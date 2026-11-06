@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
@@ -24,8 +24,12 @@ async def bootstrap_account(
 
 
 async def require_current_user(
+    request: Request,
     identity: Annotated[AuthenticatedIdentity, Depends(require_authenticated_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> UserResponse:
     """Shared guard for protected application routes after bootstrap."""
-    return await get_active_user(session, identity.supabase_user_id)
+    # Hold the account row lock through each write transaction, including deletion.
+    return await get_active_user(
+        session, identity.supabase_user_id, lock=request.method not in {"GET", "HEAD", "OPTIONS"}
+    )

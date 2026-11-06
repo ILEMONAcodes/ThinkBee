@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.config import get_settings
 from app.db.models import Base
+from app.modules.farms.models import Farm, FarmUnit  # noqa: F401 -- register tables
 from app.modules.users.models import User  # noqa: F401 -- register tables for Alembic
 
 config = context.config

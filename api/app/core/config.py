@@ -22,6 +22,16 @@ class Settings(BaseSettings):
     supabase_service_role_key: SecretStr = SecretStr("")
     farmer_id_max_attempts: int = Field(default=5, ge=1, le=20)
     default_locale: str = "en-NG"
+    supported_locales: str = "en-NG"
+    max_farms_per_user: int = Field(default=20, ge=1, le=1000)
+    max_units_per_farm: int = Field(default=200, ge=1, le=10000)
+    page_size: int = Field(default=50, ge=1, le=100)
+    max_page_size: int = Field(default=100, ge=1, le=1000)
+    supabase_admin_timeout_seconds: float = Field(default=10, gt=0, le=30)
+    deletion_batch_size: int = Field(default=25, ge=1, le=100)
+    deletion_retry_seconds: int = Field(default=60, ge=1, le=3600)
+    deletion_max_retry_seconds: int = Field(default=3600, ge=1, le=86400)
+    deletion_job_timeout_seconds: int = Field(default=3600, ge=60, le=86400)
 
     @property
     def allowed_origin_list(self) -> list[str]:

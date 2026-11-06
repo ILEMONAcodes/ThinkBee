@@ -40,3 +40,19 @@ TEST_DATABASE_URL=postgresql+asyncpg://thinkbee:thinkbee@localhost:5432/thinkbee
 ```
 
 Without this variable the database integration tests are skipped; CI supplies a Postgres service and runs them. The suite covers real signed bearer tokens, bootstrap retries and concurrency, farmer ID collisions, suspended/deleted accounts, and migration upgrade/downgrade.
+
+## Profiles, farms and deletion
+
+After migrating, `PATCH /api/v1/me` edits language preferences. `GET/PATCH /api/v1/me/chat-profile` manages the owner's display name, bio, area and visibility choices. Avatar keys cannot be assigned until the validated upload pipeline is implemented. Public profile lookup and blocking remain in the chat phase.
+
+Farm and unit CRUD routes are listed in `docs/API_SPEC.md`. Creates require a caller-generated `client_id` UUID for retries. Lists use bounded cursor pagination; farms and exact saved pins are visible only to their owner. A hive belongs to a bee/mixed farm and a crop block to a crop/mixed farm. Every authenticated write holds the account lock until commit so deletion cannot race with a new write.
+
+`DELETE /api/v1/me` removes local profile and farm data, immediately disables the local account, and persists a deletion job. It returns `202` with a pending/completed status. **Run the worker alongside the API** to finish Supabase deletion:
+
+```sh
+arq app.worker.WorkerSettings
+```
+
+The worker needs the same database settings as the API, Redis, and the backend-only Supabase service-role key. It checks pending jobs each minute and retries failures with bounded backoff. Jobs survive Redis/worker restarts; no browser session is required. Tests mock the Supabase Admin endpoint and never delete a live account. Do not start the worker against a live environment merely to run tests.
+
+An already-deleted Supabase user completes the job; arbitrary provider errors remain pending. Monitor overdue rows in `account_deletions` and fix configuration/provider issues if requests remain pending. Log only status/error codes, never profile data, keys or provider response bodies. The frontend must clear local data and its Supabase session after deletion is accepted. As later features add private data, extend `users/deletion_service.py` and its tests before enabling them.
