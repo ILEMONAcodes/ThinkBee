@@ -4,9 +4,9 @@ Think Bee is Macaney's PWA for farmers and beekeepers in Nigeria. The monorepo c
 
 ## Local setup
 
-Requirements: Node.js 24, npm 11, Python 3.12, and Docker with Compose.
+Requirements: Node.js 24, npm 11, Python 3.12, Docker with Compose, and a Supabase project on the free tier.
 
-1. Copy `env/web.env.example` to `web/.env.local` and `env/api.env.example` to `api/.env`.
+1. Copy `env/web.env.example` to `web/.env.local` and `env/api.env.example` to `api/.env`, then add the Supabase URL, publishable key and backend-only service-role key.
 2. Start PostgreSQL, Redis, and MinIO with `docker compose up -d`.
 3. In `web/`, run `npm ci` and `npm run dev`.
 4. In `api/`, create a Python 3.12 virtual environment, install `.[dev]`, and run `uvicorn app.main:app --reload`.

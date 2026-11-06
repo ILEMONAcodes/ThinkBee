@@ -10,11 +10,11 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] MSW mock server from the OpenAPI schema
 
 ## Phase 1: Foundation
-- [ ] BE: phone OTP request and verify, rate limits, SMS provider interface
-- [ ] BE: farmer ID generation, JWT access and rotating refresh in cookies
+- [ ] BE: Supabase Auth setup (Email / Magic Link), token verification middleware
+- [ ] BE: farmer ID generation, Supabase user mapping and session validation
 - [ ] BE: users, farms, farm units (hives, crop blocks), account deletion
 - [ ] FE: app shell, floating nav, desktop rail, theme switch
-- [ ] FE: onboarding (splash, welcome, phone, OTP, profile, add farm)
+- [ ] FE: onboarding (splash, welcome, email/magic link auth, profile, add farm)
 - [ ] FE: PWA manifest, service worker, offline page, install prompt
 - [ ] FE: app lock (PIN or biometrics where available)
 

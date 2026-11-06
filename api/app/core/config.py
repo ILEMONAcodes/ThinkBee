@@ -8,10 +8,12 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     app_env: str = "local"
-    secret_key: SecretStr = SecretStr("change-me")
     database_url: str = "postgresql+asyncpg://thinkbee:thinkbee@localhost:5432/thinkbee"
     redis_url: str = "redis://localhost:6379/0"
     allowed_origins: str = "http://localhost:3000"
+    supabase_url: str = ""
+    supabase_jwt_audience: str = "authenticated"
+    supabase_service_role_key: SecretStr = SecretStr("")
 
     @property
     def allowed_origin_list(self) -> list[str]:

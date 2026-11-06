@@ -3,10 +3,9 @@
 PostgreSQL. UUID primary keys (v7). `created_at`, `updated_at` on every table. Soft delete only where stated.
 
 ## Identity
-- `users`: id, farmer_id (unique, server generated, format `TB-` + 8 chars Crockford base32), phone_e164 (unique, encrypted at rest and hashed for lookup), status (active, suspended, deleted), is_think_bee_admin, locale, last_seen_at
-- `devices`: id, user_id, label, push_subscription (json), refresh_token_hash, last_used_at
-- `otp_requests`: id, phone_hash, code_hash, expires_at, attempts, consumed_at, ip
-- `chat_profiles`: user_id (pk), display_name, photo_key, bio, area_state, area_lga, show_crops, show_hive_type, discoverable_by_phone, show_phone
+- `users`: id, supabase_user_id (unique, Supabase `sub` UUID), farmer_id (unique, server generated, format `TB-` + 8 chars Crockford base32), status (active, suspended, deleted), is_think_bee_admin, locale, last_seen_at
+- `devices`: id, user_id, label, push_subscription (json), last_used_at
+- `chat_profiles`: user_id (pk), display_name, photo_key, bio, area_state, area_lga, show_crops, show_hive_type
 - `blocks`: blocker_id, blocked_id
 
 ## Farms and records
@@ -37,5 +36,5 @@ PostgreSQL. UUID primary keys (v7). `created_at`, `updated_at` on every table. S
 - A space always has at least one `space_admin` (enforced in service and by a deferred constraint trigger).
 - Direct chats are `spaces` with kind `direct` and exactly two memberships, unique per pair.
 - `scan_shares.snapshot` makes shared cards immutable even if the original scan is later edited or deleted.
-- Deleting an account: set `users.status=deleted`, remove chat profile and farm data, null `sender_id` display as "Deleted user", delete scan images, queue media deletion.
-- Indexes: `messages (space_id, seq desc)`, `messages (client_msg_id, sender_id)` unique, `memberships (user_id)`, `reports (status, created_at)`.
+- Deleting an account: set `users.status=deleted`, remove chat profile and farm data, null `sender_id` display as "Deleted user", delete scan images, queue media deletion, then delete the Supabase Auth user with the backend service-role credential.
+- Indexes: `users (supabase_user_id)` unique, `messages (space_id, seq desc)`, `messages (client_msg_id, sender_id)` unique, `memberships (user_id)`, `reports (status, created_at)`.

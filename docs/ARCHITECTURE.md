@@ -4,11 +4,12 @@
 
 ```
 Browser (PWA: Next.js, Serwist SW, Dexie)
-   |  HTTPS REST + SSE (assistant)         |  WebSocket (chat)
+   |  Supabase Auth (email magic link / optional OAuth)
+   |  HTTPS REST + SSE with Bearer JWT     |  WebSocket auth event (chat)
    v                                       v
-FastAPI (api/)  ---- Redis (pub/sub, rate limits, OTP, presence)
+FastAPI (api/)  ---- Redis (pub/sub, app rate limits, presence)
    |    |
-   |    +---- Providers: Gemini (AI), SMS (OTP), Web Push, S3 storage
+   |    +---- Providers: Gemini (AI), Web Push, S3 storage
    v
 PostgreSQL
 ```
@@ -21,13 +22,14 @@ PostgreSQL
 - **Outbox worker** in `lib/outbox`: processes queued items in order per chat, with backoff, triggered on reconnect, app open, and visibility change (iOS has no background sync).
 - **Realtime** in `lib/realtime`: one WebSocket per session with heartbeat and resume from last seen event id. Falls back to polling every 15 seconds when sockets fail.
 - **Generated API client** from OpenAPI. Errors map to a single `AppError` type with a plain-language message.
+- **Authentication** through `@supabase/supabase-js`. Supabase owns magic-link/OAuth flows, token persistence, refresh and auth rate limits. The API client reads the current session and attaches the access token as a bearer header without copying it into application state or custom storage.
 - **Service worker** (Serwist): precache app shell, runtime cache for images (stale while revalidate), network first for API reads with offline fallback, no caching of authenticated chat media URLs beyond their signed lifetime. Handles Web Push display and click routing.
 
 ## Backend structure
 
 Modular monolith. Modules own their tables and expose services. Cross-module calls go through services, never through another module's models.
 
-- `auth`: OTP, tokens, sessions, devices
+- `auth`: Supabase JWT verification, local user mapping, session validation
 - `users`: accounts, farmer ID, chat profile, privacy settings, blocks
 - `farms`: farms and units (hives, crop blocks)
 - `scans`: image intake, calls `AIProvider`, stores structured result
@@ -40,11 +42,19 @@ Modular monolith. Modules own their tables and expose services. Cross-module cal
 - `moderation`: reports, actions, audit log
 - `admin`: Think Bee admin endpoints
 
-Background work: `arq` (Redis) workers for media processing, push delivery, OTP sending, retention jobs. Scheduled jobs: reminder dispatch, retention clean-up, expired OTP purge.
+Background work: `arq` (Redis) workers for media processing, push delivery and retention jobs. Scheduled jobs: reminder dispatch and retention clean-up.
+
+## Authentication design
+
+- The web app signs users in with Supabase email magic links. OAuth providers may be enabled later through configuration without adding backend auth endpoints.
+- FastAPI never accepts a Supabase service-role key from the browser and never issues or refreshes user tokens.
+- One dependency verifies bearer tokens with the Supabase JWKS and validates issuer, audience, expiry and subject. It maps the `sub` claim to `users.supabase_user_id`.
+- `POST /auth/bootstrap` creates the local user and farmer ID once, then returns the same mapping on retries.
+- Account deletion removes or anonymises local data first, then deletes the Supabase Auth user through a backend-only service-role call.
 
 ## Realtime design
 
-- Client connects to `/ws` with the access cookie. Server authenticates, loads the user's space memberships, and subscribes to Redis channels `space:{id}` and `user:{id}`.
+- Client connects to `/ws`, immediately sends the current Supabase access token in an `auth` event, and may send no other event until the server validates it. The server then loads memberships and subscribes to Redis channels `space:{id}` and `user:{id}`.
 - Messages are persisted first, then published. Each message has a monotonically increasing `seq` per space for ordering and resume.
 - Typing and presence are ephemeral (Redis only, short TTL).
 - On reconnect the client sends `last_seq` per open space and receives the missed range through REST (`GET /spaces/{id}/messages?after_seq=`).

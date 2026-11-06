@@ -31,7 +31,7 @@ Think Bee is a Progressive Web App for farmers and beekeepers in Nigeria. A farm
 | Realtime | FastAPI WebSockets, Redis pub/sub for fan-out |
 | Files | S3-compatible object storage, upload through presigned URLs |
 | AI | Google Gemini through an `AIProvider` interface (`docs/AI_SAFETY.md`) |
-| SMS OTP | Behind an `SmsProvider` interface (Termii first, swappable) |
+| Auth | Supabase Auth free tier, email magic links first, optional OAuth; FastAPI validates Supabase JWTs |
 | Tests | Vitest and Playwright (web), Pytest and httpx (api) |
 | Local dev | Docker Compose for Postgres, Redis, and an S3 emulator |
 
@@ -51,14 +51,14 @@ Do not add a major dependency that is not listed here without writing a short en
 ├─ web/             Next.js PWA
 │  ├─ app/          route groups: (onboarding) (main) (admin)
 │  ├─ components/   ui/ (primitives), chat/, scan/, records/, shell/
-│  ├─ lib/          api client (generated), db (Dexie), outbox, realtime, push
+│  ├─ lib/          auth, api client (generated), db (Dexie), outbox, realtime, push
 │  ├─ styles/       globals.css (imports design/tokens.css)
 │  └─ public/       icons, manifest, offline page
 └─ api/             FastAPI service
    ├─ app/
    │  ├─ core/      config, security, logging, rate limits
    │  ├─ modules/   auth, users, farms, scans, assistant, records, reminders, chat, uploads, push, moderation, admin
-   │  ├─ providers/ ai/, sms/, storage/, push/
+   │  ├─ providers/ ai/, storage/, push/
    │  ├─ db/        models, session, migrations
    │  └─ main.py
    └─ tests/
@@ -78,9 +78,9 @@ Each backend module holds `router.py`, `schemas.py`, `service.py`, `models.py`. 
 - Full rules and the system prompt: `docs/AI_SAFETY.md` and `prompts/ai_system_prompt.md`.
 
 **Privacy**
-- Chat profiles show only what the farmer chose. Phone number is hidden by default. Exact farm coordinates are never exposed to other users.
+- Chat profiles show only what the farmer chose. Authentication email addresses are never shown to other users. Exact farm coordinates are never exposed to other users.
 - Strip EXIF and GPS data from every uploaded photo on the server.
-- Encrypt in transit and at rest. Never log message bodies, phone numbers, OTPs, tokens or photo URLs.
+- Encrypt in transit and at rest. Never log message bodies, email addresses, auth tokens or photo URLs.
 - Account deletion must remove or anonymise the user's data. Build the deletion path in phase 1, not later.
 - Think Bee farmer IDs are internal identifiers, never described as government IDs.
 
@@ -91,8 +91,9 @@ Each backend module holds `router.py`, `schemas.py`, `service.py`, `models.py`. 
 - Photos are compressed on the device before upload. Voice notes are recorded at a low bitrate.
 
 **Security**
-- OTP: rate limited per phone and per IP, short expiry, hashed at rest, single use.
-- Access tokens are short lived. Refresh tokens rotate and are stored hashed. Never put tokens in localStorage; use httpOnly secure cookies for the web app.
+- Supabase Auth owns email magic-link delivery, optional OAuth, session refresh, token persistence, and authentication rate limits.
+- FastAPI accepts `Authorization: Bearer <supabase_token>` and validates the signature, issuer, audience, expiry and subject against the Supabase project JWKS. It never issues or refreshes auth tokens.
+- Application code must not copy Supabase access or refresh tokens into its own storage. Use `@supabase/supabase-js` session APIs and keep the service-role key backend-only.
 - Every endpoint checks authentication and the caller's role in that space. Role checks live in one place (`modules/chat/permissions.py`).
 - Validate file type by content, not by extension. Enforce size caps on the server.
 - No secret in the repository. Use `env/*.example` as the template.

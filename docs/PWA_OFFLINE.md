@@ -15,6 +15,7 @@ Show the install card in Me after the user has done something meaningful (first 
 ## Offline behaviour
 | Area | Offline |
 | --- | --- |
+| Sign in, exchange a magic link, recover a session | no, clear connection message; already cached local data remains readable when safe |
 | Open app, see Home, Records, Reminders | yes, from local data |
 | Create or edit log entries and reminders | yes, drafts sync later |
 | Read loaded chats | yes |

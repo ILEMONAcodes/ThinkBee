@@ -1,7 +1,7 @@
 # CHAT_SYSTEM.md
 
 ## Spaces
-- **Direct**: two farmers. Started from a profile, a member list, a phone number or a farmer ID. Blocked users cannot start one.
+- **Direct**: two farmers. Started from a profile, a member list or a farmer ID. Blocked users cannot start one.
 - **Group**: created by a Think Bee admin. Private by default. Join by invite link, code, or admin add.
 - **Community**: created by a Think Bee admin. Public (searchable) or private. Posting mode everyone or admins only. May hold topic rooms.
 - **Topic room**: child of a community. Inherits membership and rules, has its own messages.

@@ -175,8 +175,8 @@ Design every screen below in light and dark, mobile and desktop where noted (M =
 ### 8.1 Onboarding (M, D)
 1. **Splash**: logo on forest-900, comb cells assemble into the bee mark, then fade to Welcome.
 2. **Welcome**: 3 swipeable panels in Fraunces headlines with real photography (scan, records, community). Skip always visible. Orange "Get started".
-3. **Phone number**: country code fixed to +234 by default, large numeric field, plain sentence explaining why the code is needed.
-4. **OTP**: six boxes, auto-advance, auto-read where the platform allows, resend timer, "wrong number" link.
+3. **Email sign-in**: large email field, plain sentence explaining that Think Bee will send a secure sign-in link, and one orange "Email me a sign-in link" button. Optional OAuth buttons appear only for providers enabled in configuration.
+4. **Check your email**: show the submitted address, a clear instruction to open the magic link on this device, resend cooldown, "Use a different email" action, expired-link error and a returning-from-link loading state.
 5. **Create profile**: display name, optional photo (camera or gallery), short bio. Shows exactly what others will see in a live preview card.
 6. **Add your farm or apiary**: type (crops, bees, both), name, general location (state, LGA), number and type of hives or crops. Skippable, can add later.
 7. **Permissions primer**: shown only when a feature first needs camera, microphone, gallery, notifications or location. One sentence on why, a clear "Not now" that keeps the rest of the app working.
@@ -209,7 +209,7 @@ Design every screen below in light and dark, mobile and desktop where noted (M =
 
 ### 8.5 Chats (M, D)
 - **Chat list** following reference 02: segmented control All, Direct, Groups, Communities. Search. Rows with avatar (comb-shaped frame for groups and communities, circle for people), name, preview, time, unread badge in honey, pin icon, mute icon, typing state, voice note preview, photo preview label. Swipe left: mute and more. Swipe right: pin. Long press: report, mute, leave. Floating "New chat" button.
-- **New chat sheet**: search by farmer ID or phone number (where allowed), recent contacts, join with code.
+- **New chat sheet**: search by farmer ID, recent contacts, join with code.
 - **Direct chat room**: curved header notch, forest-700 background in light mode, bubbles with reply quote, photo grid (1 to 6), voice note bubble (play, waveform, duration), scan result card, system messages, delivery states (clock, sent, delivered, read), outbox state with retry. Composer as in section 6. Date separators sticky.
 - **Group and community room**: same plus sender name and colour per member (derived from the palette scale), role tag next to name (Admin, Mod), pinned message bar, standing notice banner ("Advice from members is not expert advice. For serious cases, see an extension officer."), and in communities a **topic room switcher** as a horizontal chip row.
 - **Voice note recording overlay**: hold mic, composer transforms: pulsing honey ring, live waveform, timer, "slide to cancel" with a left arrow, "slide up to lock". Release sends. Haptic on start and send.
@@ -230,7 +230,7 @@ Design every screen below in light and dark, mobile and desktop where noted (M =
 
 ### 8.7 Me (M, D)
 - Profile header: photo, name, farmer ID with copy button, bio.
-- **Chat profile** editor with live preview and visibility toggles: show crops or hive type, show general area, be found by phone number, show phone number (off by default).
+- **Chat profile** editor with live preview and visibility toggles: show crops or hive type and show general area. Authentication email is never public.
 - **My farms**: list, add, edit.
 - **Settings**: language (English at launch), theme, notifications (per category), app lock, storage and data usage, low data mode.
 - **Privacy and data**: plain-language page on how photos and messages are used and kept, messages are not end-to-end encrypted in the MVP, request deletion.
@@ -248,7 +248,7 @@ Design every screen below in light and dark, mobile and desktop where noted (M =
 
 ## 9. Components to build (Figma components and React primitives)
 
-Buttons (primary honey, secondary forest outline, tertiary text, destructive, icon, round send; sizes 48 and 56; states default, pressed, loading, disabled). Inputs (text, phone, OTP, search, textarea, select). Chips and pills (filter, status, role). Avatars (circle, comb frame, stack). Cards (hero, tile, list row, result, scan result share). Bubbles (text, photo grid, voice, scan card, system, reply quote). Composer. Bottom pill nav and desktop rail. Sheets (bottom sheet, modal, menu). Toast. Segmented control. Switch. List row with swipe actions. Skeletons. Empty state. Confidence meter. Waveform. CombField. Loader. Banner (offline, notice).
+Buttons (primary honey, secondary forest outline, tertiary text, destructive, icon, round send; sizes 48 and 56; states default, pressed, loading, disabled). Inputs (text, email, search, textarea, select). Chips and pills (filter, status, role). Avatars (circle, comb frame, stack). Cards (hero, tile, list row, result, scan result share). Bubbles (text, photo grid, voice, scan card, system, reply quote). Composer. Bottom pill nav and desktop rail. Sheets (bottom sheet, modal, menu). Toast. Segmented control. Switch. List row with swipe actions. Skeletons. Empty state. Confidence meter. Waveform. CombField. Loader. Banner (offline, notice).
 
 Variants must cover light and dark. Build with auto layout and Figma variables bound to `design/tokens.json`.
 

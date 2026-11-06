@@ -40,7 +40,7 @@ No `Co-authored-by`, no "Generated with" trailers, no tool signatures. One logic
 
 - `main`: always deployable. Protected.
 - `dev`: integration branch.
-- Feature branches from `dev`: `web/chat-outbox`, `api/otp-auth`, `design/tokens`. Lowercase, hyphens, role prefix.
+- Feature branches from `dev`: `web/chat-outbox`, `api/supabase-auth`, `design/tokens`. Lowercase, hyphens, role prefix.
 
 ## Pull requests
 

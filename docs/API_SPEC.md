@@ -1,25 +1,28 @@
 # API_SPEC.md
 
-Base: `/api/v1`. JSON. Auth by httpOnly cookie (access) with CSRF header on unsafe methods. Errors:
+Base: `/api/v1`. JSON. Authenticated requests use `Authorization: Bearer <supabase_token>`. Errors:
 
 ```json
-{ "error": { "code": "otp_expired", "message": "That code has expired. Ask for a new one.", "fields": {} } }
+{ "error": { "code": "auth_invalid_token", "message": "Your session is not valid. Sign in again.", "fields": {} } }
 ```
 
 `message` is always plain language, safe to show. FastAPI generates the OpenAPI schema; this file lists the intended surface. If code and this file differ, fix the file in the same PR.
 
-## Auth
-- `POST /auth/otp/request` {phone} -> 202
-- `POST /auth/otp/verify` {phone, code, device_label} -> sets cookies, returns {user, is_new}
-- `POST /auth/refresh` -> rotates refresh token
-- `POST /auth/logout`
+The generated OpenAPI document defines an HTTP bearer security scheme with `bearerFormat: JWT` and applies it to protected operations. Health endpoints and any future public metadata endpoints explicitly opt out.
+
+## Authentication and security
+Supabase Auth handles email magic links, optional OAuth, session persistence, refresh and authentication rate limits. The Think Bee API does not send OTPs, set auth cookies, issue JWTs, refresh sessions or expose logout endpoints.
+
+Every protected FastAPI route uses one shared auth dependency. It reads the bearer token, validates its signature against the Supabase project JWKS, and checks `iss`, `aud`, `exp` and `sub`. The dependency maps `sub` to `users.supabase_user_id`, rejects missing, invalid or expired tokens with `401`, and rejects suspended or deleted local users with `403`. JWKS may be cached with a short TTL, but a signing-key miss triggers one refresh before rejection.
+
+- `POST /auth/bootstrap` (authenticated, idempotent) -> maps the Supabase user to a local user, creates the unique farmer ID on first use, returns `{user, is_new}`
 - `DELETE /me` -> starts account deletion
 
 ## Me and profiles
 - `GET /me`, `PATCH /me`
 - `GET /me/chat-profile`, `PATCH /me/chat-profile`
 - `GET /users/{farmer_id}` (public chat profile only)
-- `GET /users/search?q=` (farmer ID, or phone if the target allows it)
+- `GET /users/search?q=` (farmer ID)
 - `POST /blocks/{user_id}`, `DELETE /blocks/{user_id}`, `GET /blocks`
 
 ## Farms
@@ -60,7 +63,7 @@ Scan result shape:
 
 ## Chat
 - `GET /chats` -> spaces the user is in with last message and unread
-- `POST /chats/direct` {user_id | farmer_id | phone}
+- `POST /chats/direct` {user_id | farmer_id}
 - `POST /spaces` (Think Bee admin only) {kind, name, description, visibility, parent_space_id?}
 - `GET/PATCH /spaces/{id}`, `POST /spaces/{id}/join` {invite_code?}, `POST /spaces/{id}/leave`
 - `GET /spaces/{id}/members`, `PATCH /spaces/{id}/members/{user_id}` {role} (space admin or Think Bee admin), `DELETE /spaces/{id}/members/{user_id}`
@@ -83,9 +86,11 @@ Scan result shape:
 - `GET /admin/audit`
 
 ## WebSocket `/ws`
+The browser sends an `auth` event containing the current Supabase access token immediately after opening the socket. The server validates it with the same JWT verifier before subscribing the connection to any user or space channels. No other client event is accepted before authentication.
+
 Server events: `message.new`, `message.deleted`, `message.receipt`, `typing`, `presence`, `member.joined`, `member.removed`, `role.changed` (also stored as a system message), `space.updated`, `pin.changed`, `scan.ready`.
-Client events: `typing.start|stop`, `read` {space_id, seq}, `resume` {spaces: [{id, last_seq}]}, `ping`.
+Client events: `auth` {access_token}, `typing.start|stop`, `read` {space_id, seq}, `resume` {spaces: [{id, last_seq}]}, `ping`.
 Every event carries `id` and `space_id` where relevant. Messages are never created through the socket; always through REST, so idempotency and permission checks have one path.
 
 ## Limits (all configurable)
-`MAX_VOICE_SECONDS`, `MAX_IMAGES_PER_MESSAGE`, `MAX_IMAGE_BYTES`, `MAX_GROUP_MEMBERS`, `MAX_COMMUNITY_MEMBERS`, `SCANS_PER_DAY`, `QUESTIONS_PER_DAY`, `OTP_PER_PHONE_PER_HOUR`.
+`MAX_VOICE_SECONDS`, `MAX_IMAGES_PER_MESSAGE`, `MAX_IMAGE_BYTES`, `MAX_GROUP_MEMBERS`, `MAX_COMMUNITY_MEMBERS`, `SCANS_PER_DAY`, `QUESTIONS_PER_DAY`.

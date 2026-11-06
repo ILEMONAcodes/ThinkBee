@@ -1,1 +1,0 @@
-"""Replaceable SMS provider implementations."""

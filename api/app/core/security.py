@@ -1,1 +1,1 @@
-"""Shared authentication, cookie and CSRF helpers will live here."""
+"""Shared Supabase bearer-token verification and authorization helpers."""

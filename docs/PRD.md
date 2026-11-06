@@ -14,7 +14,7 @@ The first release (the MVP) connects to an existing AI service, Google Gemini. W
 
 The MVP is built for farmers and beekeepers, including smallholders and people who are new to digital tools. The app should be simple enough to use without training. Chat should feel familiar to anyone who has used WhatsApp or Telegram.
 
-Extension officers and cooperatives are a later audience. The MVP does not include their dashboards or workflows. They can still join chat as ordinary farmers if they register with a phone number.
+Extension officers and cooperatives are a later audience. The MVP does not include their dashboards or workflows. They can still join chat as ordinary farmers if they register with an email address.
 
 ## What the MVP does
 
@@ -24,7 +24,7 @@ The MVP now has six features. Feature 5 is extended and feature 6 is new.
 2. **Ask the AI.** The farmer can type a farming or beekeeping question and get a clear answer, using their saved farm details and history for context.
 3. **History and records.** Every scan the farmer chooses to save becomes an entry in a timeline for that farm or hive. The AI suggests a record (for example, "Possible aphid damage on Block B") and the farmer taps to confirm. Nothing is recorded as done unless the farmer says it was done.
 4. **Reminders.** The farmer can set reminders for inspections, planting, treatments and harvests, and mark them done, postponed or dismissed.
-5. **Farmer profile (extended).** Each farmer registers with their phone number and receives a unique Think Bee farmer ID. They add their farm or apiary details, such as location, crops, and number and type of hives, and can register more than one farm. Each farmer now also has a chat profile that other farmers can see, with a name, photo and short bio. The farmer controls what it shows.
+5. **Farmer profile (extended).** Each farmer signs in through Supabase Auth with an email magic link and receives a unique Think Bee farmer ID. Optional OAuth providers may be enabled later. They add their farm or apiary details, such as location, crops, and number and type of hives, and can register more than one farm. Each farmer now also has a chat profile that other farmers can see, with a name, photo and short bio. The farmer controls what it shows.
 6. **Community chat (new).** Farmers can message each other one to one, join groups and larger communities around a place, crop or topic. Admins create the groups and communities and assign roles. Farmers can share text, photos from the camera or gallery, voice notes and scan results.
 
 ## Community chat
@@ -35,7 +35,7 @@ Community chat lets farmers talk to each other inside Think Bee, the way they al
 
 | Space | Who is in it | How it works |
 | --- | --- | --- |
-| Direct chat | Two farmers | Private one-to-one messages. Any farmer can start one from a profile, a group member list, or by entering a phone number or farmer ID. |
+| Direct chat | Two farmers | Private one-to-one messages. Any farmer can start one from a profile, a group member list, or by entering a farmer ID. |
 | Group | A small circle, such as a village, a cooperative, or a hive-sharing team | Created by an admin, who names it, adds a photo and invites members. Private by default: people join by invite link or code, or are added by an admin. |
 | Community | A larger space around a place, a crop or a topic, such as "Cocoa farmers in Ondo" or "Beekeeping beginners" | Created and run by admins. Members can read and post, or admins can limit posting to announcements. Can be public (anyone can find and join) or private. A community can hold several topic rooms, for example one for pests and one for market prices. |
 
@@ -62,9 +62,9 @@ The app asks for camera, microphone and photo-gallery access only when the farme
 
 ### Profiles
 
-Every farmer has a chat profile separate from their private farm records. It shows a display name, an optional photo, a short bio, and the general area (state or local government area, never exact farm coordinates). Farmers may choose to show crops or hive type. Their phone number is hidden by default. Farm records, scans, reminders and exact locations are never visible to other farmers unless the farmer shares a specific item.
+Every farmer has a chat profile separate from their private farm records. It shows a display name, an optional photo, a short bio, and the general area (state or local government area, never exact farm coordinates). Farmers may choose to show crops or hive type. Their authentication email address is never part of the public profile. Farm records, scans, reminders and exact locations are never visible to other farmers unless the farmer shares a specific item.
 
-A farmer can have one profile that works across all their farms. Farmers can find each other by farmer ID or by phone number, and each farmer can turn off being found by phone number.
+A farmer can have one profile that works across all their farms. Farmers find each other by Think Bee farmer ID or through shared groups and communities.
 
 ### Safety and moderation
 
@@ -108,7 +108,7 @@ The AI service is connected through a replaceable layer, so we can switch provid
 
 ## Sign-up, login and offline use
 
-**Sign-up and login.** The farmer registers with a phone number and confirms it with a one-time code sent to the phone. The server then creates the account and generates the unique farmer ID, so duplicate IDs cannot happen. After the first login the app keeps the farmer signed in, so they are not asked for a code every time. An optional PIN or fingerprint lock protects the app if the phone is shared or lost. If a farmer changes phone or SIM, they can sign in again by confirming their number with a new code. The same account is used for chat, so the farmer's chat profile and groups come with them to the new phone.
+**Sign-up and login.** The farmer enters an email address and Supabase Auth sends a magic link. Opening the link returns the farmer to Think Bee and starts the Supabase session. Optional OAuth providers may be enabled through configuration. The Think Bee API validates the Supabase access token, maps the Supabase user to a local account, and generates the unique farmer ID once. Supabase owns session persistence, refresh and authentication rate limits. An optional PIN or fingerprint lock protects the app if the device is shared or lost. The same account is used for chat, so the farmer's profile and groups follow them to another device after sign-in.
 
 **Offline use.** The AI scan and the AI assistant need an internet connection, because the photo and question must reach the AI service. Chat also needs a connection to send and receive. Without signal, the farmer can still:
 
@@ -132,8 +132,7 @@ The app stores personal details, farm locations, photos and now messages, so it 
 
 **Added for chat**
 
-- Chat profiles show only what the farmer chooses. Phone numbers are hidden by default, and exact farm locations are never shown.
-- Farmers can switch off being found by phone number.
+- Chat profiles show only what the farmer chooses. Authentication email addresses and exact farm locations are never shown.
 - Messages are encrypted in transit and at rest. They are not end-to-end encrypted in the MVP, which means Think Bee's review team can look at reported messages. Farmers are told this plainly in the app.
 - Farmers can delete their own messages. When an account is deleted, the profile is removed and the farmer's messages are removed or shown as from a deleted user, as decided in the review below.
 - Photos and voice notes shared in chat follow their own retention rules, separate from scan photos, and farmers are told how long they are kept. Camera, microphone and gallery access is requested only when the farmer first uses it.
@@ -171,7 +170,7 @@ These ideas are saved for later versions, once the core app has proven useful.
 
 Timelines will be set once the decisions below are confirmed. Community chat is added as its own phase because it is the largest new piece of work and needs real-time messaging, moderation tools and safety review.
 
-1. **Foundation.** Phone sign-up and login, farmer ID, farmer and farm profiles, and the app's basic structure and security.
+1. **Foundation.** Supabase email magic-link sign-in, farmer ID, farmer and farm profiles, and the app's basic structure and security.
 2. **AI core.** The AI assistant, the photo scan for crops and hives, and the safety rules for AI answers.
 3. **Records and reminders.** Saved scans, history timeline, draft entries that sync, and reminders.
 4. **Community chat (new).** Chat profiles, direct chats, admin-created groups and communities, roles and admin tools, camera and image upload, voice notes, scan sharing, notifications, outbox for weak signal, reporting and blocking.
@@ -205,7 +204,7 @@ These answers will set the timeline and cost. The chat questions at the end are 
 - **Launch market:** Nigeria only, or more countries?
 - **Languages:** Is English enough for the MVP, or is one local language needed at launch?
 - **Offline use:** Are saved drafts and an outbox enough, or must more work without signal?
-- **Shared phones:** Can two farmers share one phone, or is it one account per phone?
+- **Shared devices:** Can two farmers share one browser profile, or must they sign out to switch accounts?
 - **Starting scope:** Which crops and which bee problems should the pilot focus on first?
 - **Expert review:** Who will check the AI's advice for safety before public launch?
 - **Pilot:** Where and with which farmers will the first testing happen?
@@ -219,7 +218,7 @@ These answers will set the timeline and cost. The chat questions at the end are 
 - **Public or private:** Should public, searchable communities exist at launch, or invite-only groups first?
 - **Moderation:** Who will staff reports and suspensions during the pilot and after launch, and how fast must they respond?
 - **Community structure:** Are communities organised by place, by crop or hive topic, or both?
-- **Finding people:** Can farmers be found by phone number and farmer ID, or by farmer ID only?
+- **Finding people:** Farmer ID is the launch default. Should public display-name search be added later?
 - **Voice notes and images:** What is the longest voice note, how many images per message, and how long should both be kept?
 - **Extension officers and cooperatives:** May they host communities in the MVP as ordinary members, or wait for the later dashboards?
 - **Message retention:** How long should messages be kept, and what happens to a farmer's messages when they delete their account?

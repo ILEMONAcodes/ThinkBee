@@ -11,6 +11,7 @@ Folder: `web/`. Read `AGENTS.md`, `docs/UI_DESIGN.md`, `docs/PWA_OFFLINE.md`, `d
 - App shell, routing, navigation (mobile pill, desktop rail), themes.
 - All screens in `UI_DESIGN.md` section 8, mobile and desktop, with loading, empty, error and offline states.
 - Local-first data layer (Dexie), outbox, sync, realtime client, push registration.
+- Supabase email magic-link authentication through `@supabase/supabase-js`; optional OAuth providers remain configuration-driven.
 - Camera, gallery and voice recorder components with permission handling on first use.
 - Motion from `design/motion.ts`, honouring reduced motion.
 - i18n through `next-intl`, English strings only for now, no hard-coded text in components.
@@ -24,7 +25,7 @@ Folder: `web/`. Read `AGENTS.md`, `docs/UI_DESIGN.md`, `docs/PWA_OFFLINE.md`, `d
 - Test every outbox and sync behaviour. Test components that have state.
 
 ## Do not
-- Store tokens in localStorage.
+- Copy Supabase tokens into application state, Dexie or custom browser storage. Let the Supabase client own session persistence and refresh.
 - Block the UI on network calls that can be queued.
 - Add visual flourishes outside `UI_DESIGN.md`.
 - Use emoji in the interface or in code comments.
