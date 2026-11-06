@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./tokens.css";
+@import "./shell.css";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
@@ -14,6 +15,7 @@
   --color-muted: var(--text-3);
   --color-on-brand: var(--text-on-brand);
   --color-on-accent: var(--text-on-honey);
+  --color-mint: var(--color-forest-300);
   --color-accent: var(--accent);
   --color-link: var(--link);
   --color-line: var(--line);
@@ -31,12 +33,15 @@ html {
 }
 
 body {
+  /* next/font variables live on body; resolve the font aliases in that scope. */
+  --font-display: var(--font-fraunces), "Georgia", serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
   min-height: 100dvh;
   margin: 0;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.5;
 }
 

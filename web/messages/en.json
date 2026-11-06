@@ -8,43 +8,49 @@
     "chats": "Chats",
     "scan": "Scan",
     "records": "Records",
-    "me": "Me"
+    "me": "Me",
+    "primary": "Main navigation",
+    "sidebar": "Sidebar",
+    "brandHome": "Think Bee home",
+    "pin": "Pin sidebar",
+    "unpin": "Unpin sidebar",
+    "brandName": "Think Bee"
   },
   "Theme": {
-    "toggle": "Change colour theme"
+    "title": "Appearance",
+    "description": "Choose a colour theme for this device.",
+    "system": "Follow device",
+    "light": "Light",
+    "dark": "Dark",
+    "toggleLabel": "Theme: {current}. Switch to {next}.",
+    "current": "Theme: {theme}",
+    "temporary": "This preference could not be saved. It will last until you leave this page."
   },
   "Home": {
     "eyebrow": "Your farm today",
-    "greeting": "Good morning",
-    "summary": "2 reminders need your attention today.",
+    "greeting": "A little care, every day",
+    "summary": "Your place for farm guidance, records and conversations.",
     "scanKicker": "Photo check",
     "scanTitle": "Check a hive or a crop",
     "scanBody": "Take a clear photo. Think Bee will show likely causes and safe next steps.",
-    "scanAction": "Start a scan",
-    "quickTitle": "What do you need?",
+    "scanAction": "Explore photo checks",
+    "quickTitle": "Around your farm",
     "scanHive": "Scan a hive",
     "scanCrop": "Scan a crop",
     "ask": "Ask Think Bee",
     "newReminder": "New reminder",
     "todayTitle": "Today",
-    "todayTime": "4:30 pm",
-    "todayReminder": "Check the top-bar hive",
-    "todayFarm": "North field apiary",
-    "markDone": "Mark done",
-    "postpone": "Postpone",
     "recentTitle": "Recent",
     "viewAll": "View all",
-    "recentHive": "Possible wax moth activity",
-    "recentHiveMeta": "Hive 04 · 2 hours ago",
-    "recentCrop": "Cassava leaf check",
-    "recentCropMeta": "South block · Yesterday",
-    "recentQuestion": "Why are bees gathering outside?",
-    "recentQuestionMeta": "Question · Monday",
     "communityTitle": "From your communities",
-    "communityName": "Beekeeping beginners",
-    "communityPost": "Three farmers shared updates about feeding during the rainy week.",
-    "communityUnread": "3 unread posts",
-    "offline": "You are offline. Saved information is still available."
+    "todayEmpty": "Make room for what matters",
+    "todayEmptyBody": "Your inspections, planting and other reminders will appear here.",
+    "recentEmpty": "A record of your work",
+    "recentEmptyBody": "Saved scans and field notes will come together here.",
+    "communityEmpty": "Learn from each other",
+    "communityEmptyBody": "Your farmer conversations and groups will appear here.",
+    "communityAction": "Open Chats",
+    "recordsAction": "Open Records"
   },
   "Feature": {
     "chatsTitle": "Your conversations",
@@ -52,11 +58,12 @@
     "recordsTitle": "Records and reminders",
     "recordsBody": "Saved scans, field notes and upcoming work will stay available offline.",
     "meTitle": "Your Think Bee profile",
-    "meBody": "Manage your public chat profile, farms, privacy and app settings.",
+    "meBody": "Your profile and farms belong here. Choose how Think Bee looks on this device.",
     "adminTitle": "Think Bee administration",
     "adminBody": "Reports, spaces and account actions will be managed here.",
-    "emptyLabel": "This area is ready for its Phase 1 feature work.",
-    "backHome": "Back to Home"
+    "emptyLabel": "Your information will appear here.",
+    "backHome": "Back to Home",
+    "notFound": "This page is not here"
   },
   "Scan": {
     "back": "Back",
@@ -67,12 +74,23 @@
     "hiveHint": "Frames, brood, comb or the outside of a hive",
     "crop": "A crop",
     "cropHint": "Leaves, stems, fruit or visible pest damage",
-    "notice": "A scan gives likely causes, not a confirmed diagnosis."
+    "notice": "A scan gives likely causes, not a confirmed diagnosis.",
+    "availableLater": "Photo checks will be available here. You can return to Home to explore Think Bee."
   },
   "Onboarding": {
     "title": "Clear guidance for farms and hives",
     "body": "Scan a crop or hive, keep records, and learn from other farmers.",
     "action": "Get started",
     "skip": "Skip for now"
+  },
+  "Shell": {
+    "skip": "Skip to content",
+    "offline": "You are offline. Some actions need a connection.",
+    "loading": "Loading your page…",
+    "errorTitle": "This page could not load",
+    "errorBody": "Try again. You can also use the navigation to open another page.",
+    "offlineError": "Reconnect to load this page, then try again.",
+    "retry": "Try again",
+    "home": "Back to Home"
   }
 }

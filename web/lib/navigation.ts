@@ -19,3 +19,7 @@ export function isNavigationItemActive(pathname: string, href: string): boolean 
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+export function isImmersiveRoute(pathname: string): boolean {
+  return pathname === "/scan" || pathname.startsWith("/scan/") || pathname.startsWith("/chats/");
+}

@@ -4,6 +4,9 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 
+import { ThemeProvider } from "@/components/shell/theme-provider";
+import { themeScript } from "@/lib/theme";
+
 import "@/styles/globals.css";
 
 const inter = Inter({
@@ -39,14 +42,6 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const themeScript = `
-  try {
-    const saved = localStorage.getItem("thinkbee-theme");
-    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    document.documentElement.dataset.theme = saved || (systemDark ? "dark" : "light");
-  } catch (_) {}
-`;
-
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const locale = await getLocale();
   const messages = await getMessages();
@@ -57,7 +52,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className={`${inter.variable} ${fraunces.variable}`}>
-        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>
+          <ThemeProvider>{children}</ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

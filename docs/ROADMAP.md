@@ -13,7 +13,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] BE: Supabase Auth setup (Email / Magic Link), token verification middleware
 - [x] BE: farmer ID generation, Supabase user mapping and session validation
 - [x] BE: users, farms, farm units (hives, crop blocks), account deletion
-- [ ] FE: app shell, floating nav, desktop rail, theme switch
+- [x] FE: app shell, floating nav, desktop rail, theme switch
 - [ ] FE: onboarding (splash, welcome, email/magic link auth, profile, add farm)
 - [ ] FE: PWA manifest, service worker, offline page, install prompt
 - [ ] FE: app lock (PIN or biometrics where available)
@@ -78,3 +78,13 @@ Account deletion atomically removes current profile and farm/unit data, disables
 Validation: 75 API tests and 7 web tests passed, with lint/type checks, migration upgrade/downgrade, worker import, OpenAPI export and frontend type/mock generation. Tests used isolated Postgres schemas and mocked Supabase deletion; no live account or configured app database was modified. Local runtime remains Python 3.11/Postgres 18; CI targets Python 3.12/Postgres 17.
 
 To use locally: apply `alembic upgrade head`, then run `arq app.worker.WorkerSettings` alongside the API with Redis and backend Supabase configuration. Defaults: English, 20 farms/account, 200 units/farm, pages of 50 (maximum 100), deletion polling each minute and configurable retries. Next roadmap task: FE app shell, floating navigation, desktop rail and theme switch.
+
+## Handoff — app shell and themes (2026-11-07)
+
+Pushed `api/farms-account-deletion` to origin, then implemented the shell on `web/app-shell`. Mobile has floating five-tab navigation with a raised Scan button; tablet/desktop has a keyboard-accessible rail that expands on hover/focus and can stay pinned. Scan and nested chat routes hide the shell navigation. Added a skip link, loading/error boundaries and an offline band.
+
+Appearance defaults to the device theme, supports live device changes and light/dark overrides, and persists theme/rail preferences locally. Blocked storage leaves controls usable. Replaced fabricated Home activity with empty sections and corrected the shared font bindings and text colours. No new imagery was needed; no Figma file was supplied, so the shell follows `UI_DESIGN.md`.
+
+Validation: lint, TypeScript, 16 unit tests, a production Webpack build and 20 Chrome browser tests passed. Browser checks covered 390px/1440px in light/dark, tablet rail pinning, keyboard navigation, reduced motion, offline settings, denied storage, 400ms network latency, 4x CPU throttling and 200% text size. Reviewed all four Home screenshots. Initial Home JavaScript is 168.1 KB gzipped against the 170 KB limit; the check and browser suite now run in CI. Turbopack remains blocked by this host's process/port restrictions; Webpack is the verified fallback.
+
+Next: FE onboarding (splash, welcome, Supabase email/magic link auth, profile, add farm), including live callback/sign-in validation. Full offline reload and service-worker caching remain with the following PWA task; this shell only handles offline status and preferences on an already loaded page.
