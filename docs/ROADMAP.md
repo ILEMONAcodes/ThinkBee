@@ -7,7 +7,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] Tokens, fonts, Tailwind wiring (`design/tokens.css`), motion presets
 - [x] CI: lint, type check, tests on both sides
 - [x] OpenAPI to TypeScript client generation
-- [ ] MSW mock server from the OpenAPI schema
+- [x] MSW mock server from the OpenAPI schema
 
 ## Phase 1: Foundation
 - [ ] BE: phone OTP request and verify, rate limits, SMS provider interface

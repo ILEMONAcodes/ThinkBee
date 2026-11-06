@@ -118,10 +118,26 @@ jobs:
         working-directory: web
         run: npm run generate:api
 
+      - name: Generate MSW mocks
+        working-directory: web
+        run: npm run generate:mocks
+
+      - name: Create browser mock worker
+        working-directory: web
+        run: npx msw init public --save
+
       - name: Check generated output
         working-directory: web
         run: test -s lib/api/schema.d.ts
 
+      - name: Check generated mocks
+        working-directory: web
+        run: test -s mocks/generated/server.mjs
+
       - name: Type check generated output
         working-directory: web
         run: npm run typecheck
+
+      - name: Test generated mocks
+        working-directory: web
+        run: npm test

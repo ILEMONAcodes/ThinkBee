@@ -38,3 +38,5 @@ dist/
 # Generated API contract
 api/openapi.json
 web/lib/api/schema.d.ts
+web/mocks/generated/
+web/public/mockServiceWorker.js
