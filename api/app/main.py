@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.core.config import get_settings
+from app.core.errors import AppError, app_error_handler
 
 
 class HealthResponse(BaseModel):
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    application.add_exception_handler(AppError, app_error_handler)
 
     @application.get(
         "/health/live",

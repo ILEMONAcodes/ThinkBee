@@ -10,7 +10,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] MSW mock server from the OpenAPI schema
 
 ## Phase 1: Foundation
-- [ ] BE: Supabase Auth setup (Email / Magic Link), token verification middleware
+- [x] BE: Supabase Auth setup (Email / Magic Link), token verification middleware
 - [ ] BE: farmer ID generation, Supabase user mapping and session validation
 - [ ] BE: users, farms, farm units (hives, crop blocks), account deletion
 - [ ] FE: app shell, floating nav, desktop rail, theme switch

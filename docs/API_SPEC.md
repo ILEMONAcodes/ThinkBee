@@ -15,6 +15,8 @@ Supabase Auth handles email magic links, optional OAuth, session persistence, re
 
 Every protected FastAPI route uses one shared auth dependency. It reads the bearer token, validates its signature against the Supabase project JWKS, and checks `iss`, `aud`, `exp` and `sub`. The dependency maps `sub` to `users.supabase_user_id`, rejects missing, invalid or expired tokens with `401`, and rejects suspended or deleted local users with `403`. JWKS may be cached with a short TTL, but a signing-key miss triggers one refresh before rejection.
 
+The verifier accepts only configured asymmetric signing algorithms and the Supabase `authenticated` role; it never verifies browser tokens with the service-role secret. Authentication errors use `auth_required`, `auth_invalid_token` or `auth_token_expired` and include `WWW-Authenticate: Bearer`. A temporary JWKS/provider failure returns `503 auth_verifier_unavailable` rather than treating a valid user as signed out.
+
 - `POST /auth/bootstrap` (authenticated, idempotent) -> maps the Supabase user to a local user, creates the unique farmer ID on first use, returns `{user, is_new}`
 - `DELETE /me` -> starts account deletion
 
