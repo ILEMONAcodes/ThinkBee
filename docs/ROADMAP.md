@@ -12,7 +12,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 ## Phase 1: Foundation
 - [x] BE: Supabase Auth setup (Email / Magic Link), token verification middleware
 - [x] BE: farmer ID generation, Supabase user mapping and session validation
-- [ ] BE: users, farms, farm units (hives, crop blocks), account deletion
+- [x] BE: users, farms, farm units (hives, crop blocks), account deletion
 - [ ] FE: app shell, floating nav, desktop rail, theme switch
 - [ ] FE: onboarding (splash, welcome, email/magic link auth, profile, add farm)
 - [ ] FE: PWA manifest, service worker, offline page, install prompt
@@ -68,3 +68,13 @@ Implemented `POST /auth/bootstrap`, `GET /me`, UUIDv7 local accounts, unique far
 Validation: 29 API tests and 7 web tests passed; both lint/type checks and OpenAPI/type/mock generation passed. Local API checks used the existing Python 3.11 environment and Postgres 18; CI is configured for the required Python 3.12 and Postgres 17, with database integration tests enabled.
 
 Next: users/profile editing, farms, farm units and account deletion. Working defaults: English (`en-NG`), one active Supabase account per browser profile, five configurable farmer-ID collision attempts. Full-stack role confirmed; some assets are missing and the team permits temporary online assets for future UI work.
+
+## Handoff — profiles, farms and account deletion (2026-11-06)
+
+Implemented owner profile/preferences editing; private farm and hive/crop-block CRUD; validated locations/details; client-ID creation retries; bounded pagination and configurable capacity limits. The owner-only profile supports onboarding now; avatar assignment and public profiles remain with the upload/chat work.
+
+Account deletion atomically removes current profile and farm/unit data, disables the local identity and saves a durable job. The ARQ worker performs Supabase hard deletion after local cleanup, retrying provider failures. Account-row locks prevent a concurrent write from recreating deleted data. Later modules must add their data/media cleanup to this path before being enabled.
+
+Validation: 75 API tests and 7 web tests passed, with lint/type checks, migration upgrade/downgrade, worker import, OpenAPI export and frontend type/mock generation. Tests used isolated Postgres schemas and mocked Supabase deletion; no live account or configured app database was modified. Local runtime remains Python 3.11/Postgres 18; CI targets Python 3.12/Postgres 17.
+
+To use locally: apply `alembic upgrade head`, then run `arq app.worker.WorkerSettings` alongside the API with Redis and backend Supabase configuration. Defaults: English, 20 farms/account, 200 units/farm, pages of 50 (maximum 100), deletion polling each minute and configurable retries. Next roadmap task: FE app shell, floating navigation, desktop rail and theme switch.

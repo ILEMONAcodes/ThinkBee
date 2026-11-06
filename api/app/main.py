@@ -2,12 +2,14 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.core.config import get_settings
-from app.core.errors import AppError, app_error_handler
+from app.core.errors import AppError, app_error_handler, validation_error_handler
 from app.modules.auth.router import router as auth_router
+from app.modules.farms.router import router as farms_router
 from app.modules.users.router import router as users_router
 
 
@@ -37,8 +39,10 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     application.add_exception_handler(AppError, app_error_handler)
+    application.add_exception_handler(RequestValidationError, validation_error_handler)
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(users_router, prefix="/api/v1")
+    application.include_router(farms_router, prefix="/api/v1")
 
     @application.get(
         "/health/live",

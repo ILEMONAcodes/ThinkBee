@@ -61,8 +61,13 @@ async def bootstrap_user(
     )
 
 
-async def get_active_user(session: AsyncSession, supabase_user_id: UUID) -> UserResponse:
-    user = await session.scalar(select(User).where(User.supabase_user_id == supabase_user_id))
+async def get_active_user(
+    session: AsyncSession, supabase_user_id: UUID, *, lock: bool = False
+) -> UserResponse:
+    query = select(User).where(User.supabase_user_id == supabase_user_id)
+    if lock:
+        query = query.with_for_update()
+    user = await session.scalar(query)
     if user is None:
         raise AppError(
             status_code=409,
