@@ -1,0 +1,1 @@
+"""Think Bee administration endpoints."""
