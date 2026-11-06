@@ -41,19 +41,81 @@ Every protected FastAPI route uses one shared auth dependency. It reads the bear
 Scan result shape:
 ```json
 {
+  "task": "scan_analysis",
+  "status": "completed|needs_clarification|refused|unavailable",
   "likely_causes": [{"name": "string", "confidence": "low|medium|high", "reasoning": "string"}],
   "overall_confidence": "low|medium|high",
+  "observations": ["string"],
+  "weather_relevance": "string|null",
   "needs_better_photo": false,
   "better_photo_hint": null,
   "follow_up_questions": ["string"],
   "next_steps": ["string"],
+  "protective_gear_warning": "string|null",
   "pollinator_warning": "string|null",
   "label_notice": "string",
   "expert_referral": "string|null",
   "suggested_record": {"title": "string", "type": "string"},
+  "refusal": null,
   "disclaimer_version": "1"
 }
 ```
+
+The authoritative AI output schemas, refusal objects and examples are in `docs/AI_PROMPTS.md`.
+
+## Weather and daily briefings
+
+Both routes are authenticated. The server verifies that the selected farm belongs to the caller. Exact device coordinates are accepted only in the redacted `X-ThinkBee-Latitude` and `X-ThinkBee-Longitude` request headers; they must never appear in access logs, analytics, response bodies or AI context. If those headers are absent, the server uses the selected farm's saved pin, then its State/LGA.
+
+- `GET /weather/current?farm_id={uuid}` -> current localized weather plus the next 24–48 hours from the cache/provider layer.
+- `GET /briefings/daily?farm_id={uuid}&date={YYYY-MM-DD}` -> the saved or generated briefing for the farm's local date. `date` defaults to today and cannot request an unbounded historical range.
+
+Full paths are `GET /api/v1/weather/current` and `GET /api/v1/briefings/daily`.
+
+Weather response:
+
+```json
+{
+  "status": "live|cached|stale|unavailable",
+  "location": {"source": "device_gps|saved_pin|state_lga|none", "label": "Ibadan North, Oyo", "precision": "two_decimals|administrative_area|none"},
+  "observed_at": "2026-11-06T08:00:00+01:00",
+  "expires_at": "2026-11-06T09:30:00+01:00",
+  "temperature_c": 28.4,
+  "humidity_percent": 84,
+  "rain_probability_next_4h_percent": 70,
+  "rain_probability_next_24h_percent": 85,
+  "wind_speed_kmh": 13,
+  "wind_direction": "SW",
+  "forecast_hours": [{"at": "2026-11-06T09:00:00+01:00", "temperature_c": 29.1, "humidity_percent": 82, "rain_probability_percent": 65, "wind_speed_kmh": 14, "wind_direction": "SW"}],
+  "limitations": []
+}
+```
+
+Unavailable numeric fields are `null`; they are never guessed. A stale response includes the original observation time and a plain-language limitation. Cache freshness and provider rules are defined in `docs/AI_WEATHER_INTEGRATION.md`.
+
+Daily briefing response:
+
+```json
+{
+  "task": "daily_briefing",
+  "status": "ready|limited|unavailable",
+  "local_date": "2026-11-06",
+  "location_label": "Ibadan North, Oyo",
+  "weather_summary": "Warm and humid, with rain likely this afternoon.",
+  "priorities": [{"title": "Check field drainage", "reason": "Rain may be heavy.", "timing": "Before rain", "source_task_id": null}],
+  "pest_risks": [{"name": "Conditions may favour fungal growth", "level": "medium", "reason": "Humidity and temperature cross the threshold on consecutive forecast days.", "action": "Inspect leaves for visible signs."}],
+  "hive_advice": "Wait for a dry, calm period before opening the hives.",
+  "postponed_tasks": [],
+  "alerts": [],
+  "limitations": [],
+  "refusal": null,
+  "generated_at": "2026-11-06T06:00:00+01:00",
+  "prompt_version": "daily_briefing:1",
+  "weather_observed_at": "2026-11-06T05:45:00+01:00"
+}
+```
+
+The domain portion follows `DailyBriefingOutput` in `docs/AI_PROMPTS.md`; API metadata is added by the server. `limited` is returned when weather is missing or stale but non-weather priorities can still be shown. `unavailable` is returned when no useful briefing can be produced. Generating a briefing does not mark any reminder or record as done.
 
 ## Records, reminders, sync
 - `GET/POST /records`, `PATCH/DELETE /records/{id}`, `POST /records/from-scan/{scan_id}` (farmer confirms)

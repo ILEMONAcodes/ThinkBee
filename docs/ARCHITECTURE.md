@@ -7,9 +7,9 @@ Browser (PWA: Next.js, Serwist SW, Dexie)
    |  Supabase Auth (email magic link / optional OAuth)
    |  HTTPS REST + SSE with Bearer JWT     |  WebSocket auth event (chat)
    v                                       v
-FastAPI (api/)  ---- Redis (pub/sub, app rate limits, presence)
+FastAPI (api/)  ---- Redis (pub/sub, app rate limits, presence, weather cache)
    |    |
-   |    +---- Providers: Gemini (AI), Web Push, S3 storage
+   |    +---- Providers: Gemini (AI), Open-Meteo (weather), Web Push, S3 storage
    v
 PostgreSQL
 ```
@@ -34,6 +34,8 @@ Modular monolith. Modules own their tables and expose services. Cross-module cal
 - `farms`: farms and units (hives, crop blocks)
 - `scans`: image intake, calls `AIProvider`, stores structured result
 - `assistant`: threads and messages with the AI, streaming
+- `weather`: private location resolution, normalized current weather and forecasts
+- `briefings`: daily advice generation, predictive rules and alert delivery state
 - `records`: records, drafts, sync
 - `reminders`
 - `chat`: spaces, memberships, roles, messages, receipts, mutes, pins, gateway
@@ -42,7 +44,7 @@ Modular monolith. Modules own their tables and expose services. Cross-module cal
 - `moderation`: reports, actions, audit log
 - `admin`: Think Bee admin endpoints
 
-Background work: `arq` (Redis) workers for media processing, push delivery and retention jobs. Scheduled jobs: reminder dispatch and retention clean-up.
+Background work: `arq` (Redis) workers for media processing, push delivery, daily briefing generation and retention jobs. Scheduled jobs: reminder dispatch, configurable morning briefings and retention clean-up.
 
 ## Authentication design
 
@@ -61,7 +63,11 @@ Background work: `arq` (Redis) workers for media processing, push delivery and r
 
 ## AI layer
 
-`providers/ai/base.py` defines `AIProvider` with `analyze_scan`, `answer_question`, `stream_answer`. `gemini.py` implements it. Prompt text lives in `prompts/` and is versioned. Scan output is validated against a Pydantic schema; invalid output is retried once, then returned as a "could not analyse" result with a clear reason. A post-check enforces safety fields (see `docs/AI_SAFETY.md`). The app keeps working if the provider is down.
+`providers/ai/base.py` defines `AIProvider` with `analyze_scan`, `answer_question`, `stream_answer` and `generate_daily_briefing`. `gemini.py` implements it. Prompt text lives in `prompts/` and is versioned. Outputs are validated against Pydantic schemas; invalid output is retried once, then replaced by a safe server-owned fallback. A post-check enforces safety fields and deterministic weather rules (see `docs/AI_SAFETY.md`, `docs/AI_PROMPTS.md` and `docs/AI_WEATHER_INTEGRATION.md`). The app keeps working if the provider is down.
+
+## Weather and location layer
+
+`providers/weather/base.py` defines `WeatherProvider`; `open_meteo.py` implements it and a mock provider supplies tests/local development. The weather module resolves permitted live GPS, a saved private farm pin or State/LGA in that order. Redis caches normalized current conditions and 24–48 hour forecasts by truncated coordinate cell for a configurable one-to-two-hour TTL. Exact coordinates never enter AI prompts or logs. Deterministic rules decide unsafe hive/spraying windows and fungal-risk indicators before AI wording is generated.
 
 ## Environments
 

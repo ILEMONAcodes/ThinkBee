@@ -18,14 +18,16 @@ Extension officers and cooperatives are a later audience. The MVP does not inclu
 
 ## What the MVP does
 
-The MVP now has six features. Feature 5 is extended and feature 6 is new.
+The MVP now has eight features. Feature 5 is extended and feature 6 is new.
 
 1. **Photo scan for crops and hives.** The farmer takes or uploads a photo, picks crop or hive, and receives a likely cause, how sure the AI is, and suggested next steps. The AI can ask follow-up questions or request a better photo.
-2. **Ask the AI.** The farmer can type a farming or beekeeping question and get a clear answer, using their saved farm details and history for context.
+2. **Ask the AI.** The farmer can type a farming or beekeeping question and get a clear answer, using their saved farm details, history, permitted location and available local weather for context.
 3. **History and records.** Every scan the farmer chooses to save becomes an entry in a timeline for that farm or hive. The AI suggests a record (for example, "Possible aphid damage on Block B") and the farmer taps to confirm. Nothing is recorded as done unless the farmer says it was done.
 4. **Reminders.** The farmer can set reminders for inspections, planting, treatments and harvests, and mark them done, postponed or dismissed.
 5. **Farmer profile (extended).** Each farmer signs in through Supabase Auth with an email magic link and receives a unique Think Bee farmer ID. Optional OAuth providers may be enabled later. They add their farm or apiary details, such as location, crops, and number and type of hives, and can register more than one farm. Each farmer now also has a chat profile that other farmers can see, with a name, photo and short bio. The farmer controls what it shows.
 6. **Community chat (new).** Farmers can message each other one to one, join groups and larger communities around a place, crop or topic. Admins create the groups and communities and assign roles. Farmers can share text, photos from the camera or gallery, voice notes and scan results.
+7. **Location-aware weather and daily briefing.** With permission, the Home screen shows current local weather and a short daily briefing that explains how conditions affect scheduled farm tasks and hive inspections. A saved farm location works when live GPS is not available.
+8. **Predictive weather and pest-risk alerts.** The app warns about unsafe spraying or hive-inspection weather and can flag weather patterns that may raise pest or fungal risk. These are risk indicators, never diagnoses, and always show the weather freshness and uncertainty.
 
 ## Community chat
 
@@ -92,7 +94,7 @@ These are proposals for the pilot, to adjust after testing, not promises: a cap 
 
 ## How the AI works
 
-The app sends the farmer's photo or question, plus relevant farm details and past records, to Google Gemini and shows the answer. No model training is needed for the MVP. The quality of the advice depends on the AI service and on the instructions we give it.
+The app sends the farmer's photo or question, plus relevant farm details, past records and privacy-reduced weather context, to Google Gemini and shows the answer. Daily briefings use the same controlled prompt layer. No model training is needed for the MVP. The quality of the advice depends on the AI service, weather freshness and the instructions we give it.
 
 Because wrong advice can harm crops and kill bee colonies, the AI follows these rules:
 
@@ -101,6 +103,8 @@ Because wrong advice can harm crops and kill bee colonies, the AI follows these 
 - It warns about risks to bees and other pollinators whenever it suggests a pest treatment.
 - It reminds the farmer to check product labels and local rules before using any chemical, and to consult an extension officer or expert for serious or uncertain cases.
 - It never claims to detect conditions that a photo cannot show reliably, such as queen status or swarming from sound.
+- It treats weather as context, never proof of a disease or pest, and says when weather is stale or unavailable.
+- It does not recommend opening a hive in rain, wind above 20 km/h or temperatures below 18°C, and it warns against spraying within four hours of rain or in high wind.
 
 These rules also travel with any scan result a farmer shares in chat. The shared card cannot be stripped of its confidence level or its warnings.
 
@@ -115,6 +119,7 @@ The AI service is connected through a replaceable layer, so we can switch provid
 - open the app and view their saved history, reminders and messages already loaded
 - write log entries as drafts, which sync automatically when the connection returns
 - write chat messages, which wait in an outbox and send when the connection returns
+- see a still-valid cached weather summary and briefing; otherwise the app clearly marks weather as unavailable offline
 
 Full offline operation of the AI is not part of the MVP.
 
@@ -124,6 +129,7 @@ The app stores personal details, farm locations, photos and now messages, so it 
 
 - Data is encrypted while traveling to and from the app and while stored.
 - Location is captured only with the farmer's permission.
+- Exact coordinates are used only for location-dependent features, are reduced to a two-decimal privacy cell before entering AI context or logs, and are never shown to other users.
 - Farmer data is not shared with anyone else, including cooperatives and government bodies, without the farmer's consent.
 - Farmers can correct their profile and request deletion of their account and data.
 - Photos sent for analysis are handled under defined retention rules, and farmers are told how their photos are used.
@@ -150,7 +156,7 @@ These ideas are saved for later versions, once the core app has proven useful.
 - Always-listening hands-free "Pocket Mode". Phones restrict background microphone use, so a start-and-stop voice mode comes first.
 - Voice in Igbo, Yoruba, Hausa and French, each tested with real speakers before launch.
 - The animated AI avatar and spoken onboarding.
-- Weather-based daily briefings and flowering or nectar-flow calendars.
+- Flowering or nectar-flow calendars.
 - Extension-officer and cooperative dashboards, and links to government registries.
 - PDF and spreadsheet reports for lenders and extension officers.
 - Running the AI fully offline on the phone.
@@ -171,7 +177,7 @@ These ideas are saved for later versions, once the core app has proven useful.
 Timelines will be set once the decisions below are confirmed. Community chat is added as its own phase because it is the largest new piece of work and needs real-time messaging, moderation tools and safety review.
 
 1. **Foundation.** Supabase email magic-link sign-in, farmer ID, farmer and farm profiles, and the app's basic structure and security.
-2. **AI core.** The AI assistant, the photo scan for crops and hives, and the safety rules for AI answers.
+2. **AI core.** The AI assistant, photo scans, location-aware weather context, daily briefings, predictive weather/pest-risk alerts, and the safety rules for AI answers.
 3. **Records and reminders.** Saved scans, history timeline, draft entries that sync, and reminders.
 4. **Community chat (new).** Chat profiles, direct chats, admin-created groups and communities, roles and admin tools, camera and image upload, voice notes, scan sharing, notifications, outbox for weak signal, reporting and blocking.
 5. **Testing with real farmers.** A small pilot to check that advice is useful, that photos work in field conditions, that sign-up is smooth, and that chat groups stay useful and safe. Fixes from the pilot come before launch.

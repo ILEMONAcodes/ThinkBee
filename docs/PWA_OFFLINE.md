@@ -17,6 +17,7 @@ Show the install card in Me after the user has done something meaningful (first 
 | --- | --- |
 | Sign in, exchange a magic link, recover a session | no, clear connection message; already cached local data remains readable when safe |
 | Open app, see Home, Records, Reminders | yes, from local data |
+| See weather and daily briefing | show only an unexpired cached snapshot/briefing; otherwise show a clear unavailable-offline state |
 | Create or edit log entries and reminders | yes, drafts sync later |
 | Read loaded chats | yes |
 | Write chat messages and attach photos or voice notes | yes, queued in outbox |
@@ -36,4 +37,5 @@ Show the install card in Me after the user has done something meaningful (first 
 - Microphone: ask on first voice note. Safari records `audio/mp4`; others `audio/webm;codecs=opus`. Feature-detect with `MediaRecorder.isTypeSupported`.
 - Vibration is not available on iPhone; treat haptics as optional.
 - Request permissions only when the feature is first used. Denial must leave the rest of the app working.
+- Location: request on first use of the weather feature. Offer the saved farm location as fallback and never infer location from IP address or photo metadata.
 - Storage: request persistent storage (`navigator.storage.persist()`) after install to reduce eviction.

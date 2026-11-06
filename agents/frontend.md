@@ -13,6 +13,7 @@ Folder: `web/`. Read `AGENTS.md`, `docs/UI_DESIGN.md`, `docs/PWA_OFFLINE.md`, `d
 - Local-first data layer (Dexie), outbox, sync, realtime client, push registration.
 - Supabase email magic-link authentication through `@supabase/supabase-js`; optional OAuth providers remain configuration-driven.
 - Camera, gallery and voice recorder components with permission handling on first use.
+- Location permission, saved-farm fallback, weather freshness states and the daily briefing card defined in `docs/AI_WEATHER_INTEGRATION.md`.
 - Motion from `design/motion.ts`, honouring reduced motion.
 - i18n through `next-intl`, English strings only for now, no hard-coded text in components.
 - Accessibility and performance budgets in `AGENTS.md`.

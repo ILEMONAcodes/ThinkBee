@@ -159,7 +159,7 @@ Two columns: a collapsible rail on the left, content on the right. Chat shows li
 This is a real layout. Do not stretch the phone.
 
 - **Left rail** (88px, expands to 264px on hover or pin): logo, the five destinations, theme toggle, profile.
-- **Home**: bento layout. A wide "Scan" hero spanning two columns, a Today card, recent history list, community highlights, all with different heights.
+- **Home**: bento layout. A wide "Scan" hero spanning two columns, a weather/briefing area, a Today card, recent history list and community highlights, all with different heights.
 - **Chats**: three panes. Chat list (360px), conversation (flex), details panel (320px, collapsible) showing members, shared photos, pinned messages, rules.
 - **Scan**: left is photo drop zone or webcam viewfinder, right is the result. File upload is the primary path on desktop.
 - **Records**: master-detail table. Timeline list left, entry detail right. Keyboard friendly.
@@ -186,6 +186,9 @@ Design every screen below in light and dark, mobile and desktop where noted (M =
 - Greeting in Fraunces with the farmer's name and the date. One line of context under it, written plainly (for example "2 reminders today").
 - **Scan hero card**: forest-900 card with `CombField` texture, serif headline "Check a hive or a crop", honey button, bee mark partially cropped at the right edge.
 - Quick tiles (horizontal scroll on mobile): Scan hive, Scan crop, Ask Think Bee, New reminder. Tinted honey-100, comb-100, forest-100, bone, each with a different shape cut so they do not look like a template.
+- **Current weather widget**: temperature, humidity, rain chance, wind and a freshness label. It uses the selected farm or permitted live location, never exposes coordinates, and has distinct loading, cached, stale, unavailable, permission-denied and offline states. Stale weather shows “Updated at…” instead of looking current.
+- **Location permission sheet**: shown when weather first needs live location. Explain the benefit in one sentence, then offer “Use my location”, “Use saved farm location” and “Not now”. Denial keeps the rest of Home usable.
+- **Daily briefing card**: a short weather impact summary, up to three top actions and the strongest current warning. Expand to the full briefing with priorities, risk indicators, hive advice, postponed tasks, source time and limitations. Risk indicators never use diagnosis language.
 - **Today** card: next reminder with mark done, postpone, dismiss.
 - **Recent** list: scans and questions with outlined category pills (Hive, Crop, Question), time, and a one-line preview.
 - **From your communities**: up to three latest posts, avatar stack, unread count.
@@ -241,7 +244,7 @@ Design every screen below in light and dark, mobile and desktop where noted (M =
 ### 8.8 System states (M, D)
 - Offline banner and Sync band, queue counter, "will send when you have signal".
 - Upload progress ring in photo and voice bubbles.
-- Session expired, maintenance, AI temporarily unavailable (the rest of the app keeps working), permission denied, storage full, update available toast.
+- Session expired, maintenance, AI temporarily unavailable (the rest of the app keeps working), weather stale or unavailable, location permission denied, storage full, update available toast.
 - 404 and generic error pages with the bee mark.
 
 ---

@@ -22,8 +22,13 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [ ] BE: `AIProvider` interface and Gemini implementation, structured scan output, prompt versioning
 - [ ] BE: scan endpoint with image handling (EXIF strip, resize), assistant thread endpoint with streaming
 - [ ] BE: safety post-checks (required warning fields, confidence present)
+- [ ] BE: WeatherProvider interface, OpenMeteo implementation, Redis geohash caching
+- [ ] BE: Location-aware context builder for Gemini prompts (GPS + Farm location + Weather)
+- [ ] BE: Daily briefing generator endpoint & automated morning alerts
 - [ ] FE: scan flow (pick, capture, review, analysing, result)
 - [ ] FE: Ask Think Bee thread, feedback actions
+- [ ] FE: Location permission modal & current weather widget on Home screen
+- [ ] FE: Daily briefing card on Home screen
 - [ ] AI unavailable state
 
 ## Phase 3: Records and reminders

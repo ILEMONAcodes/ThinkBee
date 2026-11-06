@@ -1,0 +1,53 @@
+{
+  "context_version": "1",
+  "request": {
+    "request_id": "server-generated-id",
+    "task": "scan_analysis|question_answering|clarification|daily_briefing",
+    "requested_at": "2026-11-06T06:00:00+01:00",
+    "locale": "en-NG"
+  },
+  "farm": {
+    "farm_id": "internal-id-or-null",
+    "name": "Farm name or null",
+    "kind": "crops|bees|both|unknown",
+    "state": "Nigerian state or null",
+    "lga": "Local government area or null",
+    "crops": ["crop name"],
+    "hive_count": 0,
+    "hive_types": ["hive type"]
+  },
+  "location": {
+    "source": "device_gps|saved_pin|state_lga|none",
+    "permission": "granted|denied|not_requested|not_available",
+    "label": "General area only",
+    "latitude_truncated": null,
+    "longitude_truncated": null,
+    "precision": "two_decimals|administrative_area|none"
+  },
+  "weather": {
+    "status": "live|cached|stale|unavailable",
+    "provider": "open_meteo|mock|cache|none",
+    "observed_at": null,
+    "expires_at": null,
+    "temperature_c": null,
+    "humidity_percent": null,
+    "rain_probability_next_4h_percent": null,
+    "rain_probability_next_24h_percent": null,
+    "wind_speed_kmh": null,
+    "wind_direction": null,
+    "forecast_days": [],
+    "limitations": []
+  },
+  "history": {
+    "conversation_messages": [],
+    "recent_records": [],
+    "recent_scans": [],
+    "scheduled_tasks": []
+  },
+  "availability": {
+    "farm_profile_available": false,
+    "location_available": false,
+    "weather_available": false,
+    "history_available": false
+  }
+}

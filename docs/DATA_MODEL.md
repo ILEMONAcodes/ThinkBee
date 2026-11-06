@@ -17,6 +17,10 @@ PostgreSQL. UUID primary keys (v7). `created_at`, `updated_at` on every table. S
 - `assistant_messages`: id, thread_id, role (user, assistant), body, attachments, safety (jsonb), feedback
 - `records`: id, user_id, farm_id, unit_id, type, title, note, occurred_at, source (manual, scan), scan_id, status (draft, saved), client_id (unique per user)
 - `reminders`: id, user_id, farm_id, unit_id, type, title, due_at, repeat_rule, state (open, done, postponed, dismissed), client_id
+- `daily_briefings`: id, user_id, farm_id, local_date, status (ready, limited, unavailable), content (jsonb, validated), prompt_version, weather_observed_at, generated_at; unique `(user_id, farm_id, local_date)`
+- `predictive_alerts`: id, user_id, farm_id, kind, risk_level, evidence (jsonb), rule_version, forecast_start, forecast_end, expires_at, state (pending, sent, read, expired), created_at
+
+Normalized weather snapshots are cached in Redis rather than persisted as user history. A briefing stores only the weather observation timestamp and privacy-reduced evidence needed to explain its advice; it does not store exact live GPS coordinates.
 
 ## Chat
 - `spaces`: id, kind (direct, group, community, topic_room), parent_space_id (for topic rooms), name, description, photo_key, visibility (public, private), posting_mode (everyone, admins_only), invite_code, rules_text, created_by, closed_at
@@ -38,3 +42,4 @@ PostgreSQL. UUID primary keys (v7). `created_at`, `updated_at` on every table. S
 - `scan_shares.snapshot` makes shared cards immutable even if the original scan is later edited or deleted.
 - Deleting an account: set `users.status=deleted`, remove chat profile and farm data, null `sender_id` display as "Deleted user", delete scan images, queue media deletion, then delete the Supabase Auth user with the backend service-role credential.
 - Indexes: `users (supabase_user_id)` unique, `messages (space_id, seq desc)`, `messages (client_msg_id, sender_id)` unique, `memberships (user_id)`, `reports (status, created_at)`.
+- Additional indexes: `daily_briefings (user_id, farm_id, local_date)` unique, `predictive_alerts (user_id, farm_id, state, expires_at)`.

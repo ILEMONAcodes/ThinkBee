@@ -31,6 +31,7 @@ Think Bee is a Progressive Web App for farmers and beekeepers in Nigeria. A farm
 | Realtime | FastAPI WebSockets, Redis pub/sub for fan-out |
 | Files | S3-compatible object storage, upload through presigned URLs |
 | AI | Google Gemini through an `AIProvider` interface (`docs/AI_SAFETY.md`) |
+| Weather | Open-Meteo through a `WeatherProvider` interface, cached in Redis |
 | Auth | Supabase Auth free tier, email magic links first, optional OAuth; FastAPI validates Supabase JWTs |
 | Tests | Vitest and Playwright (web), Pytest and httpx (api) |
 | Local dev | Docker Compose for Postgres, Redis, and an S3 emulator |
@@ -57,8 +58,8 @@ Do not add a major dependency that is not listed here without writing a short en
 └─ api/             FastAPI service
    ├─ app/
    │  ├─ core/      config, security, logging, rate limits
-   │  ├─ modules/   auth, users, farms, scans, assistant, records, reminders, chat, uploads, push, moderation, admin
-   │  ├─ providers/ ai/, storage/, push/
+   │  ├─ modules/   auth, users, farms, scans, assistant, weather, briefings, records, reminders, chat, uploads, push, moderation, admin
+   │  ├─ providers/ ai/, weather/, storage/, push/
    │  ├─ db/        models, session, migrations
    │  └─ main.py
    └─ tests/
@@ -75,12 +76,14 @@ Each backend module holds `router.py`, `schemas.py`, `service.py`, `models.py`. 
 - A scan result shared into chat keeps its confidence level and warnings. The card is rendered from the stored result and cannot be edited by the sender.
 - The AI does not read group chats, does not post in them, and does not listen to voice notes.
 - Nothing is recorded as done unless the farmer confirms it. AI suggests, farmer taps to confirm.
-- Full rules and the system prompt: `docs/AI_SAFETY.md` and `prompts/ai_system_prompt.md`.
+- Weather is context, not proof of a diagnosis. Stale or missing weather is labeled and cannot drive predictive alerts.
+- Do not recommend hive inspections during rain, wind above 20 km/h or temperatures below 18°C. Do not recommend spraying within four hours of rain or in high wind.
+- Full rules and prompts: `docs/AI_SAFETY.md`, `docs/AI_PROMPTS.md`, `docs/AI_WEATHER_INTEGRATION.md` and `prompts/`.
 
 **Privacy**
 - Chat profiles show only what the farmer chose. Authentication email addresses are never shown to other users. Exact farm coordinates are never exposed to other users.
 - Strip EXIF and GPS data from every uploaded photo on the server.
-- Encrypt in transit and at rest. Never log message bodies, email addresses, auth tokens or photo URLs.
+- Encrypt in transit and at rest. Never log message bodies, email addresses, auth tokens, photo URLs or exact coordinates.
 - Account deletion must remove or anonymise the user's data. Build the deletion path in phase 1, not later.
 - Think Bee farmer IDs are internal identifiers, never described as government IDs.
 
