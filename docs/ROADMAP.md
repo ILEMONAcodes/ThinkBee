@@ -5,7 +5,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 ## Phase 0: Setup
 - [x] Repo, `web/` Next.js app, `api/` FastAPI app, Docker Compose (Postgres, Redis, S3 emulator)
 - [x] Tokens, fonts, Tailwind wiring (`design/tokens.css`), motion presets
-- [ ] CI: lint, type check, tests on both sides
+- [x] CI: lint, type check, tests on both sides
 - [ ] OpenAPI to TypeScript client generation
 - [ ] MSW mock server from the OpenAPI schema
 
