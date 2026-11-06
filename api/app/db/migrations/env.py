@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.config import get_settings
 from app.db.models import Base
+from app.modules.users.models import User  # noqa: F401 -- register tables for Alembic
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
@@ -51,7 +52,10 @@ async def run_migrations_online() -> None:
     await connectable.dispose()
 
 
-if context.is_offline_mode():
+provided_connection = config.attributes.get("connection")
+if provided_connection is not None:
+    do_run_migrations(provided_connection)
+elif context.is_offline_mode():
     run_migrations_offline()
 else:
     run(run_migrations_online())

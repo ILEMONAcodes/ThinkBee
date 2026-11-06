@@ -20,6 +20,14 @@ The verifier accepts only configured asymmetric signing algorithms and the Supab
 - `POST /auth/bootstrap` (authenticated, idempotent) -> maps the Supabase user to a local user, creates the unique farmer ID on first use, returns `{user, is_new}`
 - `DELETE /me` -> starts account deletion
 
+Implemented foundation routes:
+- `POST /auth/bootstrap` returns `200 {user, is_new}`. It takes no request body. First use creates a UUIDv7 account and a `TB-` plus eight-character Crockford base32 farmer ID; retries and concurrent requests return the same account. Only the request that creates it returns `is_new: true`. Clients cannot set account IDs, roles or status.
+- `GET /me` validates the Supabase token and the current local account status, then returns the same `user` shape. An unmapped Supabase user receives `409 auth_bootstrap_required` and must call bootstrap first.
+- The private account response contains `id`, `farmer_id`, `status`, `is_think_bee_admin`, `locale`, `last_seen_at`, `created_at` and `updated_at`. It contains no email, Supabase subject, token or session credentials. `last_seen_at` is initialized at account creation; tracking later activity is not implemented yet.
+- Both routes reject suspended/deleted accounts with `403 account_suspended` / `account_deleted`. They return `503 account_store_unavailable` for a temporary database failure; bootstrap may return `503 farmer_id_unavailable` after exhausting the configured collision retries. Retrying bootstrap after a lost response is safe.
+
+Application routes use `require_current_user`; only bootstrap uses the lower-level `require_authenticated_identity` dependency so a first-time user can create their mapping. The account summary is not a public chat profile. Profile editing, farms and deletion are the next foundation task.
+
 ## Me and profiles
 - `GET /me`, `PATCH /me`
 - `GET /me/chat-profile`, `PATCH /me/chat-profile`

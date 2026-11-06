@@ -36,3 +36,4 @@ Open decisions from the PRD never block work. Each has a working default. Put th
 | 2026-11-06 | MinIO for the local S3-compatible emulator | Keeps upload development local and matches the storage contract |
 | 2026-11-06 | Supabase Auth free tier with email magic links and optional OAuth | Removes paid SMS OTP dependencies and delegates auth sessions, refresh and rate limits |
 | 2026-11-06 | Open-Meteo behind `WeatherProvider`, with privacy-cell Redis caching | Provides no-key weather data, controls cost/rate limits, and keeps provider details replaceable |
+| 2026-11-06 | Bootstrap uses Postgres uniqueness constraints with conflict-safe inserts; farmer ID collision retries default to 5 | Concurrent sign-ins keep one account and one farmer ID. `FARMER_ID_MAX_ATTEMPTS` and `DEFAULT_LOCALE` are configurable. |

@@ -11,7 +11,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 
 ## Phase 1: Foundation
 - [x] BE: Supabase Auth setup (Email / Magic Link), token verification middleware
-- [ ] BE: farmer ID generation, Supabase user mapping and session validation
+- [x] BE: farmer ID generation, Supabase user mapping and session validation
 - [ ] BE: users, farms, farm units (hives, crop blocks), account deletion
 - [ ] FE: app shell, floating nav, desktop rail, theme switch
 - [ ] FE: onboarding (splash, welcome, email/magic link auth, profile, add farm)
@@ -58,3 +58,13 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [ ] Moderation process review
 - [ ] Analytics for the success measures in the PRD (privacy-safe)
 - [ ] Pilot build, feedback loop, fixes
+
+## Handoff — 2026-11-06
+
+Supabase project URLs and key roles match. Live read-only checks passed for the publishable key, email provider, asymmetric JWKS and backend admin credential. Magic-link delivery and callback redirects still need a real browser sign-in during onboarding.
+
+Implemented `POST /auth/bootstrap`, `GET /me`, UUIDv7 local accounts, unique farmer IDs, retry/concurrency handling and a shared active-account guard. The initial users migration was tested forward and backward in an isolated Postgres schema; run `alembic upgrade head` against the local app database before using these routes. No migration was applied to the configured app database in this session.
+
+Validation: 29 API tests and 7 web tests passed; both lint/type checks and OpenAPI/type/mock generation passed. Local API checks used the existing Python 3.11 environment and Postgres 18; CI is configured for the required Python 3.12 and Postgres 17, with database integration tests enabled.
+
+Next: users/profile editing, farms, farm units and account deletion. Working defaults: English (`en-NG`), one active Supabase account per browser profile, five configurable farmer-ID collision attempts. Full-stack role confirmed; some assets are missing and the team permits temporary online assets for future UI work.

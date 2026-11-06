@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     supabase_jwks_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
     supabase_jwt_leeway_seconds: int = Field(default=30, ge=0, le=300)
     supabase_service_role_key: SecretStr = SecretStr("")
+    farmer_id_max_attempts: int = Field(default=5, ge=1, le=20)
+    default_locale: str = "en-NG"
 
     @property
     def allowed_origin_list(self) -> list[str]:
