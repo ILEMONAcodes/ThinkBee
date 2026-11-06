@@ -1,0 +1,78 @@
+{
+  "Metadata": {
+    "title": "Think Bee",
+    "description": "Farm and hive guidance that stays useful on weak connections."
+  },
+  "Navigation": {
+    "home": "Home",
+    "chats": "Chats",
+    "scan": "Scan",
+    "records": "Records",
+    "me": "Me"
+  },
+  "Theme": {
+    "toggle": "Change colour theme"
+  },
+  "Home": {
+    "eyebrow": "Your farm today",
+    "greeting": "Good morning",
+    "summary": "2 reminders need your attention today.",
+    "scanKicker": "Photo check",
+    "scanTitle": "Check a hive or a crop",
+    "scanBody": "Take a clear photo. Think Bee will show likely causes and safe next steps.",
+    "scanAction": "Start a scan",
+    "quickTitle": "What do you need?",
+    "scanHive": "Scan a hive",
+    "scanCrop": "Scan a crop",
+    "ask": "Ask Think Bee",
+    "newReminder": "New reminder",
+    "todayTitle": "Today",
+    "todayTime": "4:30 pm",
+    "todayReminder": "Check the top-bar hive",
+    "todayFarm": "North field apiary",
+    "markDone": "Mark done",
+    "postpone": "Postpone",
+    "recentTitle": "Recent",
+    "viewAll": "View all",
+    "recentHive": "Possible wax moth activity",
+    "recentHiveMeta": "Hive 04 · 2 hours ago",
+    "recentCrop": "Cassava leaf check",
+    "recentCropMeta": "South block · Yesterday",
+    "recentQuestion": "Why are bees gathering outside?",
+    "recentQuestionMeta": "Question · Monday",
+    "communityTitle": "From your communities",
+    "communityName": "Beekeeping beginners",
+    "communityPost": "Three farmers shared updates about feeding during the rainy week.",
+    "communityUnread": "3 unread posts",
+    "offline": "You are offline. Saved information is still available."
+  },
+  "Feature": {
+    "chatsTitle": "Your conversations",
+    "chatsBody": "Direct chats, groups and communities will appear here.",
+    "recordsTitle": "Records and reminders",
+    "recordsBody": "Saved scans, field notes and upcoming work will stay available offline.",
+    "meTitle": "Your Think Bee profile",
+    "meBody": "Manage your public chat profile, farms, privacy and app settings.",
+    "adminTitle": "Think Bee administration",
+    "adminBody": "Reports, spaces and account actions will be managed here.",
+    "emptyLabel": "This area is ready for its Phase 1 feature work.",
+    "backHome": "Back to Home"
+  },
+  "Scan": {
+    "back": "Back",
+    "step": "Step 1 of 4",
+    "title": "What are you checking?",
+    "body": "Choose one so the photo guidance matches what you need.",
+    "hive": "A hive",
+    "hiveHint": "Frames, brood, comb or the outside of a hive",
+    "crop": "A crop",
+    "cropHint": "Leaves, stems, fruit or visible pest damage",
+    "notice": "A scan gives likely causes, not a confirmed diagnosis."
+  },
+  "Onboarding": {
+    "title": "Clear guidance for farms and hives",
+    "body": "Scan a crop or hive, keep records, and learn from other farmers.",
+    "action": "Get started",
+    "skip": "Skip for now"
+  }
+}

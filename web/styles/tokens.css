@@ -1,0 +1,155 @@
+/* Think Bee design tokens (Tailwind v4, CSS-first).
+   Base hues are sampled from the Macaney website:
+   honey orange #FC9900, deep green #022C22, band green #034E3B,
+   feature green #006046, pill mint #65E8B6, comb yellow #FFD144,
+   bark brown #4C3823, page #FAFAFA, nav #F8F8F6.
+   Other steps are tints and shades of those hues only. Do not add new hues. */
+
+@theme {
+  /* Honey (primary action) */
+  --color-honey-50:  #FFF8EB;
+  --color-honey-100: #FFEFD0;
+  --color-honey-200: #FFDC9E;
+  --color-honey-300: #FFC65E;
+  --color-honey-400: #FEAE2B;
+  --color-honey-500: #FC9900; /* brand orange */
+  --color-honey-600: #D98100;
+  --color-honey-700: #A86300;
+  --color-honey-800: #6E4300;
+  --color-honey-900: #3D2500;
+
+  /* Forest (surfaces, text on light) */
+  --color-forest-50:  #EEF8F3;
+  --color-forest-100: #D3EEE2;
+  --color-forest-200: #A6DCC4;
+  --color-forest-300: #65E8B6; /* brand mint, used on dark only */
+  --color-forest-400: #1FA97C;
+  --color-forest-500: #008A63;
+  --color-forest-600: #006046; /* brand feature green */
+  --color-forest-700: #034E3B; /* brand band green */
+  --color-forest-800: #034836;
+  --color-forest-900: #022C22; /* brand deep green */
+  --color-forest-950: #011A14;
+
+  /* Comb (highlights, badges, honeycomb art) */
+  --color-comb-100: #FFF4CC;
+  --color-comb-300: #FFE27F;
+  --color-comb-400: #FFD144; /* brand comb yellow */
+  --color-comb-600: #B8921A;
+
+  /* Bark (earth neutral, from the site's top strip) */
+  --color-bark-100: #EFE7DE;
+  --color-bark-300: #C9B8A3;
+  --color-bark-500: #8A6B4A;
+  --color-bark-700: #4C3823; /* brand bark */
+  --color-bark-900: #2A1E12;
+
+  /* Paper (light neutrals) */
+  --color-paper:  #FAFAFA;
+  --color-bone:   #F8F8F6;
+  --color-fog:    #ECEEEA;
+  --color-ink:    #12201B;   /* forest-tinted near-black, body text on light */
+  --color-ink-2:  #3D4A44;
+  --color-ink-3:  #66736D;
+
+  /* Status (kept inside the palette where possible) */
+  --color-ok:      #008A63;
+  --color-warn:    #FC9900;
+  --color-danger:  #B3261E;   /* only non-brand hue; errors and destructive actions only */
+  --color-danger-bg: #FCE9E7;
+
+  /* Type */
+  --font-display: var(--font-fraunces), "Georgia", serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Radius */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  /* Shadow (soft, green-tinted, never pure black) */
+  --shadow-card: 0 1px 2px rgb(2 44 34 / 0.06), 0 8px 24px -12px rgb(2 44 34 / 0.18);
+  --shadow-float: 0 12px 32px -8px rgb(2 44 34 / 0.28);
+  --shadow-press: inset 0 2px 6px rgb(2 44 34 / 0.18);
+
+  /* Motion */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring-ish: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur-instant: 90ms;
+  --dur-fast: 160ms;
+  --dur-base: 260ms;
+  --dur-slow: 420ms;
+  --dur-scene: 640ms;
+}
+
+/* Semantic roles. Components use these, never raw palette steps. */
+:root {
+  color-scheme: light;
+  --bg:          var(--color-paper);
+  --bg-raised:   #FFFFFF;
+  --bg-sunken:   var(--color-bone);
+  --bg-brand:    var(--color-forest-900);
+  --bg-brand-2:  var(--color-forest-700);
+  --text:        var(--color-ink);
+  --text-2:      var(--color-ink-2);
+  --text-3:      var(--color-ink-3);
+  --text-on-brand: #FFFFFF;
+  --text-on-honey: var(--color-forest-900);
+  --accent:      var(--color-honey-500);
+  --accent-press: var(--color-honey-600);
+  --link:        var(--color-forest-600);
+  --line:        rgb(2 44 34 / 0.10);
+  --bubble-in:   #FFFFFF;
+  --bubble-out:  var(--color-forest-700);
+  --bubble-out-text: #FFFFFF;
+  --focus:       var(--color-honey-500);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:          var(--color-forest-950);
+  --bg-raised:   #0A2A21;
+  --bg-sunken:   #01140F;
+  --bg-brand:    var(--color-forest-900);
+  --bg-brand-2:  var(--color-forest-800);
+  --text:        #F1F6F3;
+  --text-2:      #B9C9C1;
+  --text-3:      #84968D;
+  --accent:      var(--color-honey-500);
+  --accent-press: var(--color-honey-400);
+  --link:        var(--color-forest-300);
+  --line:        rgb(255 255 255 / 0.09);
+  --bubble-in:   #0F3328;
+  --bubble-out:  var(--color-honey-500);
+  --bubble-out-text: var(--color-forest-900);
+  --focus:       var(--color-forest-300);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: var(--color-forest-950);
+    --bg-raised: #0A2A21;
+    --bg-sunken: #01140F;
+    --text: #F1F6F3;
+    --text-2: #B9C9C1;
+    --text-3: #84968D;
+    --line: rgb(255 255 255 / 0.09);
+    --bubble-in: #0F3328;
+    --bubble-out: var(--color-honey-500);
+    --bubble-out-text: var(--color-forest-900);
+    --link: var(--color-forest-300);
+    --focus: var(--color-forest-300);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 1ms; --dur-base: 1ms; --dur-slow: 1ms; --dur-scene: 1ms;
+  }
+}
