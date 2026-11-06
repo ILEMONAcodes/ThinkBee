@@ -12,3 +12,5 @@ uvicorn app.main:app --reload
 ```
 
 Quality checks: `ruff check .`, `mypy app tests`, and `pytest`.
+
+Export the current OpenAPI schema with `python scripts/export_openapi.py --output openapi.json`.

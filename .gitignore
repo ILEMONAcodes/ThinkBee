@@ -34,3 +34,7 @@ dist/
 
 # Local infrastructure
 .minio/
+
+# Generated API contract
+api/openapi.json
+web/lib/api/schema.d.ts

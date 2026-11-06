@@ -1,3 +1,3 @@
 # API client
 
-The generated OpenAPI client and shared `AppError` mapping will live here.
+Run the backend schema exporter, then `npm run generate:api` from `web/`. The generated `schema.d.ts` is intentionally ignored and recreated in CI so generated files do not enter Git history.
