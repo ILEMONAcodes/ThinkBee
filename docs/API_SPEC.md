@@ -26,7 +26,7 @@ Implemented foundation routes:
 - The private account response contains `id`, `farmer_id`, `status`, `is_think_bee_admin`, `locale`, `last_seen_at`, `created_at` and `updated_at`. It contains no email, Supabase subject, token or session credentials. `last_seen_at` is initialized at account creation; tracking later activity is not implemented yet.
 - Both routes reject suspended/deleted accounts with `403 account_suspended` / `account_deleted`. They return `503 account_store_unavailable` for a temporary database failure; bootstrap may return `503 farmer_id_unavailable` after exhausting the configured collision retries. Retrying bootstrap after a lost response is safe.
 
-Application routes use `require_current_user`; only bootstrap uses the lower-level `require_authenticated_identity` dependency so a first-time user can create their mapping. The account summary is not a public chat profile. Profile editing, farms and deletion are the next foundation task.
+Application routes use `require_current_user`. Bootstrap and account deletion use the lower-level `require_authenticated_identity`: bootstrap creates a first-time mapping, while deletion accepts retries for deleted accounts and lets suspended users remove their data. All writes lock the current account row until commit so a concurrent deletion cannot be followed by a new farm or profile write. The account summary is not a public chat profile.
 
 ## Me and profiles
 - `GET /me`, `PATCH /me`
@@ -35,9 +35,33 @@ Application routes use `require_current_user`; only bootstrap uses the lower-lev
 - `GET /users/search?q=` (farmer ID)
 - `POST /blocks/{user_id}`, `DELETE /blocks/{user_id}`, `GET /blocks`
 
+Implemented owner profile operations:
+- `PATCH /me` accepts `{locale}` from `SUPPORTED_LOCALES` (default `en-NG`) and returns the private account summary. Identity, status and admin fields are not editable.
+- `GET /me/chat-profile` returns `404 profile_not_found` until the owner creates it.
+- `PATCH /me/chat-profile` creates or updates the owner's profile. `display_name` is required on creation. Editable fields: `display_name` (1–80 characters), `bio` (up to 280), `area_state`, `area_lga`, `show_crops` and `show_hive_type`. Display name and bio cannot be null; an empty bio clears it. Setting both area fields to null hides the area. LGA requires a state. Visibility flags default to false and farm details are never copied into this profile automatically.
+- Profile responses contain those fields plus `photo_key`, `created_at`, `updated_at`; they contain no email, identity subject or exact coordinates. Avatar assignment awaits the validated upload pipeline, so clients cannot submit `photo_key` yet. Public profile lookup, search and blocking remain phase 4 work.
+- All input objects reject unknown fields. Empty patches and invalid values return `422` using the shared error envelope, without echoing submitted values.
+
+Account deletion:
+- `DELETE /me` takes no body and returns `202 {status: pending|completed, requested_at, completed_at}`. It always targets the bearer token's account; clients cannot supply another user's ID.
+- The first request atomically marks the local account deleted, clears profile/preferences and private farms/units, and saves an `account_deletions` job. The minimal identity tombstone prevents old tokens from recreating the account. Normal application routes immediately reject the old account.
+- Retries return the same deletion request. A suspended account can request deletion; an unmapped identity receives `409 auth_bootstrap_required`. A failed local transaction returns a retryable error and leaves the account/data intact.
+- The ARQ worker polls durable pending jobs each minute and deletes the Supabase Auth user using the backend credential after local cleanup commits. Timeouts, missing configuration, rejected credentials and provider failures remain pending with capped exponential retry. A Supabase `user_not_found` error is treated as an already-completed deletion; other errors do not imply success.
+- The frontend must show confirmation before calling DELETE and clear its local private data and Supabase session after acceptance. The worker continues without the browser or a valid session. Future chat, scan, media and reminder modules must extend local cleanup before they ship.
+
 ## Farms
 - `GET/POST /farms`, `GET/PATCH/DELETE /farms/{id}`
 - `GET/POST /farms/{id}/units`, `PATCH/DELETE /units/{id}`
+
+Implemented farm operations are owner-only, including for admins. Missing and other users' IDs both return `404 farm_not_found` / `unit_not_found` without revealing existence or coordinates.
+
+- `POST /farms` accepts `{client_id: UUID, name, kind: crops|bees|both, state?, lga?, lat?, lng?}`. Name is 1–120 characters; LGA requires a state. A private saved pin must supply both valid coordinates or neither. The submitted pin reflects the farmer's permission; no location is inferred.
+- `PATCH /farms/{id}` accepts name, kind and location fields. Omitted fields stay unchanged. Coordinates must be changed or cleared together. Changing farm kind is rejected with `409 farm_kind_conflict` if existing units are incompatible.
+- `POST /farms/{id}/units` accepts `{client_id: UUID, name, kind: hive|crop_block, details?}`. A hive belongs to `bees` or `both`; a crop block belongs to `crops` or `both`. `details` accepts `hive_type` for hives, or `crop` and positive `area_hectares` for crop blocks. Unknown or incompatible details are rejected.
+- `PATCH /units/{id}` accepts name and details; an included details object replaces the prior details (`{}` clears it). Unit kind, farm, owner and client ID cannot be changed.
+- Creates return `201` with the saved object, including its UUIDv7 ID, client ID and timestamps. Units include `farm_id`. Retrying an existing client ID in the same owner/farm scope returns the stored object without applying the retry's fields. Concurrent creation is serialized with account deletion and capacity checks. Caps default to 20 farms per user and 200 units per farm; retries still succeed at the cap.
+- `GET /farms` and `GET /farms/{id}/units` accept `cursor` (UUID) and `limit`. Responses are `{items, next_cursor}` ordered by ID; the final page has a null cursor. Default page size is 50, maximum 100, configurable. `GET /farms/{id}` returns the farm, with exact coordinates only to its owner.
+- Deletes return `204`; deleting a farm cascades to its units. A retry for an absent item returns `404`, which a deletion outbox can treat as already removed. Creation retries are deduplicated while the resource exists; clients must process a resource's writes in order and discard pending creates after a confirmed deletion.
 
 ## Scans and assistant
 - `POST /uploads/presign` {purpose: scan|chat_image|chat_audio|avatar, content_type, bytes} -> {upload_url, key}
