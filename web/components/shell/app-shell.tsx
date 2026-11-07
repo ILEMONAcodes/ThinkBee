@@ -1,13 +1,44 @@
-import type { ReactNode } from "react";
+"use client";
 
+import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useEffect, useRef, type ReactNode } from "react";
+
+import { ConnectionStatus } from "@/components/shell/connection-status";
 import { AppNavigation } from "@/components/shell/navigation";
+import { screenSlide } from "@/lib/motion";
+import { isImmersiveRoute } from "@/lib/navigation";
+import { usePreferences } from "@/lib/state/preferences";
 
 export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
+  const pathname = usePathname();
+  const t = useTranslations("Shell");
+  const pinned = usePreferences((state) => state.railPinned);
+  const immersive = isImmersiveRoute(pathname);
+  const content = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = content.current;
+    if (!element?.animate) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const animation = element.animate(
+      reduced ? [{ opacity: 0 }, { opacity: 1 }] : [
+        { opacity: 0, transform: `translateX(${screenSlide.initial.x}px)` },
+        { opacity: 1, transform: "translateX(0)" },
+      ],
+      {
+        duration: reduced ? 1 : screenSlide.animate.transition.duration * 1000,
+        easing: `cubic-bezier(${screenSlide.animate.transition.ease.join(",")})`,
+      },
+    );
+    return () => animation.cancel();
+  }, [pathname]);
   return (
-    <div className="min-h-dvh bg-app text-app">
-      <AppNavigation />
-      <main className="min-h-dvh pb-28 lg:ml-[88px] lg:pb-0">
-        <div className="mx-auto max-w-[1280px] px-5 pb-10 pt-[max(24px,env(safe-area-inset-top))] sm:px-8 lg:px-10 lg:py-10">
+    <div className="app-shell" data-pinned={pinned} data-immersive={immersive}>
+      <a className="skip-link" href="#main-content">{t("skip")}</a>
+      {!immersive ? <AppNavigation /> : null}
+      <main className="shell-main" id="main-content" tabIndex={-1}>
+        <ConnectionStatus />
+        <div className="shell-content" key={pathname} ref={content}>
           {children}
         </div>
       </main>

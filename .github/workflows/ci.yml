@@ -43,6 +43,26 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Build for browser tests
+        run: npm run build -- --webpack
+
+      - name: Check Home JavaScript budget
+        run: npm run check:bundle
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests
+        run: npm run test:e2e
+
+      - name: Upload browser screenshots and failure traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shell-browser-results
+          path: web/test-results/
+          retention-days: 7
+
   api:
     name: api
     runs-on: ubuntu-latest

@@ -7,7 +7,23 @@ npm ci
 npm run dev
 ```
 
-Quality checks: `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
+Quality checks:
+
+```sh
+npm run lint
+npm run typecheck
+npm test
+npm run build -- --webpack
+npm run check:bundle
+npx playwright install chromium
+npm run test:e2e
+```
+
+Webpack is the verified production-build path on hosts where Turbopack cannot create its required process/port. The bundle check requires a completed build and rejects initial Home JavaScript at or above 170 KB gzipped. Browser tests start the production server on port 3100 and cover mobile/desktop light and dark layouts, keyboard navigation, reduced motion, offline settings, denied storage, slow network/CPU and enlarged text. Screenshots and failure traces go to ignored `test-results/`; CI retains them for seven days. With Chrome already installed locally, use `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e` instead of installing Chromium.
+
+The app shell uses floating navigation below 768px and an expandable, pinnable rail on larger screens. Scan and nested chat routes hide shell navigation. Appearance follows the device by default; choose a theme in Me or cycle it with the theme button. Theme and rail preferences persist locally and theme follows device changes while in system mode.
+
+Home currently shows empty sections; scans, records and chats are connected in later roadmap tasks. The offline band and appearance controls work on an already loaded page. Offline reload, cached pages, installation and the service worker belong to the subsequent PWA task.
 
 Authentication uses `@supabase/supabase-js` with email magic links. See `lib/auth/README.md`; the browser receives only the Supabase URL and publishable key.
 

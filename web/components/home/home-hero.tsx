@@ -8,7 +8,7 @@ export async function HomeHero() {
   const t = await getTranslations("Home");
   return (
     <section className="relative min-h-80 overflow-hidden rounded-lg bg-brand p-7 text-on-brand shadow-card sm:p-9">
-      <CombField className="absolute -right-8 -top-3 rotate-12 opacity-70" count={12} />
+      <CombField className="absolute -right-8 -top-3 rotate-12 opacity-15" count={12} />
       <div className="relative z-10 flex h-full max-w-xl flex-col items-start">
         <p className="rounded-pill border border-mint/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-mint">
           {t("scanKicker")}
