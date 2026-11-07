@@ -3,7 +3,9 @@
 This document is for the Figma designer and for the frontend agent. It is binding. If you are about to deviate from it, stop and write the reason in `docs/DECISIONS.md` first.
 
 Assets referenced here live in `assets/`:
-- `assets/brand/macaney-logo.png` — the Macaney bee and wordmark.
+- `assets/wordmark/` and `assets/short-form/` — the Think Bee product wordmark and short mark.
+- `assets/app-icons/` — the Think Bee PWA, browser and notification icons.
+- `assets/brand/macaney-logo.png` — the Macaney parent-brand mark, used only for creator attribution such as “by Macaney”.
 - `assets/brand/macaney-website-palette-reference.png` — the Macaney website. **This is the colour source.** Palette is strict.
 - `assets/inspiration/ref-01-assistant-light-soft-cards.png` — light assistant app.
 - `assets/inspiration/ref-02-chat-list-and-room.png` — chat list and conversation.
@@ -96,7 +98,7 @@ Headlines use tight letter spacing (-0.01em). Numbers in timelines and reminders
 
 - Icons: **Phosphor**, regular weight for inactive, fill for active tab, 24px, stroke consistent. Custom icons needed: hive, frame, queen cage (not used in MVP), smoker, comb cell, crop leaf, pest. Draw them in the same stroke style or use Phosphor equivalents.
 - The **honeycomb** is the brand device. Build a hex grid component (`<CombField />`) that renders flat hexagons. Use it as: hero card texture at 6 to 10% opacity, loading state, empty-state illustration, avatar frame for groups, and the shape of the scan shutter button. Do not tile it across entire screens.
-- The **bee** comes from the logo. Provide a simplified bee mark (SVG) for loading, empty states and the assistant avatar. It must be a traced version of the logo bee, not a new mascot. Ask for a vector in `docs/ASSET_REQUESTS.md`.
+- The **bee** comes from the supplied Think Bee short-form SVG. Use it for loading, empty states and the assistant avatar; do not redraw it as a new mascot.
 - Photography: real hives, real crops, real Nigerian farmers and beekeepers, supplied by Macaney. Never stock images of people. Rounded 24, subtle forest-tinted overlay where text sits on a photo.
 - Reference 01 and 03 use glossy 3D forms. Take the *idea* (a bold, tactile hero object per screen) and express it with a layered honeycomb cluster and a bee, rendered in flat shapes with soft inner shading. Do not import blue or red 3D mascots.
 

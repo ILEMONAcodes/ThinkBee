@@ -36,6 +36,8 @@ Banned in messages: emoji, jokes, puns, bee or honey wordplay, pop-culture refer
 
 No `Co-authored-by`, no "Generated with" trailers, no tool signatures. One logical change per commit. Do not commit generated files, secrets, or `.env`.
 
+The versioned FastAPI contract snapshot at `web/lib/api/openapi.json` is the exception: it is a build input for frontend-only deployments, checked against a fresh backend export in CI. Generated TypeScript clients, mocks and service workers remain ignored.
+
 ## Branches
 
 - `main`: always deployable. Protected.

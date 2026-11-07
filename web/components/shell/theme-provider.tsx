@@ -7,7 +7,8 @@ import { parseTheme, railStorageKey, resolveTheme, themeStorageKey } from "@/lib
 
 export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
   useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    void import("@/lib/pwa/client");
+    const media = matchMedia("(prefers-color-scheme: dark)");
     try {
       usePreferences.setState({
         theme: parseTheme(localStorage.getItem(themeStorageKey)),
@@ -30,12 +31,12 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
     apply();
     const unsubscribe = usePreferences.subscribe(apply);
     usePreferences.setState({ hydrated: true });
-    media.addEventListener("change", apply);
-    window.addEventListener("storage", onStorage);
+    media.onchange = apply;
+    addEventListener("storage", onStorage);
     return () => {
       unsubscribe();
-      media.removeEventListener("change", apply);
-      window.removeEventListener("storage", onStorage);
+      media.onchange = null;
+      removeEventListener("storage", onStorage);
     };
   }, []);
   return children;

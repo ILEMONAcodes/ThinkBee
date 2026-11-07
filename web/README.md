@@ -13,21 +13,21 @@ Quality checks:
 npm run lint
 npm run typecheck
 npm test
-npm run build -- --webpack
+npm run build
 npm run check:bundle
 npx playwright install chromium
 npm run test:e2e
 ```
 
-Webpack is the verified production-build path on hosts where Turbopack cannot create its required process/port. The bundle check requires a completed build and rejects initial Home JavaScript at or above 170 KB gzipped. Browser tests start the production server on port 3100 and cover mobile/desktop light and dark layouts, keyboard navigation, reduced motion, offline settings, denied storage, slow network/CPU and enlarged text. Screenshots and failure traces go to ignored `test-results/`; CI retains them for seven days. With Chrome already installed locally, use `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e` instead of installing Chromium.
+`npm run build` explicitly uses Webpack so local, CI and Docker builds all generate the Serwist worker. The bundle check requires a completed build and rejects initial Home JavaScript at or above 170 KB gzipped. Browser tests start the production server on port 3100 and cover mobile/desktop light and dark layouts, keyboard navigation, reduced motion, offline settings, denied storage, slow network/CPU and enlarged text. Screenshots and failure traces go to ignored `test-results/`; CI retains them for seven days. With Chrome already installed locally, use `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e` instead of installing Chromium.
 
 The app shell uses floating navigation below 768px and an expandable, pinnable rail on larger screens. Scan and nested chat routes hide shell navigation. Appearance follows the device by default; choose a theme in Me or cycle it with the theme button. Theme and rail preferences persist locally and theme follows device changes while in system mode.
 
-Home currently shows empty sections; scans, records and chats are connected in later roadmap tasks. The offline band and appearance controls work on an already loaded page. Offline reload, cached pages, installation and the service worker belong to the subsequent PWA task.
+Home currently shows empty sections; scans, records and chats are connected in later roadmap tasks. The Serwist worker precaches the shell and offline page, caches visited pages and bounded same-origin images, and keeps authenticated/API responses out of browser caches. Offline Home reload and the standalone fallback page are covered by browser tests.
 
 Authentication uses `@supabase/supabase-js` with email magic links. See `lib/auth/README.md`; the browser receives only the Supabase URL and publishable key.
 
-After exporting `../api/openapi.json`, run `npm run generate:api` to create the ignored TypeScript schema at `lib/api/schema.d.ts`.
+Builds, type checks and development startup automatically generate the ignored TypeScript schema at `lib/api/schema.d.ts` from the committed `lib/api/openapi.json` contract snapshot. A frontend-only deployment needs Node.js, not the Python backend. CI checks the snapshot against a fresh FastAPI export; update it with `python scripts/export_openapi.py --output ../web/lib/api/openapi.json` from `api/` whenever the backend contract changes.
 
 Run `npm run generate:mocks` to create schema-driven MSW handlers for Node and the browser. Run `npx msw init public --save` once after installing dependencies to create the ignored browser worker.
 
@@ -37,4 +37,6 @@ Configure the local/staging/production `/auth/callback` URLs in Supabase's redir
 
 Profile and farm edits are saved in IndexedDB before submission. Pending jobs keep client IDs across retries; reconnect and visibility events restart sync. The API URL and Supabase project used for tests must match the build. Browser tests intercept authentication and API requests with synthetic accounts; they never send real sign-in emails. For a live check, run the real API with migrations applied, start this app at the configured origin, and request one link from `/sign-in`. Do not paste tokens or email links into logs or issue descriptions.
 
-Temporary welcome photographs and source credits are in `public/onboarding/`. Profile photos await the server upload pipeline. English, the 200-unit setup cap and optional Google OAuth remain configuration-driven. Full offline page reload still belongs to the next PWA task.
+Temporary welcome photographs and source credits are in `public/onboarding/`. Product UI and install surfaces use the supplied Think Bee brand kit in `public/brand/` and `public/icons/`; the Macaney logo remains a separate parent-brand asset. Profile photos await the server upload pipeline. English, the 200-unit setup cap and optional Google OAuth remain configuration-driven.
+
+The install card in Me follows `docs/PWA_OFFLINE.md`: a saved scan or sent message must call `markPwaMeaningfulUse` before the card can appear. Chromium uses the deferred install event; iPhone shows Add to Home Screen instructions. If local disk space is tight, `NEXT_DISABLE_WEBPACK_CACHE=1 npm run build` skips only the disposable Webpack cache.

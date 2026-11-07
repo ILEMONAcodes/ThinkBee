@@ -93,6 +93,25 @@
     "retry": "Try again",
     "home": "Back to Home"
   },
+  "Pwa": {
+    "offlineKicker": "Saved on this device",
+    "offlineTitle": "No signal right now",
+    "offlineBody": "Think Bee can still open saved pages and local records. Reconnect for scans, sign-in and new advice.",
+    "offlineAction": "Open Think Bee",
+    "installKicker": "Use it like an app",
+    "installTitle": "Install Think Bee",
+    "installBody": "Open Think Bee from your home screen and reach saved information more quickly on weak connections.",
+    "installAction": "Install app",
+    "installDismissed": "Installation was not started. You can try again here later.",
+    "installFailed": "Installation could not start. Reload to try again, or use your browser's install option.",
+    "installPending": "Opening install options…",
+    "installRetry": "Reload and try again",
+    "iosAction": "How to install",
+    "iosShare": "Tap Share in Safari.",
+    "iosAdd": "Choose Add to Home Screen.",
+    "update": "A newer version of Think Bee is ready.",
+    "apply": "Update"
+  },
   "Welcome": {
     "brand": "Think Bee",
     "skip": "Skip for now",

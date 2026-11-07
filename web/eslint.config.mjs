@@ -9,8 +9,12 @@ export default defineConfig([
     ".next/**",
     "out/**",
     "coverage/**",
+    "test-results/**",
+    "playwright-report/**",
     "mocks/generated/**",
     "public/mockServiceWorker.js",
+    "public/sw.js",
+    "public/sw.js.map",
     "next-env.d.ts",
   ]),
 ]);

@@ -11,12 +11,12 @@ export function SetupEntry() {
       // Supabase can fall back to its Site URL when a redirect is not allowlisted.
       // Recover a PKCE callback at Home before ordinary first-visit navigation.
       if (pathname === "/") {
-        const url = new URL(window.location.href);
+        const url = new URL(location.href);
         const code = url.searchParams.get("code");
-        const failed = url.searchParams.has("error") || new URLSearchParams(url.hash.slice(1)).has("error");
+        const failed = url.href.includes("error=");
         if (code || failed) {
           const target = code ? `/auth/callback?code=${encodeURIComponent(code)}` : "/auth/callback?error=access_denied";
-          window.location.replace(target);
+          location.replace(target);
           return;
         }
       }
@@ -28,10 +28,10 @@ export function SetupEntry() {
       } catch { /* Blocked preferences must not trap a visitor in onboarding. */ }
     };
     run();
-    window.addEventListener("online", run);
+    addEventListener("online", run);
     document.addEventListener("visibilitychange", run);
-    const timer = window.setInterval(run, 60_000);
-    return () => { window.removeEventListener("online", run); document.removeEventListener("visibilitychange", run); window.clearInterval(timer); };
+    const timer = setInterval(run, 60_000);
+    return () => { removeEventListener("online", run); document.removeEventListener("visibilitychange", run); clearInterval(timer); };
   }, [pathname, router]);
   return null;
 }

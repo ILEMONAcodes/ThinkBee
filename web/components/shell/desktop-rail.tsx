@@ -16,7 +16,7 @@ export function DesktopRail() {
   return (
     <aside className="desktop-rail" data-pinned={pinned} aria-label={t("sidebar")}>
       <Link aria-label={t("brandHome")} className="rail-brand" href="/">
-        <Image alt="" className="rail-logo" height={352} priority src="/brand/macaney-logo.png" width={498} />
+        <Image alt="" className="rail-logo" height={192} priority src="/icons/icon-192.png" width={192} />
         <span className="rail-label font-display text-2xl">{t("brandName")}</span>
       </Link>
       <nav aria-label={t("primary")} className="rail-destinations"><NavigationLinks variant="desktop" /></nav>

@@ -12,8 +12,7 @@ export async function OnboardingFrame({ children }: Readonly<{ children: ReactNo
     <ConnectionStatus />
     <header className="setup-header">
       <Link className="inline-flex min-h-12 items-center gap-3" href="/welcome" aria-label={t("brand")}>
-        <Image alt="" width={60} height={43} src="/brand/macaney-logo.png" className="rounded-sm bg-paper p-1" />
-        <span className="font-display text-2xl">{t("brand")}</span>
+        <Image alt="" width={132} height={54} src="/brand/thinkbee-wordmark.svg" className="rounded-sm bg-paper px-2 py-1" />
       </Link>
       <ThemeToggle />
     </header>
