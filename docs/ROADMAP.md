@@ -14,7 +14,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] BE: farmer ID generation, Supabase user mapping and session validation
 - [x] BE: users, farms, farm units (hives, crop blocks), account deletion
 - [x] FE: app shell, floating nav, desktop rail, theme switch
-- [ ] FE: onboarding (splash, welcome, email/magic link auth, profile, add farm)
+- [x] FE: onboarding (splash, welcome, email/magic link auth, profile, add farm)
 - [ ] FE: PWA manifest, service worker, offline page, install prompt
 - [ ] FE: app lock (PIN or biometrics where available)
 
@@ -90,3 +90,17 @@ CI follow-up: the mobile failure was the page-width assertion before the Records
 Validation: lint, TypeScript, 16 unit tests, a production Webpack build and 20 Chrome browser tests passed. Browser checks covered 390px/1440px in light/dark, tablet rail pinning, keyboard navigation, reduced motion, offline settings, denied storage, 400ms network latency, 4x CPU throttling and 200% text size. Reviewed all four Home screenshots. Initial Home JavaScript is 168.1 KB gzipped against the 170 KB limit; the check and browser suite now run in CI. Turbopack remains blocked by this host's process/port restrictions; Webpack is the verified fallback.
 
 Next: FE onboarding (splash, welcome, Supabase email/magic link auth, profile, add farm), including live callback/sign-in validation. Full offline reload and service-worker caching remain with the following PWA task; this shell only handles offline status and preferences on an already loaded page.
+
+## Handoff — onboarding (2026-11-07)
+
+Pushed `web/app-shell` to origin, then implemented onboarding on `web/onboarding`: logo splash, three welcome panels with temporary credited photos, email links with resend cooldown, explicit PKCE callback handling, profile preview, optional farm setup with hive/crop units, account/farm display in Me and sign-out. Profiles and farm locations use the existing owner-only API contract. Avatar uploads remain with the upload pipeline; no permissions are requested before a feature needs them.
+
+Profile/farm drafts are saved locally before network writes. Submitted jobs retain client IDs and resume after reload/reconnect, including partial farm/unit success. Sign-out asks before discarding unsynced drafts and clears the private setup cache. App code never persists Supabase credentials. Theme controls wait for initialization so slow-load clicks are not lost. Home stays at 168.7 KB gzipped.
+
+Validation: lint, TypeScript, 31 unit tests, production Webpack build and 48 Chrome browser checks passed (44 shell/onboarding checks plus four sign-out confirmation checks). Coverage includes direct/root callbacks, stale links, API failures, blocked storage, interrupted requests, offline drafts, light/dark at 390px and 1440px, keyboard/tablet behavior, slow network, 4x CPU and 200% text. Reviewed onboarding screenshots. CI now generates API types/mocks before building the web app.
+
+Live validation: Supabase accepted one email-link request to the supplied test address with HTTP 200. The test window returned to Home, but no local account was created in the isolated database at the last check; the live callback remains unverified. Root callbacks are now handled and tested with mocks. Confirm the deployed origin's `/auth/callback` URL in Supabase's redirect allowlist and open the email link in the same browser that requested it. No test address, link, token or session dump is committed.
+
+The live API used a separate local `thinkbee_onboarding` database on the existing test Postgres cluster (port 55439), with the existing migrations applied; the configured app database was not changed. Local preview uses port 3000 with API port 8000. Next roadmap task: FE PWA manifest, service worker, offline page and install prompt. Full offline reload remains unimplemented until that task.
+
+CI fix validation: the animation regression reproduced 414px overflow on the 390px viewport in both mobile themes before the CSS fix. After the fix, lint, TypeScript, 31 unit tests, the production Webpack build and all 52 Chrome browser checks passed, including the new animation checks and existing Records navigation. Reviewed all four Home screenshots; Home JavaScript remains 168.7 KB gzipped. Both profile-preview `break-words` classes now use Tailwind's canonical `wrap-break-word`. PWA work has not started.

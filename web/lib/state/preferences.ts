@@ -5,6 +5,7 @@ import { create } from "zustand";
 import { railStorageKey, themeStorageKey, type ThemePreference } from "@/lib/theme";
 
 type Preferences = {
+  hydrated: boolean;
   theme: ThemePreference;
   railPinned: boolean;
   storageAvailable: boolean;
@@ -22,6 +23,7 @@ function save(key: string, value: string): boolean {
 }
 
 export const usePreferences = create<Preferences>((set, get) => ({
+  hydrated: false,
   theme: "system",
   railPinned: false,
   storageAvailable: true,

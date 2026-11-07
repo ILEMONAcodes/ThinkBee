@@ -8,6 +8,7 @@ import { themeOptions } from "@/lib/theme";
 export function ThemeSettings() {
   const t = useTranslations("Theme");
   const theme = usePreferences((state) => state.theme);
+  const hydrated = usePreferences((state) => state.hydrated);
   const setTheme = usePreferences((state) => state.setTheme);
   const storageAvailable = usePreferences((state) => state.storageAvailable);
   return (
@@ -18,7 +19,7 @@ export function ThemeSettings() {
       <div className="mt-5 flex flex-wrap gap-3">
         {themeOptions.map((option) => (
           <label className="theme-option" key={option}>
-            <input checked={theme === option} name="theme" onChange={() => setTheme(option)} type="radio" value={option} />
+            <input checked={theme === option} disabled={!hydrated} name="theme" onChange={() => setTheme(option)} type="radio" value={option} />
             <span>{t(option)}</span>
           </label>
         ))}
