@@ -1,20 +1,11 @@
-# Supabase authentication plan
+# Supabase browser authentication
 
-Think Bee uses Supabase Auth on the free tier. Email magic links are the launch method; OAuth providers may be enabled through configuration later.
+`client.ts` creates the one browser client with PKCE, SDK-owned persistence and automatic refresh. Application state holds only the user ID and readiness. The API client obtains the SDK session immediately before a request and never copies access/refresh tokens into application storage.
 
-## Client flow
+`actions.ts` requests email links and explicitly exchanges the callback code once. Codes and provider error descriptions are cleared from the address bar before rendering results. A callback on the Site URL is forwarded to `/auth/callback`; request and callback must use the same browser profile. Network retries retain the code only in memory. Expired/used links need a new email.
 
-1. Create one browser client with `@supabase/supabase-js` using `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
-2. Replace the planned six-digit SMS screen with an email form. Submit with `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo } })`; the product copy calls this a sign-in link, not an OTP.
-3. Show the check-email, resend cooldown, expired-link and returning-from-link states described in `docs/UI_DESIGN.md`. If an OAuth provider is enabled, start it with `supabase.auth.signInWithOAuth({ provider, options: { redirectTo } })`.
-4. After Supabase establishes the session, call `POST /api/v1/auth/bootstrap` with `Authorization: Bearer <access_token>` to create or fetch the local user and farmer ID.
-5. Subscribe to `supabase.auth.onAuthStateChange` so the shell reacts to sign-in, refresh and sign-out. Use `supabase.auth.signOut()` for logout.
+Configure `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_API_URL` and the deployment's `/auth/callback` redirect allowlist in Supabase. The browser refuses known backend key formats. The redirect always uses the current origin; a stale environment value cannot send the link to another origin. Google OAuth is optional and hidden unless `NEXT_PUBLIC_AUTH_OAUTH_PROVIDERS=google`; it must also be configured in Supabase.
 
-## Session rules
+Supabase owns authentication rate limits. The email screen adds a 60-second resend cooldown, email validation and explicit age confirmation. Authentication requires connectivity. Profile/farm setup works from account-scoped local drafts after initial account bootstrap. Sign-out clears setup drafts and the SDK session; unsynced draft removal requires confirmation.
 
-- Supabase owns token persistence, refresh and authentication rate limits.
-- Think Bee code must not copy access or refresh tokens into Zustand, Dexie, localStorage, cookies or another custom store.
-- The generated API client obtains the current session from the Supabase client and attaches the access token as a bearer header immediately before a request.
-- The WebSocket sends the current access token in its first `auth` event and reconnects after a token refresh.
-- Sign-in, link exchange and OAuth require a network connection. Existing offline data stays readable, but protected network actions wait until the session can be validated.
-- The service-role key is never included in the web environment or bundle.
+The browser suite mocks Supabase transport and uses synthetic SDK session fixtures. Live email delivery/callback checks use a separately supplied test address and must never commit an email link, session token or browser storage dump.

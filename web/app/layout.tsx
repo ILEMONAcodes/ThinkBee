@@ -29,6 +29,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s · ${t("title")}`,
     },
     description: t("description"),
+    referrer: "no-referrer",
   };
 }
 

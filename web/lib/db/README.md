@@ -1,3 +1,7 @@
 # Local database
 
-Dexie tables for drafts, records, reminders, chats, messages, the outbox, media queue and sync state will live here.
+`onboarding.ts` defines the account-scoped setup cache, editable drafts and submitted profile/farm jobs in Dexie. It contains no authentication tokens or email addresses. SDK sessions remain owned by Supabase.
+
+The setup queue keeps submitted snapshots separate from unsent edits. Profile jobs use revision IDs so an older response cannot erase a newer submission. Farms and units retain their client IDs through partial success. Clearing local data advances a generation and sync updates only existing rows, so in-flight work cannot recreate data after sign-out.
+
+Records, reminders, chats, messages, media queues and general sync state belong to later roadmap tasks. The service worker and offline reload are not implemented by this table.

@@ -29,6 +29,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
     };
     apply();
     const unsubscribe = usePreferences.subscribe(apply);
+    usePreferences.setState({ hydrated: true });
     media.addEventListener("change", apply);
     window.addEventListener("storage", onStorage);
     return () => {

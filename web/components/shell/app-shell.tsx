@@ -6,6 +6,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 import { ConnectionStatus } from "@/components/shell/connection-status";
 import { AppNavigation } from "@/components/shell/navigation";
+import { SetupEntry } from "@/components/shell/setup-entry";
 import { screenSlide } from "@/lib/motion";
 import { isImmersiveRoute } from "@/lib/navigation";
 import { usePreferences } from "@/lib/state/preferences";
@@ -34,6 +35,7 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   }, [pathname]);
   return (
     <div className="app-shell" data-pinned={pinned} data-immersive={immersive}>
+      <SetupEntry />
       <a className="skip-link" href="#main-content">{t("skip")}</a>
       {!immersive ? <AppNavigation /> : null}
       <main className="shell-main" id="main-content" tabIndex={-1}>
