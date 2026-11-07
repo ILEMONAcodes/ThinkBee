@@ -55,8 +55,8 @@ export function ProfileForm() {
     <aside className="setup-preview">
       <p className="setup-kicker">{t("preview")}</p>
       <div className="mt-8 flex size-20 items-center justify-center rounded-full bg-accent font-display text-3xl text-on-accent" aria-hidden>{values.display_name?.trim().slice(0, 1).toUpperCase() || "—"}</div>
-      <h2 className="mt-6 break-words font-display text-3xl">{values.display_name?.trim() || t("yourName")}</h2>
-      <p className="mt-3 whitespace-pre-wrap break-words text-subtle">{values.bio?.trim() || t("yourBio")}</p>
+      <h2 className="mt-6 wrap-break-word font-display text-3xl">{values.display_name?.trim() || t("yourName")}</h2>
+      <p className="mt-3 whitespace-pre-wrap wrap-break-word text-subtle">{values.bio?.trim() || t("yourBio")}</p>
       <p className="mt-8 text-sm text-subtle">{t("profilePrivacy")}</p>
       <div className="mt-8 border-t border-line pt-6"><p className="text-sm text-subtle">{t("farmerId")}</p><p className="mt-2 font-semibold">{account.data?.user?.farmer_id}</p><p className="mt-2 text-sm text-subtle">{t("internalId")}</p></div>
     </aside>
