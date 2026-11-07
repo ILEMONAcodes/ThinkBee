@@ -85,6 +85,8 @@ Pushed `api/farms-account-deletion` to origin, then implemented the shell on `we
 
 Appearance defaults to the device theme, supports live device changes and light/dark overrides, and persists theme/rail preferences locally. Blocked storage leaves controls usable. Replaced fabricated Home activity with empty sections and corrected the shared font bindings and text colours. No new imagery was needed; no Figma file was supplied, so the shell follows `UI_DESIGN.md`.
 
+CI follow-up: the mobile failure was the page-width assertion before the Records click. The 24px entrance translation temporarily widened the 390px page to 414px. The main region now clips horizontal animation overflow while retaining vertical scrolling. A regression test pauses real entrances and checks page width at 0%, 50% and 99% on Home and Records in all four viewport/theme projects; the existing navigation assertion remains intact.
+
 Validation: lint, TypeScript, 16 unit tests, a production Webpack build and 20 Chrome browser tests passed. Browser checks covered 390px/1440px in light/dark, tablet rail pinning, keyboard navigation, reduced motion, offline settings, denied storage, 400ms network latency, 4x CPU throttling and 200% text size. Reviewed all four Home screenshots. Initial Home JavaScript is 168.1 KB gzipped against the 170 KB limit; the check and browser suite now run in CI. Turbopack remains blocked by this host's process/port restrictions; Webpack is the verified fallback.
 
 Next: FE onboarding (splash, welcome, Supabase email/magic link auth, profile, add farm), including live callback/sign-in validation. Full offline reload and service-worker caching remain with the following PWA task; this shell only handles offline status and preferences on an already loaded page.
