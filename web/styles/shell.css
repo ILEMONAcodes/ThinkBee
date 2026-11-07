@@ -37,7 +37,7 @@
   .desktop-rail { position: fixed; z-index: 40; inset-block: 0; left: 0; display: flex; flex-direction: column; width: 88px; padding: 24px 12px; overflow-x: hidden; overflow-y: auto; border-right: 1px solid var(--line); background: var(--bg-raised); }
   .desktop-rail:is(:hover, :focus-within), .desktop-rail[data-pinned="true"] { width: 264px; box-shadow: var(--shadow-card); }
   .rail-brand { display: flex; align-items: center; gap: 12px; min-height: 64px; width: 240px; padding: 8px; border-radius: var(--radius-sm); }
-  .rail-logo { width: 48px; height: auto; flex-shrink: 0; padding: 4px; border-radius: var(--radius-xs); background: var(--color-paper); }
+  .rail-logo { width: 48px; height: 48px; flex-shrink: 0; border-radius: var(--radius-sm); }
   .rail-label { white-space: nowrap; opacity: 0; transition: opacity var(--dur-fast); font-size: 14px; font-weight: 600; }
   .rail-brand .rail-label { font-size: 24px; }
   .desktop-rail:is(:hover, :focus-within) .rail-label, .desktop-rail[data-pinned="true"] .rail-label { opacity: 1; }

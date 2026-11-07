@@ -22,8 +22,8 @@ export function WelcomeCarousel() {
   }, []);
   const panel = panels[index];
   return <main className="welcome-page">
-    {splash ? <div className="welcome-splash" aria-hidden><CombField className="absolute opacity-20" /><Image alt="" src="/brand/macaney-logo.png" width={180} height={127} className="relative rounded-lg bg-paper p-6" priority /></div> : null}
-    <header className="welcome-header"><Link className="inline-flex min-h-12 items-center gap-3" href="/" onClick={rememberWelcome}><Image alt="" src="/brand/macaney-logo.png" width={56} height={40} className="rounded-sm bg-paper p-1" /><span className="font-display text-2xl">{t("brand")}</span></Link><Link className="welcome-skip" href="/" onClick={rememberWelcome}>{t("skip")}</Link></header>
+    {splash ? <div className="welcome-splash" aria-hidden><CombField className="absolute opacity-20" /><Image alt="" src="/brand/thinkbee-wordmark-dark.svg" width={265} height={108} className="relative" priority /></div> : null}
+    <header className="welcome-header"><Link aria-label={t("brand")} className="inline-flex min-h-12 items-center" href="/" onClick={rememberWelcome}><Image alt="" src="/brand/thinkbee-wordmark-dark.svg" width={132} height={54} /></Link><Link className="welcome-skip" href="/" onClick={rememberWelcome}>{t("skip")}</Link></header>
     <section className="welcome-panel" aria-roledescription="carousel" aria-label={t("intro")} tabIndex={0}
       onTouchStart={(event) => { start.current = event.touches[0].clientX; }}
       onTouchEnd={(event) => { if (start.current !== null) { const distance = start.current - event.changedTouches[0].clientX; if (Math.abs(distance) > 50) setIndex((value) => Math.max(0, Math.min(2, value + (distance > 0 ? 1 : -1)))); } start.current = null; }}

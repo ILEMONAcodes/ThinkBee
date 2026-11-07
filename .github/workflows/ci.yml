@@ -49,6 +49,9 @@ jobs:
           pip install -e .
           python scripts/export_openapi.py --output openapi.json
 
+      - name: Check API contract snapshot
+        run: diff -u ../api/openapi.json lib/api/openapi.json
+
       - name: Generate API types and mocks
         run: |
           npm run generate:api
@@ -64,7 +67,7 @@ jobs:
         run: npm test
 
       - name: Build for browser tests
-        run: npm run build -- --webpack
+        run: npm run build
 
       - name: Check Home JavaScript budget
         run: npm run check:bundle
@@ -169,6 +172,10 @@ jobs:
       - name: Export OpenAPI schema
         working-directory: api
         run: python scripts/export_openapi.py --output openapi.json
+
+      - name: Check API contract snapshot
+        working-directory: web
+        run: diff -u ../api/openapi.json lib/api/openapi.json
 
       - name: Generate TypeScript API types
         working-directory: web

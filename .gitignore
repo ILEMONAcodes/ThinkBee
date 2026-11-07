@@ -15,6 +15,8 @@ Thumbs.db
 # JavaScript
 node_modules/
 .next/
+web/public/sw.js
+web/public/sw.js.map
 out/
 coverage/
 playwright-report/

@@ -8,7 +8,8 @@ Show the install card in Me after the user has done something meaningful (first 
 
 ## Service worker (Serwist)
 - Precache the shell, fonts, offline page, icons.
-- Runtime: images stale-while-revalidate with size and age limits; API reads network-first with timeout and fallback to local Dexie data; never cache auth routes; signed media URLs cached only for their lifetime.
+- Runtime: public same-origin images, including safe `next/image` requests, use stale-while-revalidate with entry and age limits. Pages and RSC reads have a four-second response deadline and use cached content on network failure or server errors; uncached navigations fall back to the offline page.
+- Authenticated requests and API reads stay network-only, with private offline data read from account-scoped Dexie (see `DECISIONS.md`). Never cache auth routes, callback parameters or signed media URLs, including signed sources inside image-optimizer URLs. Activation removes old private entries from application runtime caches.
 - Update flow: new worker waits, app shows "Update available", applies on user tap or next cold start.
 - Push handler shows notification, click focuses an existing window and routes to the room.
 

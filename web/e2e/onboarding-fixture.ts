@@ -24,7 +24,8 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
     }
   }, { storageKey, session, signedIn });
   const state = { profile: withProfile ? { ...profile } : undefined as Schema["ProfileResponse"] | undefined, farms: new Map<string, Schema["FarmResponse"]>(), units: new Map<string, Schema["UnitResponse"]>(), otpCount: 0, tokenCount: 0, failUnitOnce: false, bootstrapStatus: 200, profileWrites: 0 };
-  await page.route("**/auth/v1/**", async (route) => {
+  // Context routes also intercept fetches made by the controlling service worker.
+  await page.context().route("**/auth/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith("/otp")) { state.otpCount++; await route.fulfill({ json: {} }); }
     else if (path.endsWith("/token")) { state.tokenCount++; await route.fulfill({ json: session }); }
@@ -32,7 +33,7 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
     else if (path.endsWith("/logout")) await route.fulfill({ status: 204 });
     else await route.fulfill({ status: 400, json: { error: "unexpected_auth_request" } });
   });
-  await page.route("**/api/v1/**", async (route) => {
+  await page.context().route("**/api/v1/**", async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname.replace("/api/v1", "");
     const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization,content-type", "access-control-allow-methods": "GET,POST,PATCH,OPTIONS" };

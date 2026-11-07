@@ -34,7 +34,7 @@ describe.runIf(generatedMocksExist)("generated OpenAPI mocks", () => {
 
   it("covers every operation in the exported OpenAPI schema", () => {
     const schema = JSON.parse(
-      readFileSync(resolve(process.cwd(), "../api/openapi.json"), "utf8"),
+      readFileSync(resolve(process.cwd(), "lib/api/openapi.json"), "utf8"),
     ) as { paths: Record<string, Record<string, unknown>> };
     const manifest = JSON.parse(
       readFileSync(resolve(generatedDirectory, "manifest.json"), "utf8"),

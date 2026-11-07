@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const HTTP_METHODS = ["delete", "get", "patch", "post", "put"];
 const webRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const schemaPath = resolve(webRoot, "../api/openapi.json");
+const schemaPath = resolve(webRoot, "lib/api/openapi.json");
 const outputDirectory = resolve(webRoot, "mocks/generated");
 const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
 
