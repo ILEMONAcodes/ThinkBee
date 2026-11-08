@@ -3,7 +3,7 @@
 Checklist. Tick before pilot.
 
 ## Authentication and sessions
-- [ ] Supabase email magic links configured with approved redirect URLs; optional OAuth providers configured only when needed
+- [ ] Supabase email/password registration with email verification and recovery configured with approved redirect URLs; no social sign-in
 - [ ] FastAPI verifies Supabase JWT signature, issuer, audience, expiry and subject through one shared dependency
 - [ ] Missing, invalid and expired bearer tokens return stable `401` errors; suspended or deleted local users return `403`
 - [ ] The web app delegates token persistence and refresh to `@supabase/supabase-js`; application code never copies tokens into custom storage

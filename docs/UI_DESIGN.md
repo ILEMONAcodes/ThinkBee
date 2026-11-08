@@ -33,7 +33,7 @@ The design must not read as AI-generated or template-made. Avoid:
 - Rows of three identical cards, each with a circle icon, a bold title and two lines of grey text.
 - Glassmorphism on every surface. Blur is allowed on the bottom navigation and on sheets only.
 - Stock-photo smiles, 3D renders unrelated to bees or farming, floating abstract blobs.
-- Filler marketing copy ("Unlock the power of…", "Welcome back!", "Seamless experience").
+- Filler marketing copy ("Unlock the power of…", "Seamless experience"). The returning-user auth heading “Welcome back.” is an explicit team choice.
 - Perfectly symmetric layouts everywhere. Vary rhythm: a large hero next to a tight list, a full-bleed photo next to a narrow column.
 - Default component-library looks. Every primitive is restyled to the tokens.
 
@@ -68,6 +68,10 @@ Rules:
 8. Both light and dark themes are required. Dark follows the system setting and can be overridden in settings.
 
 ---
+
+### Product logo surfaces
+
+Use only the transparent supplied `thinkbee-wordmark` and `thinkbee-short` SVG masters inside the app. Choose the light/dark master for the actual surface, including splash, setup, sidebar and offline UI. Never use background-bearing logo exports or add a contrasting paper box. Platform maskable/touch icons keep their platform-required icon surfaces.
 
 ## 3. Typography
 
@@ -175,10 +179,10 @@ This is a real layout. Do not stretch the phone.
 Design every screen below in light and dark, mobile and desktop where noted (M = mobile, D = desktop). Each needs loading, empty, error and offline variants. Frame names: `Area / Screen / State / Theme / Device`.
 
 ### 8.1 Onboarding (M, D)
-1. **Splash**: logo on forest-900, comb cells assemble into the bee mark, then fade to Welcome.
-2. **Welcome**: 3 swipeable panels in Fraunces headlines with real photography (scan, records, community). Skip always visible. Orange "Get started".
-3. **Email sign-in**: large email field, plain sentence explaining that Think Bee will send a secure sign-in link, and one orange "Email me a sign-in link" button. Optional OAuth buttons appear only for providers enabled in configuration.
-4. **Check your email**: show the submitted address, a clear instruction to open the magic link on this device, resend cooldown, "Use a different email" action, expired-link error and a returning-from-link loading state.
+1. **Splash**: transparent Think Bee wordmark centred on a plain theme-matched surface, with small Macaney attribution. Brief entrance; skip animation for reduced motion. Welcome and auth footer credits link Macaney to `https://www.macaney.com/`.
+2. **Welcome**: 3 swipeable photo collages (scan, records, community), the transparent short mark and a restrained bee-flight line. No small decorative captions, italic notes or caption dashes. Large Fraunces headlines. Skip, pagination and Next stay accessible; orange “Get started” opens registration, with a separate Sign in link. Photos sit above text on mobile and beside it on desktop.
+3. **Registration and sign-in**: wordmark header and rounded form sheet on a soft forest surface on mobile, without the short bee or story area; forest story/photo panel with the short bee beside the form on desktop. Registration collects name, email, password, password confirmation and explicit age confirmation. Password fields have accessible show/hide controls. Returning users see “Welcome back.” with email, password and Forgot password. No social sign-in buttons or logos.
+4. **Verify email and password recovery**: show the submitted address and instruction to open the one-time confirmation link in this browser; resend cooldown, change-details action and expired-link handling. After verification, continue to profile/farm setup; subsequent sign-in uses the saved password. Password recovery emails a one-time link, then shows new-password and confirmation fields. Never persist form passwords or email addresses outside Supabase’s session APIs.
 5. **Create profile**: display name, optional photo (camera or gallery), short bio. Shows exactly what others will see in a live preview card.
 6. **Add your farm or apiary**: type (crops, bees, both), name, general location (state, LGA), number and type of hives or crops. Skippable, can add later.
 7. **Permissions primer**: shown only when a feature first needs camera, microphone, gallery, notifications or location. One sentence on why, a clear "Not now" that keeps the rest of the app working.

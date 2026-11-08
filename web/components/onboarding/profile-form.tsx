@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { SetupError } from "@/components/onboarding/feedback";
+import { getSupabase } from "@/lib/auth/client";
 import { changeDraft } from "@/lib/db/onboarding";
 import { useAccount } from "@/lib/hooks/use-account";
 import { profileSchema, type ProfileFormValues } from "@/lib/onboarding/forms";
@@ -20,10 +21,22 @@ export function ProfileForm() {
   const [error, setError] = useState<unknown>();
   const [saved, setSaved] = useState(false);
   const initial = account.data?.profileDraft ?? account.data?.profile ?? { display_name: "", bio: "" };
-  const { register, handleSubmit, subscribe, control, formState: { errors, isSubmitting } } = useForm<ProfileFormValues>({
+  const { register, handleSubmit, subscribe, control, getFieldState, setValue, formState: { errors, isSubmitting } } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema), defaultValues: { display_name: initial.display_name, bio: initial.bio },
   });
   const values = useWatch({ control });
+  useEffect(() => {
+    if (initial.display_name) return;
+    let active = true;
+    void getSupabase().auth.getSession().then(({ data }) => {
+      const name: unknown = data.session?.user.user_metadata.display_name;
+      if (active && typeof name === "string" && name.trim().length <= 80 && !getFieldState("display_name").isDirty) {
+        // This is only a suggestion; the farmer confirms their public profile below.
+        setValue("display_name", name.trim());
+      }
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [getFieldState, initial.display_name, setValue]);
   useEffect(() => {
     const unsubscribe = subscribe({ formState: { values: true }, callback: ({ values: value }) => {
       if (!owner) return;

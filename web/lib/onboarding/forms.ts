@@ -2,7 +2,6 @@ import { z } from "zod";
 
 const configuredUnits = Number(process.env.NEXT_PUBLIC_ONBOARDING_MAX_UNITS ?? 200);
 export const maxSetupUnits = Number.isInteger(configuredUnits) && configuredUnits > 0 ? configuredUnits : 200;
-export const signInSchema = z.object({ email: z.email().max(254), adult: z.boolean().refine(Boolean) });
 export const profileSchema = z.object({ display_name: z.string().trim().min(1).max(80), bio: z.string().trim().max(280) });
 export const farmSchema = z.object({
   name: z.string().trim().min(1).max(120), kind: z.enum(["crops", "bees", "both"]),

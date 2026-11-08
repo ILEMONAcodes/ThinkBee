@@ -32,6 +32,3 @@ export function callbackUrl(): string {
   // Never send credentials to a different origin through a stale deployment setting.
   return current.href;
 }
-
-export const oauthProviders = (process.env.NEXT_PUBLIC_AUTH_OAUTH_PROVIDERS ?? "")
-  .split(",").map((provider) => provider.trim()).filter((provider): provider is "google" => provider === "google");

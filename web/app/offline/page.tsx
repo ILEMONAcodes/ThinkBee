@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { BrandMark } from "@/components/ui/brand-mark";
 
 import "@/styles/onboarding.css";
 
@@ -8,7 +8,7 @@ export default async function OfflinePage() {
   return (
     <main className="offline-page">
       <div className="offline-card">
-        <Image alt="" className="offline-mark" height={112} priority src="/brand/thinkbee-short.svg" width={112} />
+        <BrandMark kind="short" className="offline-mark" width={88} priority />
         <p className="setup-kicker">{t("offlineKicker")}</p>
         <h1 className="font-display">{t("offlineTitle")}</h1>
         <p className="text-subtle">{t("offlineBody")}</p>

@@ -7,7 +7,7 @@ const url = (path: string) => new URL(path, "https://thinkbee.test");
 describe("worker cache privacy", () => {
   it.each([
     "/?code=one-time-code", "/?error=access_denied", "/?access_token=secret",
-    "/auth/callback", "/sign-in", "/setup/profile", "/api/v1/me",
+    "/auth/callback", "/auth/reset-password", "/sign-in", "/register", "/forgot-password", "/setup/profile", "/api/v1/me",
     "/photo.webp?X-Amz-Signature=secret", "/photo.webp?token=secret",
   ])("keeps %s out of runtime caches", (path) => {
     expect(isPrivateUrl(url(path))).toBe(true);

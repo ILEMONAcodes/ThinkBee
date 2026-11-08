@@ -4,7 +4,7 @@
 
 ```
 Browser (PWA: Next.js, Serwist SW, Dexie)
-   |  Supabase Auth (email magic link / optional OAuth)
+   |  Supabase Auth (email/password + email verification)
    |  HTTPS REST + SSE with Bearer JWT     |  WebSocket auth event (chat)
    v                                       v
 FastAPI (api/)  ---- Redis (pub/sub, app rate limits, presence, weather cache)
@@ -22,7 +22,7 @@ PostgreSQL
 - **Outbox worker** in `lib/outbox`: processes queued items in order per chat, with backoff, triggered on reconnect, app open, and visibility change (iOS has no background sync).
 - **Realtime** in `lib/realtime`: one WebSocket per session with heartbeat and resume from last seen event id. Falls back to polling every 15 seconds when sockets fail.
 - **Generated API client** from OpenAPI. Errors map to a single `AppError` type with a plain-language message.
-- **Authentication** through `@supabase/supabase-js`. Supabase owns magic-link/OAuth flows, token persistence, refresh and auth rate limits. The API client reads the current session and attaches the access token as a bearer header without copying it into application state or custom storage.
+- **Authentication** through `@supabase/supabase-js`. Supabase owns email/password sign-in, email verification, password recovery, token persistence, refresh and auth rate limits. The API client reads the current session and attaches the access token as a bearer header without copying it into application state or custom storage.
 - **Service worker** (Serwist): precache app shell, runtime cache for images (stale while revalidate), network first for API reads with offline fallback, no caching of authenticated chat media URLs beyond their signed lifetime. Handles Web Push display and click routing.
 
 ## Backend structure
@@ -48,7 +48,7 @@ Background work: `arq` (Redis) workers for media processing, push delivery, dail
 
 ## Authentication design
 
-- The web app signs users in with Supabase email magic links. OAuth providers may be enabled later through configuration without adding backend auth endpoints.
+- The web app registers name/email/password with Supabase, verifies email through a one-time PKCE link and signs returning users in with email/password. Recovery links use the same callback and route to password reset. No social sign-in is presented, and no backend auth endpoint changes are needed.
 - FastAPI never accepts a Supabase service-role key from the browser and never issues or refreshes user tokens.
 - One dependency verifies bearer tokens with the Supabase JWKS and validates issuer, audience, expiry and subject. It maps the `sub` claim to `users.supabase_user_id`.
 - `POST /auth/bootstrap` creates the local user and farmer ID once, then returns the same mapping on retries.

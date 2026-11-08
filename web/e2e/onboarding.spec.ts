@@ -2,42 +2,90 @@ import { expect, test } from "@playwright/test";
 
 import { mockOnboarding } from "./onboarding-fixture";
 
-test("welcome panels and email validation, cooldown and privacy", async ({ page }, info) => {
+const password = "Farm-test-password-2026!";
+async function fillRegistration(page: import("@playwright/test").Page) {
+  await page.getByLabel("Your name", { exact: true }).fill("Ada Okoro");
+  await page.getByLabel("Email address").fill("farmer@example.test");
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm password", { exact: true }).fill(password);
+  await page.getByRole("checkbox").check();
+}
+
+test("welcome leads to registration, verifies email and keeps credentials private", async ({ page }, info) => {
   const state = await mockOnboarding(page, false);
   await page.goto("/welcome");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("A little help");
+  await expect(page.locator(".welcome-splash")).toHaveCount(0);
+  await page.locator(".welcome-photo-main img").evaluate((image: HTMLImageElement) => image.decode());
+  await page.screenshot({ path: info.outputPath("welcome.png"), fullPage: true });
   await page.getByRole("button", { name: "Show panel 2" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your work deserves a record.");
   await page.getByRole("button", { name: "Show panel 3" }).click();
   await expect(page.getByRole("link", { name: "Skip for now" })).toBeVisible();
-  await page.locator(".welcome-photo img").evaluate((image: HTMLImageElement) => image.decode());
-  await page.screenshot({ path: info.outputPath("welcome.png"), fullPage: true });
   await page.getByRole("link", { name: "Get started" }).click();
-  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+  await expect(page).toHaveURL(/\/register$/);
+  await page.getByRole("button", { name: "Create account", exact: true }).click();
   await expect(page.getByText("Enter a valid email address.")).toBeVisible();
-  expect(state.otpCount).toBe(0);
-  await page.getByLabel("Email address").fill("farmer@example.test");
-  await page.getByRole("checkbox").check();
-  await page.screenshot({ path: info.outputPath("sign-in.png"), fullPage: true });
-  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+  expect(state.signupCount).toBe(0);
+  await fillRegistration(page);
+  await page.getByRole("button", { name: "Show password", exact: true }).click();
+  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute("type", "text");
+  await page.getByRole("button", { name: "Hide password", exact: true }).click();
+  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute("type", "password");
+  await page.getByLabel("Confirm password", { exact: true }).fill("not-the-same");
+  await page.getByRole("button", { name: "Create account", exact: true }).click();
+  await expect(page.getByText("The passwords do not match.")).toBeVisible();
+  expect(state.signupCount).toBe(0);
+  await page.getByLabel("Confirm password", { exact: true }).fill(password);
+  await page.screenshot({ path: info.outputPath("register.png"), fullPage: true });
+  await page.getByRole("button", { name: "Create account", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Send again in/ })).toBeDisabled();
-  expect(state.otpCount).toBe(1);
-  expect(page.url()).not.toContain("farmer");
+  expect(state.signupCount).toBe(1);
   const stored = await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }));
   expect(stored).not.toContain("farmer@example.test");
+  expect(stored).not.toContain(password);
+  expect(stored).not.toContain("Ada Okoro");
+  await page.goto("/auth/callback?code=synthetic-confirmation");
+  await expect(page).toHaveURL(/\/setup\/profile$/);
+  await expect(page.getByLabel("Display name")).toHaveValue("Ada Okoro");
+  expect(state.tokenCount).toBe(1);
 });
 
-test("callback exchanges once and removes credentials from the URL", async ({ page }) => {
-  const state = await mockOnboarding(page, false);
+test("password sign-in handles invalid credentials, verification and successful login", async ({ page }, info) => {
+  const state = await mockOnboarding(page, false, true);
   await page.goto("/sign-in");
+  await expect(page.getByRole("heading", { name: "Welcome back." })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Google|Facebook|Apple/ })).toHaveCount(0);
   await page.getByLabel("Email address").fill("farmer@example.test");
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.screenshot({ path: info.outputPath("sign-in.png"), fullPage: true });
+  state.signInError = "invalid_credentials";
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("The email or password is incorrect");
+  await expect(page.locator("body")).not.toContainText("Private provider information");
+  state.signInError = "email_not_confirmed";
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByRole("button", { name: "Send verification link", exact: true }).click();
+  await expect(page.getByRole("button", { name: /Send again in/ })).toBeDisabled();
+  expect(state.resendCount).toBe(1);
+  await page.getByRole("link", { name: "Sign in", exact: true }).click();
+  state.signInError = "";
+  await page.getByLabel("Email address").fill("farmer@example.test");
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
+  expect(state.passwordCount).toBe(3);
+});
+
+test("a confirmation at the site root completes PKCE and expired links stay private", async ({ page }) => {
+  const state = await mockOnboarding(page, false);
+  await page.goto("/register");
+  await fillRegistration(page);
+  await page.getByRole("button", { name: "Create account", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
-  await page.goto("/auth/callback?code=synthetic-code");
+  await page.goto("/?code=root-callback-code");
   await expect(page).toHaveURL(/\/setup\/profile$/);
-  await expect(page.getByRole("heading", { name: "What should we call you?" })).toBeVisible();
   expect(state.tokenCount).toBe(1);
   await page.goto("/auth/callback?error=access_denied&error_description=private-provider-details");
   await expect(page.locator(".setup-feedback[role=alert]")).toContainText("This link has expired");
@@ -45,16 +93,38 @@ test("callback exchanges once and removes credentials from the URL", async ({ pa
   await expect(page.locator("body")).not.toContainText("private-provider-details");
 });
 
-test("a callback at the configured site root still completes PKCE", async ({ page }) => {
+test("password recovery exchanges its link and updates the password", async ({ page }) => {
   const state = await mockOnboarding(page, false);
   await page.goto("/sign-in");
+  await page.getByRole("link", { name: "Forgot password?" }).click();
   await page.getByLabel("Email address").fill("farmer@example.test");
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
-  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
-  await page.goto("/?code=root-callback-code");
-  await expect(page).toHaveURL(/\/setup\/profile$/);
-  expect(state.tokenCount).toBe(1);
+  await page.getByRole("button", { name: "Send reset link" }).click();
+  await expect(page.getByText(/a reset link is on its way/)).toBeVisible();
+  expect(state.recoverCount).toBe(1);
+  await page.goto("/auth/callback?code=recovery-code");
+  await expect(page).toHaveURL(/\/auth\/reset-password$/);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm password", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Save new password" }).click();
+  await expect(page.getByRole("heading", { name: "Your password is updated." })).toBeVisible();
+  expect(state.passwordUpdates).toBe(1);
+  expect(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).not.toContain(password);
+});
+
+test("registration failures and offline password login remain recoverable", async ({ page, context }) => {
+  const state = await mockOnboarding(page, false);
+  state.signupStatus = 429;
+  await page.goto("/register");
+  await fillRegistration(page);
+  await page.getByRole("button", { name: "Create account", exact: true }).click();
+  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("Too many attempts");
+  await expect(page.getByRole("heading", { name: "Check your email" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Sign in", exact: true }).click();
+  await context.setOffline(true);
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeDisabled();
+  await expect(page.getByText("Connect to the internet to sign in.")).toBeVisible();
+  await context.setOffline(false);
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeEnabled();
 });
 
 test("profile and farm sync, including a lost unit response", async ({ page }, info) => {

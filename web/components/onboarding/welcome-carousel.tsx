@@ -1,39 +1,67 @@
 "use client";
 
-import Image from "next/image";
+import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
-import { CombField } from "@/components/ui/comb-field";
+import { WelcomeArt, welcomePanels } from "@/components/onboarding/welcome-art";
+import { ConnectionStatus } from "@/components/shell/connection-status";
+import { ThemeToggle } from "@/components/shell/theme-toggle";
+import { BrandMark } from "@/components/ui/brand-mark";
 
-const panels = ["scan", "records", "community"] as const;
-const photos = ["hive", "field", "apiary"];
 function rememberWelcome() { try { localStorage.setItem("thinkbee-welcome-seen", "1"); } catch { /* Optional preference. */ } }
 
 export function WelcomeCarousel() {
   const t = useTranslations("Welcome");
   const [index, setIndex] = useState(0);
   const [splash, setSplash] = useState(true);
-  const start = useRef<number | null>(null);
+  const start = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
-    const timer = window.setTimeout(() => setSplash(false), window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 640);
+    const timer = window.setTimeout(() => setSplash(false), window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900);
     return () => window.clearTimeout(timer);
   }, []);
-  const panel = panels[index];
-  return <main className="welcome-page">
-    {splash ? <div className="welcome-splash" aria-hidden><CombField className="absolute opacity-20" /><Image alt="" src="/brand/thinkbee-wordmark-dark.svg" width={265} height={108} className="relative" priority /></div> : null}
-    <header className="welcome-header"><Link aria-label={t("brand")} className="inline-flex min-h-12 items-center" href="/" onClick={rememberWelcome}><Image alt="" src="/brand/thinkbee-wordmark-dark.svg" width={132} height={54} /></Link><Link className="welcome-skip" href="/" onClick={rememberWelcome}>{t("skip")}</Link></header>
-    <section className="welcome-panel" aria-roledescription="carousel" aria-label={t("intro")} tabIndex={0}
-      onTouchStart={(event) => { start.current = event.touches[0].clientX; }}
-      onTouchEnd={(event) => { if (start.current !== null) { const distance = start.current - event.changedTouches[0].clientX; if (Math.abs(distance) > 50) setIndex((value) => Math.max(0, Math.min(2, value + (distance > 0 ? 1 : -1)))); } start.current = null; }}
-      onKeyDown={(event) => { if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); setIndex((value) => Math.max(0, Math.min(2, value + (event.key === "ArrowRight" ? 1 : -1)))); } }}>
-      <div className="welcome-copy" key={panel} aria-live="polite">
-        <p className="setup-kicker text-mint">{t(`${panel}.kicker`)}</p><h1 className="welcome-title">{t(`${panel}.title`)}</h1><p className="welcome-body">{t(`${panel}.body`)}</p>
-        <div className="welcome-actions"><Link className="setup-primary" href="/sign-in" onClick={rememberWelcome}>{t("start")}</Link>{index < 2 ? <button className="welcome-next" type="button" onClick={() => setIndex(index + 1)}>{t("next")}</button> : null}</div>
-      </div>
-      <div className="welcome-photo"><Image key={panel} alt={t(`${panel}.alt`)} src={`/onboarding/${photos[index]}.webp`} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" priority={index === 0} /><div className="welcome-photo-caption">{t(`${panel}.caption`)}</div></div>
-    </section>
-    <nav className="welcome-pagination" aria-label={t("panels")}>{panels.map((name, position) => <button type="button" key={name} aria-label={t("panel", { number: position + 1 })} aria-current={position === index ? "step" : undefined} onClick={() => setIndex(position)}><span /></button>)}</nav>
-  </main>;
+  const move = (step: number) => setIndex((value) => Math.max(0, Math.min(welcomePanels.length - 1, value + step)));
+  const panel = welcomePanels[index];
+  return <div className="welcome-page">
+    {splash ? <div className="welcome-splash" aria-hidden="true"><BrandMark width={280} priority /><span>{t.rich("byMacaney", { macaney: (chunks) => chunks })}</span></div> : null}
+    <ConnectionStatus />
+    <header className="welcome-header">
+      <Link aria-label={t("brand")} className="welcome-brand" href="/" onClick={rememberWelcome}><BrandMark /></Link>
+      <div className="welcome-header-actions"><Link className="welcome-skip" href="/" onClick={rememberWelcome}>{t("skip")}</Link><ThemeToggle /></div>
+    </header>
+    <main className="welcome-main">
+      <section className="welcome-panel" aria-roledescription="carousel" aria-label={t("intro")} tabIndex={0}
+        onTouchStart={(event) => { const touch = event.touches[0]; start.current = { x: touch.clientX, y: touch.clientY }; }}
+        onTouchEnd={(event) => {
+          if (start.current) {
+            const touch = event.changedTouches[0];
+            const distance = start.current.x - touch.clientX;
+            if (Math.abs(distance) > 50 && Math.abs(distance) > Math.abs(start.current.y - touch.clientY)) move(distance > 0 ? 1 : -1);
+          }
+          start.current = null;
+        }}
+        onTouchCancel={() => { start.current = null; }}
+        onKeyDown={(event) => { if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); move(event.key === "ArrowRight" ? 1 : -1); } }}>
+        <WelcomeArt panel={panel} />
+        <div className="welcome-content">
+          <div className="welcome-panel-top">
+            <p className="welcome-count"><span>0{index + 1}</span> / 0{welcomePanels.length}</p>
+            <nav className="welcome-pagination" aria-label={t("panels")}>{welcomePanels.map((name, position) => <button type="button" key={name} aria-label={t("panel", { number: position + 1 })} aria-current={position === index ? "step" : undefined} onClick={() => setIndex(position)}><span /></button>)}</nav>
+          </div>
+          <div className="welcome-copy" key={panel} aria-live="polite" aria-atomic="true">
+            <p className="setup-kicker">{t(`${panel}.kicker`)}</p>
+            <h1 className="welcome-title">{t.rich(`${panel}.title`, { em: (chunks) => <em>{chunks}</em> })}</h1>
+            <p className="welcome-body">{t(`${panel}.body`)}</p>
+          </div>
+          <div className="welcome-actions">
+            <Link className="setup-primary welcome-start" href="/register" onClick={rememberWelcome}>{t("start")}<ArrowRight size={22} aria-hidden="true" /></Link>
+            {index < welcomePanels.length - 1 ? <button className="welcome-next" type="button" onClick={() => move(1)}>{t("next")}<ArrowRight size={20} aria-hidden="true" /></button> : null}
+          </div>
+          <p className="welcome-sign-in">{t("hasAccount")} <Link href="/sign-in" onClick={rememberWelcome}>{t("signIn")}</Link></p>
+        </div>
+      </section>
+    </main>
+    <footer className="welcome-footer"><span>{t("footer")}</span><span>{t.rich("byMacaney", { macaney: (chunks) => <a className="brand-credit" href="https://www.macaney.com/">{chunks}</a> })}</span></footer>
+  </div>;
 }

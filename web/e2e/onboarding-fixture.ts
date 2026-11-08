@@ -11,7 +11,7 @@ export const user: Schema["UserResponse"] = { id: "019a4ff0-0000-7000-8000-00000
 export const profile: Schema["ProfileResponse"] = { display_name: "Ada", bio: "I grow cassava.", photo_key: null, area_state: null, area_lga: null, show_crops: false, show_hive_type: false, created_at: timestamp, updated_at: timestamp };
 
 export async function mockOnboarding(page: Page, signedIn = true, withProfile = false) {
-  const fakeUser = { id: owner, aud: "authenticated", role: "authenticated", email: "farmer@example.test", app_metadata: { provider: "email" }, user_metadata: {}, created_at: timestamp };
+  const fakeUser = { id: owner, aud: "authenticated", role: "authenticated", email: "farmer@example.test", app_metadata: { provider: "email" }, user_metadata: {} as { display_name?: string }, created_at: timestamp };
   const jwt = `${Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")}.${Buffer.from(JSON.stringify({ sub: owner, role: "authenticated", exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.test-signature`;
   const session = { access_token: jwt, refresh_token: "fake-refresh-for-browser-tests", token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: fakeUser };
   const storageKey = `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`;
@@ -23,13 +23,28 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
       sessionStorage.setItem("seeded", "1");
     }
   }, { storageKey, session, signedIn });
-  const state = { profile: withProfile ? { ...profile } : undefined as Schema["ProfileResponse"] | undefined, farms: new Map<string, Schema["FarmResponse"]>(), units: new Map<string, Schema["UnitResponse"]>(), otpCount: 0, tokenCount: 0, failUnitOnce: false, bootstrapStatus: 200, profileWrites: 0 };
+  const state = { profile: withProfile ? { ...profile } : undefined as Schema["ProfileResponse"] | undefined, farms: new Map<string, Schema["FarmResponse"]>(), units: new Map<string, Schema["UnitResponse"]>(), signupCount: 0, resendCount: 0, recoverCount: 0, passwordCount: 0, passwordUpdates: 0, tokenCount: 0, signupStatus: 200, signInError: "", failUnitOnce: false, bootstrapStatus: 200, profileWrites: 0 };
   // Context routes also intercept fetches made by the controlling service worker.
   await page.context().route("**/auth/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
-    if (path.endsWith("/otp")) { state.otpCount++; await route.fulfill({ json: {} }); }
-    else if (path.endsWith("/token")) { state.tokenCount++; await route.fulfill({ json: session }); }
-    else if (path.endsWith("/user")) await route.fulfill({ json: fakeUser });
+    if (path.endsWith("/signup")) {
+      state.signupCount++;
+      fakeUser.user_metadata.display_name = route.request().postDataJSON().data.display_name;
+      await route.fulfill({ status: state.signupStatus, json: state.signupStatus === 200 ? fakeUser : { code: "over_email_send_rate_limit", msg: "Private provider information" } });
+    }
+    else if (path.endsWith("/resend")) { state.resendCount++; await route.fulfill({ json: {} }); }
+    else if (path.endsWith("/recover")) { state.recoverCount++; await route.fulfill({ json: {} }); }
+    else if (path.endsWith("/token")) {
+      if (new URL(route.request().url()).searchParams.get("grant_type") === "password") {
+        state.passwordCount++;
+        if (state.signInError) return route.fulfill({ status: 400, json: { error_code: state.signInError, msg: "Private provider information" } });
+      } else state.tokenCount++;
+      await route.fulfill({ json: session });
+    }
+    else if (path.endsWith("/user")) {
+      if (route.request().method() === "PUT") state.passwordUpdates++;
+      await route.fulfill({ json: fakeUser });
+    }
     else if (path.endsWith("/logout")) await route.fulfill({ status: 204 });
     else await route.fulfill({ status: 400, json: { error: "unexpected_auth_request" } });
   });

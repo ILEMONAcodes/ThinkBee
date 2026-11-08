@@ -17,7 +17,7 @@ Show the install card in Me after the user has done something meaningful (first 
 ## Offline behaviour
 | Area | Offline |
 | --- | --- |
-| Sign in, exchange a magic link, recover a session | no, clear connection message; already cached local data remains readable when safe |
+| Register, sign in, verify email, reset a password, recover a session | no, clear connection message; already cached local data remains readable when safe |
 | Open app, see Home, Records, Reminders | yes, from local data |
 | See weather and daily briefing | show only an unexpired cached snapshot/briefing; otherwise show a clear unavailable-offline state |
 | Create or edit log entries and reminders | yes, drafts sync later |

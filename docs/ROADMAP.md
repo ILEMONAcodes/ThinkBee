@@ -14,7 +14,8 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] BE: farmer ID generation, Supabase user mapping and session validation
 - [x] BE: users, farms, farm units (hives, crop blocks), account deletion
 - [x] FE: app shell, floating nav, desktop rail, theme switch
-- [x] FE: onboarding (splash, welcome, email/magic link auth, profile, add farm)
+- [x] FE: onboarding (splash, welcome, name/email/password registration, email verification, password sign-in/recovery, profile, add farm)
+- [x] FE: increase mobile spacing between the auth wordmark and rounded form sheet to match the supplied reference
 - [x] FE: PWA manifest, service worker, offline page, install prompt
 - [x] FE: prevent reconnect reloads from interrupting offline fallback navigation; recover through cached Home
 - [ ] FE: app lock (PIN or biometrics where available)
@@ -125,3 +126,13 @@ Fixed all seven audit findings: every production build selects Webpack; callback
 Fixed clean deployment builds by generating ignored API types before build, type check and dev startup from the versioned FastAPI contract snapshot in `web/lib/api/openapi.json`. CI exports the backend independently and checks the snapshot for drift. This resolves the missing-schema errors and the consequent implicit `any` on farm rows. TypeScript declarations, mocks and service workers remain generated and ignored. Browser API mocks now cover service-worker requests, and lint ignores generated browser reports.
 
 Validation: production build passed with `schema.d.ts` removed beforehand; lint, type check, 66 unit tests, the Home bundle budget and all 88 Chrome browser checks passed. Browser coverage includes real proxy-injected outages and stalled requests, callback/signed-image cache exclusions, worker updates and cache cleanup, optimized-image offline recovery, install rejection/retry, and onboarding/shell regressions in light/dark at 390px and 1440px. Native installation on physical Android/iPhone devices remains a manual check; qualifying scan/message actions remain in their later roadmap phases.
+
+## Handoff — entry screens, password auth and offline recovery (2026-11-08)
+
+Updated welcome and authentication screens to use transparent, theme-appropriate supplied logos, photo collages and the reference's rounded mobile form sheet. Registration collects name, email, matching passwords and age confirmation; Supabase handles verification, password sign-in and password recovery. New authentication routes are excluded from service-worker caches, passwords remain in memory, and the registration name only suggests a profile the farmer must confirm. Documentation now describes the password flow consistently.
+
+Fixed the earlier CI fallback failure by disabling Serwist's reload on reconnect and using a full document navigation from the offline screen to cached Home. The regression checks cover a reconnect during an in-flight fallback, uncached offline navigation and recovery without a network connection.
+
+Validation: lint, TypeScript, all 74 unit tests, a fresh production Webpack/Serwist build, the 169.8 KB Home JavaScript budget and all 116 Chrome browser checks passed. Browser checks ran with zero retries in 8.1 minutes at 390px/1440px in light and dark, including offline/slow-network paths, recovery, private cache exclusions and setup sync. Reviewed welcome, registration, sign-in and Home screenshots in all four combinations. The overnight artifacts contained browser-launch failures and long gaps between trace events; none recurred in the fresh run with system sleep inhibited. No additional application defect was reproduced. Authentication transport used synthetic fixtures; live email-link completion and physical-device installation remain manual checks.
+
+Next roadmap task: FE app lock (PIN or biometrics where available).

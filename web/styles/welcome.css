@@ -1,0 +1,67 @@
+.welcome-page { min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
+.welcome-header { width: min(100%, 1280px); margin-inline: auto; padding: max(16px, env(safe-area-inset-top)) 20px 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.welcome-brand { display: inline-flex; align-items: center; min-height: 48px; }
+.welcome-brand .brand-mark { width: 124px; }
+.welcome-header-actions { display: flex; gap: 8px; align-items: center; }
+.welcome-skip { display: inline-flex; align-items: center; min-height: 48px; padding: 8px 12px; font-size: .875rem; color: var(--text-2); border-radius: var(--radius-pill); }
+.welcome-header .theme-button { border: 0; background: transparent; }
+.welcome-main { flex: 1; display: grid; align-content: center; width: 100%; }
+.welcome-panel { width: min(100%, 1200px); padding: 0 24px; margin: 0 auto; display: grid; gap: 4px; border-radius: var(--radius-lg); }
+.welcome-panel:focus-visible { outline: 2px solid var(--focus); outline-offset: -4px; }
+.welcome-art { position: relative; width: min(100%, 520px); height: max(290px, 18rem); margin: auto; isolation: isolate; }
+.welcome-flight { position: absolute; width: 112%; height: 110%; top: -6%; left: -6%; color: var(--link); opacity: .45; pointer-events: none; }
+.welcome-flight path { stroke: currentColor; stroke-width: 1.5; stroke-dasharray: 3 7; stroke-linecap: round; }
+.welcome-photo { position: absolute; overflow: hidden; background: var(--color-forest-700); box-shadow: var(--shadow-card); }
+.welcome-photo img { animation: welcome-reveal var(--dur-slow) var(--ease-out-quint); }
+.welcome-photo-main { top: 5%; left: 3%; width: 58%; height: 79%; border-radius: 48% 48% 12px 12px; transform: rotate(-8deg); }
+.welcome-photo-detail { bottom: 9%; right: 1%; width: 38%; height: 47%; border: 5px solid var(--bg); border-radius: 18px 18px 44% 18px; transform: rotate(9deg); }
+.welcome-bee { position: absolute; top: 0; right: 4%; display: flex; flex-direction: column; align-items: center; width: 31%; transform: rotate(8deg); }
+.welcome-bee .brand-mark { width: 100%; }
+.welcome-content { min-width: 0; }
+.welcome-panel-top { display: flex; justify-content: space-between; align-items: center; margin-top: 0; }
+.welcome-count { font-size: .75rem; letter-spacing: .12em; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.welcome-count > span { color: var(--link); font-weight: 600; }
+.welcome-pagination { display: flex; }
+.welcome-pagination button { min-width: 48px; min-height: 48px; display: grid; place-items: center; border-radius: var(--radius-pill); }
+.welcome-pagination span { width: 6px; height: 6px; border-radius: var(--radius-pill); background: var(--text-3); opacity: .4; transition: width var(--dur-base); }
+.welcome-pagination [aria-current] span { width: 24px; opacity: 1; background: var(--link); }
+.welcome-copy { animation: welcome-enter var(--dur-slow) var(--ease-out-quint); }
+.welcome-copy .setup-kicker { font-size: .625rem; letter-spacing: .16em; }
+.welcome-title { font-family: var(--font-display); font-size: clamp(2.35rem, 10vw, 3.2rem); font-weight: 500; line-height: 1.06; letter-spacing: -.035em; margin-top: 12px; text-wrap: balance; }
+.welcome-title em { color: var(--link); font-weight: 500; }
+.welcome-body { margin-top: 16px; max-width: 42ch; color: var(--text-2); font-size: 1rem; line-height: 1.6; }
+.welcome-actions { display: flex; align-items: center; gap: 12px; margin-top: 24px; }
+.welcome-start { flex: 1; justify-content: space-between; padding-inline: 24px; }
+.welcome-next { min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius-pill); font-size: .875rem; }
+.welcome-next:hover, .welcome-skip:hover { background: var(--bg-sunken); }
+.welcome-sign-in { margin-top: 12px; font-size: .875rem; color: var(--text-2); text-align: center; }
+.welcome-sign-in a { display: inline-flex; min-height: 48px; align-items: center; padding-inline: 4px; font-weight: 600; color: var(--link); text-decoration: underline; text-underline-offset: 4px; }
+.welcome-footer { display: none; }
+.welcome-splash { position: fixed; z-index: 100; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; background: var(--bg); pointer-events: none; }
+.welcome-splash .brand-mark { width: min(68vw, 300px); animation: welcome-enter var(--dur-scene) var(--ease-out-quint); }
+.welcome-splash > span:last-child { position: absolute; bottom: max(40px, env(safe-area-inset-bottom)); color: var(--text-3); letter-spacing: .12em; font-size: .75rem; }
+@keyframes welcome-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes welcome-reveal { from { opacity: .4; } to { opacity: 1; } }
+@media (min-width: 600px) and (max-width: 1023px) {
+  .welcome-panel { max-width: 600px; padding-inline: 32px; }
+  .welcome-art { height: max(360px, 22rem); }
+  .welcome-title { font-size: 3.25rem; }
+}
+@media (min-width: 1024px) {
+  .welcome-header { padding: 24px 40px; }
+  .welcome-brand .brand-mark { width: 156px; }
+  .welcome-panel { grid-template-columns: 1.1fr 1fr; align-items: center; gap: 72px; padding: 28px 40px 40px; }
+  .welcome-art { height: 540px; }
+  .welcome-bee { top: 3%; right: 0; }
+  .welcome-photo-main { top: 8%; height: 73%; }
+  .welcome-photo-detail { bottom: 8%; right: -2%; width: 43%; height: 44%; border-width: 8px; }
+  .welcome-panel-top { margin-bottom: 18px; }
+  .welcome-copy .setup-kicker { font-size: .75rem; }
+  .welcome-title { font-size: clamp(3.5rem, 4.5vw, 4.25rem); margin-top: 20px; }
+  .welcome-body { font-size: 1.0625rem; margin-top: 24px; }
+  .welcome-actions { margin-top: 32px; }
+  .welcome-start { min-height: 60px; }
+  .welcome-sign-in { text-align: left; }
+  .welcome-footer { display: flex; align-items: center; width: min(100%, 1280px); margin-inline: auto; justify-content: space-between; padding: 8px 40px 16px; font-size: .75rem; letter-spacing: .025em; color: var(--text-3); }
+}
+@media (max-width: 599px) and (max-height: 780px) { .welcome-art { height: max(240px, 15rem); } .welcome-title { font-size: 2.2rem; } }

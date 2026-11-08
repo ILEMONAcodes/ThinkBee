@@ -19,17 +19,22 @@ export function CallbackScreen() {
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
+    let recovery = false;
+    let unsubscribe = () => {};
     const finish = async () => {
+      const { data: listener } = getSupabase().auth.onAuthStateChange((event) => { if (event === "PASSWORD_RECOVERY") recovery = true; });
+      unsubscribe = () => listener.subscription.unsubscribe();
       await completeSignIn();
       const { data } = await getSupabase().auth.getSession();
       if (!data.session) throw new AppError("link_expired");
+      if (recovery) { if (active) router.replace("/auth/reset-password"); return; }
       const account = await loadAccount(data.session.user.id);
       if (!active) return;
       try { localStorage.setItem("thinkbee-welcome-seen", "1"); } catch { /* Cosmetic only. */ }
       router.replace(!account.profile && !account.profileJob ? "/setup/profile" : account.farmJob || account.profileJob ? "/setup/farm" : "/");
     };
     void finish().catch((failure: unknown) => { if (active) setError(failure); });
-    return () => { active = false; };
+    return () => { active = false; unsubscribe(); };
   }, [attempt, router]);
   return <section className="setup-narrow"><h1 className="setup-title">{t("returning")}</h1>
     {!online ? <p className="mt-5" role="status">{t("connectionRequired")}</p> : null}

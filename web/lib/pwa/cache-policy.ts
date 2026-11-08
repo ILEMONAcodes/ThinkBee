@@ -1,4 +1,4 @@
-const privatePath = /^\/(?:auth|sign-in|setup|api\/v1)(?:\/|$)/;
+const privatePath = /^\/(?:auth|sign-in|register|forgot-password|setup|api\/v1)(?:\/|$)/;
 const privateParameter = /^(?:code|error(?:_code|_description)?|access_token|refresh_token|token(?:_hash)?|signature|expires|x-amz-.+|x-goog-.+)$/i;
 const imagePath = /\.(?:avif|gif|ico|jpe?g|png|svg|webp)$/i;
 

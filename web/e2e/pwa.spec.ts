@@ -90,16 +90,18 @@ test("keeps optimized images offline without the browser HTTP cache", async ({ p
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
   await page.goto("/welcome");
-  const photo = page.locator(".welcome-photo img");
-  await expect.poll(() => photo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  const photos = page.locator(".welcome-photo img");
+  await expect(photos).toHaveCount(2);
+  await expect.poll(() => photos.evaluateAll((images: HTMLImageElement[]) => images.every((image) => image.naturalWidth > 0))).toBe(true);
   await page.waitForFunction(async () => {
-    const image = document.querySelector<HTMLImageElement>(".welcome-photo img");
-    return Boolean(image && await (await caches.open("thinkbee-images")).match(image.currentSrc));
+    const images = [...document.querySelectorAll<HTMLImageElement>(".welcome-photo img")];
+    const cache = await caches.open("thinkbee-images");
+    return images.length === 2 && (await Promise.all(images.map((image) => cache.match(image.currentSrc)))).every(Boolean);
   });
   const cdp = await context.newCDPSession(page);
   await cdp.send("Network.enable");
   await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
   await context.setOffline(true);
   await page.reload();
-  await expect.poll(() => photo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  await expect.poll(() => photos.evaluateAll((images: HTMLImageElement[]) => images.length === 2 && images.every((image) => image.naturalWidth > 0))).toBe(true);
 });
