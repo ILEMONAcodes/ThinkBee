@@ -30,6 +30,20 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: t("description"),
     referrer: "no-referrer",
+    applicationName: t("title"),
+    manifest: "/manifest.webmanifest",
+    icons: {
+      icon: [
+        { url: "/icons/favicon.svg", type: "image/svg+xml" },
+        { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+      ],
+      apple: [{ url: "/icons/apple-touch-icon-180.png", sizes: "180x180", type: "image/png" }],
+    },
+    appleWebApp: {
+      capable: true,
+      title: t("title"),
+      statusBarStyle: "black-translucent",
+    },
   };
 }
 
@@ -46,15 +60,23 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const pwa = await getTranslations("Pwa");
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{
+          __html: "addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__thinkBeeInstallPrompt=e})",
+        }} />
       </head>
       <body className={`${inter.variable} ${fraunces.variable}`}>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider>{children}</ThemeProvider>
+          <aside className="pwa-update" hidden id="pwa-u" role="status">
+            <p>{pwa("update")}</p>
+            <button data-pwa-u type="button">{pwa("apply")}</button>
+          </aside>
         </NextIntlClientProvider>
       </body>
     </html>

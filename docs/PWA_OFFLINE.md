@@ -8,14 +8,16 @@ Show the install card in Me after the user has done something meaningful (first 
 
 ## Service worker (Serwist)
 - Precache the shell, fonts, offline page, icons.
-- Runtime: images stale-while-revalidate with size and age limits; API reads network-first with timeout and fallback to local Dexie data; never cache auth routes; signed media URLs cached only for their lifetime.
+- Runtime: public same-origin images, including safe `next/image` requests, use stale-while-revalidate with entry and age limits. Pages and RSC reads have a four-second response deadline and use cached content on network failure or server errors; uncached navigations fall back to the offline page.
+- Authenticated requests and API reads stay network-only, with private offline data read from account-scoped Dexie (see `DECISIONS.md`). Never cache auth routes, callback parameters or signed media URLs, including signed sources inside image-optimizer URLs. Activation removes old private entries from application runtime caches.
 - Update flow: new worker waits, app shows "Update available", applies on user tap or next cold start.
+- Reconnecting does not reload the page: disable Serwist's `reloadOnOnline` so connectivity events cannot interrupt navigation or lose unsynced form input. Feature listeners resume sync. The offline screen's recovery link uses a full document navigation to the precached Home page.
 - Push handler shows notification, click focuses an existing window and routes to the room.
 
 ## Offline behaviour
 | Area | Offline |
 | --- | --- |
-| Sign in, exchange a magic link, recover a session | no, clear connection message; already cached local data remains readable when safe |
+| Register, sign in, verify email, reset a password, recover a session | no, clear connection message; already cached local data remains readable when safe |
 | Open app, see Home, Records, Reminders | yes, from local data |
 | See weather and daily briefing | show only an unexpired cached snapshot/briefing; otherwise show a clear unavailable-offline state |
 | Create or edit log entries and reminders | yes, drafts sync later |

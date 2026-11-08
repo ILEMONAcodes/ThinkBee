@@ -11,7 +11,7 @@ import { screenSlide } from "@/lib/motion";
 import { isImmersiveRoute } from "@/lib/navigation";
 import { usePreferences } from "@/lib/state/preferences";
 
-export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
+export function AppShell({ children, railBrand }: Readonly<{ children: ReactNode; railBrand: ReactNode }>) {
   const pathname = usePathname();
   const t = useTranslations("Shell");
   const pinned = usePreferences((state) => state.railPinned);
@@ -37,7 +37,7 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
     <div className="app-shell" data-pinned={pinned} data-immersive={immersive}>
       <SetupEntry />
       <a className="skip-link" href="#main-content">{t("skip")}</a>
-      {!immersive ? <AppNavigation /> : null}
+      {!immersive ? <AppNavigation railBrand={railBrand} /> : null}
       <main className="shell-main" id="main-content" tabIndex={-1}>
         <ConnectionStatus />
         <div className="shell-content" key={pathname} ref={content}>

@@ -1,6 +1,6 @@
 # FIGMA_PROMPT.md
 
-Paste everything below the line into your Figma AI tool (Figma Make or similar). Attach: `assets/brand/macaney-logo.png`, `assets/brand/macaney-website-palette-reference.png`, and the three files in `assets/inspiration/`. Also give it `docs/UI_DESIGN.md` and `design/tokens.json`.
+Paste everything below the line into your Figma AI tool (Figma Make or similar). Attach the Think Bee files in `assets/wordmark/`, `assets/short-form/` and `assets/app-icons/`, plus `assets/brand/macaney-website-palette-reference.png` and the three files in `assets/inspiration/`. Keep `assets/brand/macaney-logo.png` separate for “by Macaney” attribution. Also give it `docs/UI_DESIGN.md` and `design/tokens.json`.
 
 ---
 

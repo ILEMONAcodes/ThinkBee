@@ -1,0 +1,10 @@
+.brand-mark { display: inline-block; width: var(--brand-width); max-width: 100%; flex-shrink: 0; vertical-align: middle; }
+.brand-mark > img { width: 100%; height: auto; }
+.brand-credit { display: inline-flex; align-items: center; min-width: 48px; min-height: 48px; text-decoration: underline; text-underline-offset: 3px; }
+.brand-mark[data-surface="auto"] > .brand-on-dark { display: none; }
+:root[data-theme="dark"] .brand-mark[data-surface="auto"] > .brand-on-light { display: none; }
+:root[data-theme="dark"] .brand-mark[data-surface="auto"] > .brand-on-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand-mark[data-surface="auto"] > .brand-on-light { display: none; }
+  :root:not([data-theme="light"]) .brand-mark[data-surface="auto"] > .brand-on-dark { display: block; }
+}

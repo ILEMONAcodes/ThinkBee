@@ -1,13 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { cropNames, emptyFarm, farmSchema, maxSetupUnits, profileSchema, signInSchema } from "@/lib/onboarding/forms";
+import { cropNames, emptyFarm, farmSchema, maxSetupUnits, profileSchema } from "@/lib/onboarding/forms";
 
 describe("onboarding validation", () => {
-  it("requires a valid email and deliberate age confirmation", () => {
-    expect(signInSchema.safeParse({ email: "farmer@example.test", adult: false }).success).toBe(false);
-    expect(signInSchema.safeParse({ email: "not an email", adult: true }).success).toBe(false);
-    expect(signInSchema.safeParse({ email: "farmer@example.test", adult: true }).success).toBe(true);
-  });
   it("trims profiles and rejects blank names", () => {
     expect(profileSchema.safeParse({ display_name: "   ", bio: "" }).success).toBe(false);
     expect(profileSchema.parse({ display_name: " Ada ", bio: " Farmer " })).toEqual({ display_name: "Ada", bio: "Farmer" });

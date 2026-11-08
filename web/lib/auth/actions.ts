@@ -1,12 +1,36 @@
 import { AppError } from "@/lib/api/errors";
 import { callbackUrl, getSupabase } from "@/lib/auth/client";
 
-export async function sendSignInLink(email: string): Promise<void> {
-  const { error } = await getSupabase().auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: callbackUrl(), data: { chat_age_confirmed: true } },
+function authFailure(error: { code?: string; status?: number }): AppError {
+  return new AppError(error.code ?? "auth_unavailable", error.status);
+}
+
+export async function registerAccount(name: string, email: string, password: string): Promise<void> {
+  const { error } = await getSupabase().auth.signUp({
+    email, password,
+    options: { emailRedirectTo: callbackUrl(), data: { display_name: name, chat_age_confirmed: true } },
   });
-  if (error) throw new AppError("sign_in_failed", error.status);
+  if (error) throw authFailure(error);
+}
+
+export async function signInWithPassword(email: string, password: string): Promise<void> {
+  const { error } = await getSupabase().auth.signInWithPassword({ email, password });
+  if (error) throw authFailure(error);
+}
+
+export async function resendVerification(email: string): Promise<void> {
+  const { error } = await getSupabase().auth.resend({ type: "signup", email, options: { emailRedirectTo: callbackUrl() } });
+  if (error) throw authFailure(error);
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const { error } = await getSupabase().auth.resetPasswordForEmail(email, { redirectTo: callbackUrl() });
+  if (error) throw authFailure(error);
+}
+
+export async function updatePassword(password: string): Promise<void> {
+  const { error } = await getSupabase().auth.updateUser({ password });
+  if (error) throw authFailure(error);
 }
 
 let exchange: Promise<void> | undefined;

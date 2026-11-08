@@ -1,22 +1,22 @@
 "use client";
 
 import { PushPin } from "@phosphor-icons/react/dist/csr/PushPin";
-import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 import { NavigationLinks } from "@/components/shell/navigation-links";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { usePreferences } from "@/lib/state/preferences";
 
-export function DesktopRail() {
+export function DesktopRail({ brand }: Readonly<{ brand: ReactNode }>) {
   const t = useTranslations("Navigation");
   const pinned = usePreferences((state) => state.railPinned);
   const toggleRail = usePreferences((state) => state.toggleRail);
   return (
     <aside className="desktop-rail" data-pinned={pinned} aria-label={t("sidebar")}>
       <Link aria-label={t("brandHome")} className="rail-brand" href="/">
-        <Image alt="" className="rail-logo" height={352} priority src="/brand/macaney-logo.png" width={498} />
+        {brand}
         <span className="rail-label font-display text-2xl">{t("brandName")}</span>
       </Link>
       <nav aria-label={t("primary")} className="rail-destinations"><NavigationLinks variant="desktop" /></nav>

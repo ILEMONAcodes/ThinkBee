@@ -3,7 +3,9 @@
 This document is for the Figma designer and for the frontend agent. It is binding. If you are about to deviate from it, stop and write the reason in `docs/DECISIONS.md` first.
 
 Assets referenced here live in `assets/`:
-- `assets/brand/macaney-logo.png` — the Macaney bee and wordmark.
+- `assets/wordmark/` and `assets/short-form/` — the Think Bee product wordmark and short mark.
+- `assets/app-icons/` — the Think Bee PWA, browser and notification icons.
+- `assets/brand/macaney-logo.png` — the Macaney parent-brand mark, used only for creator attribution such as “by Macaney”.
 - `assets/brand/macaney-website-palette-reference.png` — the Macaney website. **This is the colour source.** Palette is strict.
 - `assets/inspiration/ref-01-assistant-light-soft-cards.png` — light assistant app.
 - `assets/inspiration/ref-02-chat-list-and-room.png` — chat list and conversation.
@@ -31,7 +33,7 @@ The design must not read as AI-generated or template-made. Avoid:
 - Rows of three identical cards, each with a circle icon, a bold title and two lines of grey text.
 - Glassmorphism on every surface. Blur is allowed on the bottom navigation and on sheets only.
 - Stock-photo smiles, 3D renders unrelated to bees or farming, floating abstract blobs.
-- Filler marketing copy ("Unlock the power of…", "Welcome back!", "Seamless experience").
+- Filler marketing copy ("Unlock the power of…", "Seamless experience"). The returning-user auth heading “Welcome back.” is an explicit team choice.
 - Perfectly symmetric layouts everywhere. Vary rhythm: a large hero next to a tight list, a full-bleed photo next to a narrow column.
 - Default component-library looks. Every primitive is restyled to the tokens.
 
@@ -67,6 +69,10 @@ Rules:
 
 ---
 
+### Product logo surfaces
+
+Use only the transparent supplied `thinkbee-wordmark` and `thinkbee-short` SVG masters inside the app. Choose the light/dark master for the actual surface, including splash, setup, sidebar and offline UI. Never use background-bearing logo exports or add a contrasting paper box. Platform maskable/touch icons keep their platform-required icon surfaces.
+
 ## 3. Typography
 
 | Use | Font | Notes |
@@ -96,7 +102,7 @@ Headlines use tight letter spacing (-0.01em). Numbers in timelines and reminders
 
 - Icons: **Phosphor**, regular weight for inactive, fill for active tab, 24px, stroke consistent. Custom icons needed: hive, frame, queen cage (not used in MVP), smoker, comb cell, crop leaf, pest. Draw them in the same stroke style or use Phosphor equivalents.
 - The **honeycomb** is the brand device. Build a hex grid component (`<CombField />`) that renders flat hexagons. Use it as: hero card texture at 6 to 10% opacity, loading state, empty-state illustration, avatar frame for groups, and the shape of the scan shutter button. Do not tile it across entire screens.
-- The **bee** comes from the logo. Provide a simplified bee mark (SVG) for loading, empty states and the assistant avatar. It must be a traced version of the logo bee, not a new mascot. Ask for a vector in `docs/ASSET_REQUESTS.md`.
+- The **bee** comes from the supplied Think Bee short-form SVG. Use it for loading, empty states and the assistant avatar; do not redraw it as a new mascot.
 - Photography: real hives, real crops, real Nigerian farmers and beekeepers, supplied by Macaney. Never stock images of people. Rounded 24, subtle forest-tinted overlay where text sits on a photo.
 - Reference 01 and 03 use glossy 3D forms. Take the *idea* (a bold, tactile hero object per screen) and express it with a layered honeycomb cluster and a bee, rendered in flat shapes with soft inner shading. Do not import blue or red 3D mascots.
 
@@ -173,10 +179,10 @@ This is a real layout. Do not stretch the phone.
 Design every screen below in light and dark, mobile and desktop where noted (M = mobile, D = desktop). Each needs loading, empty, error and offline variants. Frame names: `Area / Screen / State / Theme / Device`.
 
 ### 8.1 Onboarding (M, D)
-1. **Splash**: logo on forest-900, comb cells assemble into the bee mark, then fade to Welcome.
-2. **Welcome**: 3 swipeable panels in Fraunces headlines with real photography (scan, records, community). Skip always visible. Orange "Get started".
-3. **Email sign-in**: large email field, plain sentence explaining that Think Bee will send a secure sign-in link, and one orange "Email me a sign-in link" button. Optional OAuth buttons appear only for providers enabled in configuration.
-4. **Check your email**: show the submitted address, a clear instruction to open the magic link on this device, resend cooldown, "Use a different email" action, expired-link error and a returning-from-link loading state.
+1. **Splash**: transparent Think Bee wordmark centred on a plain theme-matched surface, with small Macaney attribution. Brief entrance; skip animation for reduced motion. Welcome and auth footer credits link Macaney to `https://www.macaney.com/`.
+2. **Welcome**: 3 swipeable photo collages (scan, records, community), the transparent short mark and a restrained bee-flight line. No small decorative captions, italic notes or caption dashes. Large Fraunces headlines. Skip, pagination and Next stay accessible; orange “Get started” opens registration, with a separate Sign in link. Photos sit above text on mobile and beside it on desktop.
+3. **Registration and sign-in**: wordmark header and rounded form sheet on a soft forest surface on mobile, without the short bee or story area; forest story/photo panel with the short bee beside the form on desktop. Registration collects name, email, password, password confirmation and explicit age confirmation. Password fields have accessible show/hide controls. Returning users see “Welcome back.” with email, password and Forgot password. No social sign-in buttons or logos.
+4. **Verify email and password recovery**: show the submitted address and instruction to open the one-time confirmation link in this browser; resend cooldown, change-details action and expired-link handling. After verification, continue to profile/farm setup; subsequent sign-in uses the saved password. Password recovery emails a one-time link, then shows new-password and confirmation fields. Never persist form passwords or email addresses outside Supabase’s session APIs.
 5. **Create profile**: display name, optional photo (camera or gallery), short bio. Shows exactly what others will see in a live preview card.
 6. **Add your farm or apiary**: type (crops, bees, both), name, general location (state, LGA), number and type of hives or crops. Skippable, can add later.
 7. **Permissions primer**: shown only when a feature first needs camera, microphone, gallery, notifications or location. One sentence on why, a clear "Not now" that keeps the rest of the app working.
