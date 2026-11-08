@@ -11,6 +11,7 @@ Show the install card in Me after the user has done something meaningful (first 
 - Runtime: public same-origin images, including safe `next/image` requests, use stale-while-revalidate with entry and age limits. Pages and RSC reads have a four-second response deadline and use cached content on network failure or server errors; uncached navigations fall back to the offline page.
 - Authenticated requests and API reads stay network-only, with private offline data read from account-scoped Dexie (see `DECISIONS.md`). Never cache auth routes, callback parameters or signed media URLs, including signed sources inside image-optimizer URLs. Activation removes old private entries from application runtime caches.
 - Update flow: new worker waits, app shows "Update available", applies on user tap or next cold start.
+- Reconnecting does not reload the page: disable Serwist's `reloadOnOnline` so connectivity events cannot interrupt navigation or lose unsynced form input. Feature listeners resume sync. The offline screen's recovery link uses a full document navigation to the precached Home page.
 - Push handler shows notification, click focuses an existing window and routes to the room.
 
 ## Offline behaviour

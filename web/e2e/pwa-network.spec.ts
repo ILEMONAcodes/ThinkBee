@@ -38,6 +38,25 @@ test("bounds stalled uncached navigation and RSC requests", async ({ page, netwo
   expect(result.elapsed).toBeLessThan(7000);
 });
 
+test("a reconnect event cannot interrupt an in-flight offline fallback", async ({ page, network }) => {
+  network.stalls.add("/uncached-reconnect");
+  const target = `${network.origin}/uncached-reconnect`;
+  await Promise.all([
+    page.waitForURL(target, { waitUntil: "load", timeout: 8000 }),
+    page.evaluate((url) => {
+      // Deliver the event during the worker's four-second network deadline.
+      setTimeout(() => {
+        sessionStorage.setItem("test-reconnect-dispatched", "1");
+        window.dispatchEvent(new Event("online"));
+      }, 100);
+      window.location.assign(url);
+    }, target),
+  ]);
+  expect(await page.evaluate(() => sessionStorage.getItem("test-reconnect-dispatched"))).toBe("1");
+  await expect(page).toHaveURL(target);
+  await expect(page.getByRole("heading", { name: "No signal right now" })).toBeVisible();
+});
+
 test("keeps root callbacks and signed images out of worker caches", async ({ page, network }) => {
   await page.goto(`${network.origin}/?code=synthetic-test-code`);
   await page.waitForURL("**/auth/callback?code=synthetic-test-code");

@@ -16,6 +16,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] FE: app shell, floating nav, desktop rail, theme switch
 - [x] FE: onboarding (splash, welcome, email/magic link auth, profile, add farm)
 - [x] FE: PWA manifest, service worker, offline page, install prompt
+- [x] FE: prevent reconnect reloads from interrupting offline fallback navigation; recover through cached Home
 - [ ] FE: app lock (PIN or biometrics where available)
 
 ## Phase 2: AI core

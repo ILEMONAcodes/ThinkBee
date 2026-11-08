@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import "@/styles/onboarding.css";
@@ -13,7 +12,8 @@ export default async function OfflinePage() {
         <p className="setup-kicker">{t("offlineKicker")}</p>
         <h1 className="font-display">{t("offlineTitle")}</h1>
         <p className="text-subtle">{t("offlineBody")}</p>
-        <Link className="setup-primary" href="/">{t("offlineAction")}</Link>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Recover from the worker's cached document without an RSC request. */}
+        <a className="setup-primary" href="/">{t("offlineAction")}</a>
       </div>
     </main>
   );

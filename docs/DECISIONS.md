@@ -30,6 +30,7 @@ Open decisions from the PRD never block work. Each has a working default. Put th
 
 | Date | Decision | Reason |
 | --- | --- | --- |
+| 2026-11-07 | Disable Serwist's automatic reload on reconnect; recover from the offline screen through a native document link | The CI trace and local reproduction show the injected `online` listener reloading Home while the worker returns the offline fallback. Preserve the current navigation and unsynced input; existing feature listeners resume sync. A native recovery link uses precached Home without depending on an RSC request. |
 | 2026-11-05 | Next.js PWA with Serwist, FastAPI backend, Postgres, Redis | Requested stack |
 | 2026-11-05 | WebSocket for realtime, Web Push for notifications | Fits FastAPI, no extra vendor |
 | 2026-11-05 | Not end-to-end encrypted in MVP | PRD requires review team access to reported messages |

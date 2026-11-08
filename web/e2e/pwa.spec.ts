@@ -33,20 +33,34 @@ test("manifest, install prompt and supplied icons are wired", async ({ page }) =
   await expect(page.getByText("Installation was not started. You can try again here later.")).toBeVisible();
 });
 
-test("cached Home reloads offline and unknown pages use the offline fallback", async ({ page, context }) => {
+test("cached Home reloads offline", async ({ page, context }) => {
   await page.goto("/");
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
   await context.setOffline(true);
-  await page.reload({ waitUntil: "domcontentloaded" });
+  const response = await page.reload();
+  expect(response?.fromServiceWorker()).toBe(true);
   await expect(page.getByRole("heading", { name: "A little care, every day" })).toBeVisible();
-  await page.goto("/not-cached-while-offline", { waitUntil: "domcontentloaded" });
+});
+
+test("uncached offline navigation shows the fallback and recovers Home", async ({ page, context }) => {
+  await page.goto("/");
+  await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+  await context.setOffline(true);
+  const response = await page.goto("/not-cached-while-offline");
+  expect(response?.fromServiceWorker()).toBe(true);
+  await expect(page).toHaveURL(/\/not-cached-while-offline$/);
   await expect(page.getByRole("heading", { name: "No signal right now" })).toBeVisible();
   const recovery = page.getByRole("link", { name: "Open Think Bee" });
   expect((await recovery.boundingBox())!.height).toBeGreaterThanOrEqual(48);
-  await recovery.click();
+  const [home] = await Promise.all([
+    page.waitForResponse((reply) => reply.request().isNavigationRequest() && new URL(reply.url()).pathname === "/"),
+    recovery.click(),
+  ]);
+  expect(home.fromServiceWorker()).toBe(true);
+  await expect(page).toHaveURL("/");
   await expect(page.getByRole("heading", { name: "A little care, every day" })).toBeVisible();
-  await context.setOffline(false);
 });
 
 test("handles install rejection with feedback and a fresh-event retry", async ({ page }) => {

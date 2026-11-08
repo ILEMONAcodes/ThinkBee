@@ -30,6 +30,9 @@ const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
   register: false,
+  // Reconnect must preserve the current route and unsynced input. Feature
+  // listeners already resume sync; only an accepted worker update reloads.
+  reloadOnOnline: false,
   disable: process.env.NODE_ENV === "development",
   additionalPrecacheEntries: [
     { url: "/", revision: pwaRevision },
