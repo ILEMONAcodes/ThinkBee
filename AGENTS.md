@@ -32,7 +32,7 @@ Think Bee is a Progressive Web App for farmers and beekeepers in Nigeria. A farm
 | Files | S3-compatible object storage, upload through presigned URLs |
 | AI | Google Gemini through an `AIProvider` interface (`docs/AI_SAFETY.md`) |
 | Weather | Open-Meteo through a `WeatherProvider` interface, cached in Redis |
-| Auth | Supabase Auth free tier, email magic links first, optional OAuth; FastAPI validates Supabase JWTs |
+| Auth | Supabase Auth free tier, email/password with email verification and recovery; no social sign-in; FastAPI validates Supabase JWTs |
 | Tests | Vitest and Playwright (web), Pytest and httpx (api) |
 | Local dev | Docker Compose for Postgres, Redis, and an S3 emulator |
 
@@ -94,7 +94,7 @@ Each backend module holds `router.py`, `schemas.py`, `service.py`, `models.py`. 
 - Photos are compressed on the device before upload. Voice notes are recorded at a low bitrate.
 
 **Security**
-- Supabase Auth owns email magic-link delivery, optional OAuth, session refresh, token persistence, and authentication rate limits.
+- Supabase Auth owns email/password registration and sign-in, email verification, password recovery, session refresh, token persistence, and authentication rate limits.
 - FastAPI accepts `Authorization: Bearer <supabase_token>` and validates the signature, issuer, audience, expiry and subject against the Supabase project JWKS. It never issues or refreshes auth tokens.
 - Application code must not copy Supabase access or refresh tokens into its own storage. Use `@supabase/supabase-js` session APIs and keep the service-role key backend-only.
 - Every endpoint checks authentication and the caller's role in that space. Role checks live in one place (`modules/chat/permissions.py`).

@@ -3,6 +3,7 @@
 @import "./brand.css";
 @import "./shell.css";
 @import "./pwa.css";
+@import "./app-lock.css";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 

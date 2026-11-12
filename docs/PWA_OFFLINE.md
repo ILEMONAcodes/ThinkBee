@@ -19,6 +19,8 @@ Show the install card in Me after the user has done something meaningful (first 
 | --- | --- |
 | Register, sign in, verify email, reset a password, recover a session | no, clear connection message; already cached local data remains readable when safe |
 | Open app, see Home, Records, Reminders | yes, from local data |
+| Unlock an existing app lock | yes, PIN verification stays on this browser; platform device verification works without an app-server request |
+| Forgotten PIN recovery | needs a connection and explicit confirmation; clears unsynced local drafts before SDK sign-out and lock removal |
 | See weather and daily briefing | show only an unexpired cached snapshot/briefing; otherwise show a clear unavailable-offline state |
 | Create or edit log entries and reminders | yes, drafts sync later |
 | Read loaded chats | yes |

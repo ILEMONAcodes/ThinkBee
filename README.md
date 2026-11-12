@@ -9,7 +9,10 @@ Requirements: Node.js 24, npm 11, Python 3.12, Docker with Compose, and a Supaba
 1. Copy `env/web.env.example` to `web/.env.local` and `env/api.env.example` to `api/.env`, then add the Supabase URL, publishable key and backend-only service-role key.
 2. Start PostgreSQL, Redis, and MinIO with `docker compose up -d`.
 3. In `web/`, run `npm ci` and `npm run dev`.
-4. In `api/`, create a Python 3.12 virtual environment, install `.[dev]`, and run `uvicorn app.main:app --reload`.
+4. In `api/`, create a Python 3.12 virtual environment and run `pip install -c requirements.lock -e '.[dev]'`. Run `alembic upgrade head` before starting `uvicorn app.main:app --reload`.
+5. In another terminal with the same API environment, run `arq app.worker.WorkerSettings` so account deletion requests finish in Supabase.
+
+Use Node.js 24 from `.nvmrc` and Python 3.12 from `.python-version`; an old virtual environment must be recreated with the required Python version. See [web checks](web/README.md) and [API checks](api/README.md) for lint, types, tests and database-test setup. Database tests need an explicit `TEST_DATABASE_URL`; without it, pytest skips them.
 
 Read `AGENTS.md` before making changes. The current build order is tracked in `docs/ROADMAP.md`.
 

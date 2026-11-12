@@ -1,0 +1,37 @@
+#app-lock-cover { display: none; }
+html[data-app-lock] #app-content { visibility: hidden; pointer-events: none; }
+html[data-app-lock] #app-content * { visibility: hidden !important; }
+html[data-app-lock] next-route-announcer { display: none; }
+html[data-app-lock] { overflow: hidden; }
+html[data-app-lock] #app-lock-cover { display: grid; position: fixed; inset: 0; z-index: 110; place-content: center; justify-items: center; gap: 24px; padding: 24px; background: var(--bg); text-align: center; }
+.app-lock-dialog { width: 100%; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: max(32px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom)); border: 0; background: var(--bg); color: var(--text); overflow-y: auto; }
+.app-lock-dialog::backdrop { background: var(--bg); }
+.lock-dialog-content { display: grid; justify-items: center; align-content: center; min-height: 100%; gap: 32px; }
+.lock-dialog-card { width: min(100%, 460px); padding: 28px 24px; border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--bg-raised); box-shadow: var(--shadow-card); animation: lock-enter var(--dur-fast) var(--ease-out-quint); }
+.lock-title { margin-top: 16px; font-family: var(--font-display); font-size: clamp(1.75rem, 7vw, 2.25rem); line-height: 1.15; }
+.lock-form { display: grid; gap: 16px; margin-top: 24px; }
+.lock-label { display: block; margin-bottom: 8px; font-weight: 600; }
+.lock-pin-field { position: relative; }
+.lock-input { width: 100%; min-width: 0; min-height: 56px; padding: 12px 60px 12px 20px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--bg); color: var(--text); font-size: 1.25rem; letter-spacing: .18em; font-variant-numeric: tabular-nums; }
+.lock-pin-toggle { display: grid; place-items: center; position: absolute; top: 50%; right: 4px; transform: translateY(-50%); width: 48px; height: 48px; color: var(--text-2); border-radius: var(--radius-pill); }
+.lock-primary, .lock-secondary, .lock-danger, .lock-text { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; min-width: 48px; padding: 12px 20px; border-radius: var(--radius-pill); font-weight: 600; text-align: center; cursor: pointer; transition: transform var(--dur-fast); }
+.lock-primary { background: var(--accent); color: var(--text-on-honey); }
+.lock-secondary { border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+.lock-text { color: var(--link); text-decoration: underline; text-underline-offset: 4px; }
+.lock-danger { background: var(--color-danger); color: var(--color-paper); }
+.lock-primary:active, .lock-secondary:active, .lock-danger:active { transform: scale(.96); }
+.lock-primary:disabled, .lock-secondary:disabled, .lock-danger:disabled, .lock-text:disabled { opacity: .55; cursor: default; }
+.lock-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.lock-error { padding: 12px 16px; border-radius: var(--radius-sm); background: var(--color-danger-bg); color: var(--color-danger); font-size: 1rem; overflow-wrap: anywhere; }
+.lock-notice { margin-top: 16px; color: var(--text-2); }
+.lock-recovery { margin-top: 24px; }
+.lock-settings { margin-bottom: 24px; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--bg-raised); }
+.lock-settings-heading { display: flex; align-items: center; gap: 12px; }
+.lock-settings-heading svg { flex-shrink: 0; color: var(--link); }
+.lock-status { margin-top: 20px; font-weight: 600; }
+.lock-device { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
+.lock-device > svg { flex-shrink: 0; color: var(--link); }
+.lock-device > div { flex: 1; min-width: min(100%, 220px); }
+.lock-footnote { margin-top: 24px; color: var(--text-2); font-size: .875rem; }
+@media (min-width: 640px) { .lock-settings { padding: 32px; } .lock-dialog-card { padding: 40px; } }
+@keyframes lock-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

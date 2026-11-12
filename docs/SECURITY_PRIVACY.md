@@ -19,6 +19,16 @@ Checklist. Tick before pilot.
 - [ ] Message bodies, email addresses, auth tokens and magic-link URLs never logged
 - [ ] Retention jobs for chat media, scan photos and reports per `docs/DECISIONS.md`
 
+## Local app lock
+
+The optional lock in Me is a screen privacy control for one account per browser profile. A six-digit PIN is checked against a random 32-byte salt and a 32-byte PBKDF2/SHA-256 verifier with 600,000 iterations. Only that verifier and local lock metadata are stored; PINs are never sent to the API. Failed attempts and retry deadlines survive reloads, and Web Locks serialize attempts across tabs. Unlock state stays in memory and is not shared between tabs.
+
+Optional platform WebAuthn credentials require user verification. The browser may use fingerprint, face or its device passcode. The app checks the assertion's challenge, origin, RP ID, presence/verification flags, credential ID, user handle and signature against the public key held locally. Biometric data remains with the authenticator. Removing device unlock removes its local association; the operating system may retain the credential in its own settings.
+
+Reload, backgrounding, restored pages, manual locking and the configured idle timeout hide and inert the app. Invalid or blocked lock storage keeps it hidden. Recovery explicitly confirms loss of unsynced drafts, clears the current local account store, signs out through Supabase, and removes the lock only after cleanup succeeds. Future private local stores must join this same cleanup path.
+
+This lock does not encrypt IndexedDB or other browser storage. Someone with browser developer tools, malicious same-origin code or control of the operating system can bypass a local screen gate or attack a copied verifier. Keep the device's screen lock and normal account security enabled. Clearing site data also clears this optional lock.
+
 ## Abuse
 - [ ] Rate limits on send, upload, search, report
 - [ ] File content sniffing, size caps, antivirus or at minimum image re-encode

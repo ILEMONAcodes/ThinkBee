@@ -5,6 +5,9 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 
 import { ThemeProvider } from "@/components/shell/theme-provider";
+import { AppLockBootstrap } from "@/components/app-lock/app-lock-bootstrap";
+import { BrandMark } from "@/components/ui/brand-mark";
+import { appLockBootScript } from "@/lib/app-lock/config";
 import { themeScript } from "@/lib/theme";
 
 import "@/styles/globals.css";
@@ -61,22 +64,32 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const locale = await getLocale();
   const messages = await getMessages();
   const pwa = await getTranslations("Pwa");
+  const lock = await getTranslations("AppLock");
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: appLockBootScript }} />
         <script dangerouslySetInnerHTML={{
           __html: "addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__thinkBeeInstallPrompt=e})",
         }} />
       </head>
       <body className={`${inter.variable} ${fraunces.variable}`}>
         <NextIntlClientProvider messages={messages}>
-          <ThemeProvider>{children}</ThemeProvider>
-          <aside className="pwa-update" hidden id="pwa-u" role="status">
-            <p>{pwa("update")}</p>
-            <button data-pwa-u type="button">{pwa("apply")}</button>
-          </aside>
+          <div id="app-content">
+            <ThemeProvider>{children}</ThemeProvider>
+            <aside className="pwa-update" hidden id="pwa-u" role="status">
+              <p>{pwa("update")}</p>
+              <button data-pwa-u type="button">{pwa("apply")}</button>
+            </aside>
+          </div>
+          <div id="app-lock-cover">
+            <BrandMark width={152} />
+            <p role="status">{lock("loading")}</p>
+            <a className="lock-secondary" href="">{lock("reload")}</a>
+          </div>
+          <AppLockBootstrap />
         </NextIntlClientProvider>
       </body>
     </html>

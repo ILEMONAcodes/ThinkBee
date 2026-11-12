@@ -3,16 +3,15 @@
 import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { WelcomeArt, welcomePanels } from "@/components/onboarding/welcome-art";
-import { ConnectionStatus } from "@/components/shell/connection-status";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { BrandMark } from "@/components/ui/brand-mark";
 
 function rememberWelcome() { try { localStorage.setItem("thinkbee-welcome-seen", "1"); } catch { /* Optional preference. */ } }
 
-export function WelcomeCarousel() {
+export function WelcomeCarousel({ connectionStatus }: Readonly<{ connectionStatus: ReactNode }>) {
   const t = useTranslations("Welcome");
   const [index, setIndex] = useState(0);
   const [splash, setSplash] = useState(true);
@@ -25,7 +24,7 @@ export function WelcomeCarousel() {
   const panel = welcomePanels[index];
   return <div className="welcome-page">
     {splash ? <div className="welcome-splash" aria-hidden="true"><BrandMark width={280} priority /><span>{t.rich("byMacaney", { macaney: (chunks) => chunks })}</span></div> : null}
-    <ConnectionStatus />
+    {connectionStatus}
     <header className="welcome-header">
       <Link aria-label={t("brand")} className="welcome-brand" href="/" onClick={rememberWelcome}><BrandMark /></Link>
       <div className="welcome-header-actions"><Link className="welcome-skip" href="/" onClick={rememberWelcome}>{t("skip")}</Link><ThemeToggle /></div>

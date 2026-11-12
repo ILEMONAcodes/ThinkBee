@@ -23,7 +23,7 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
       sessionStorage.setItem("seeded", "1");
     }
   }, { storageKey, session, signedIn });
-  const state = { profile: withProfile ? { ...profile } : undefined as Schema["ProfileResponse"] | undefined, farms: new Map<string, Schema["FarmResponse"]>(), units: new Map<string, Schema["UnitResponse"]>(), signupCount: 0, resendCount: 0, recoverCount: 0, passwordCount: 0, passwordUpdates: 0, tokenCount: 0, signupStatus: 200, signInError: "", failUnitOnce: false, bootstrapStatus: 200, profileWrites: 0 };
+  const state = { profile: withProfile ? { ...profile } : undefined as Schema["ProfileResponse"] | undefined, farms: new Map<string, Schema["FarmResponse"]>(), units: new Map<string, Schema["UnitResponse"]>(), signupCount: 0, resendCount: 0, recoverCount: 0, passwordCount: 0, passwordUpdates: 0, tokenCount: 0, signupStatus: 200, signInError: "", failUnitOnce: false, bootstrapStatus: 200, profileWrites: 0, logoutStatus: 204, logoutCount: 0 };
   // Context routes also intercept fetches made by the controlling service worker.
   await page.context().route("**/auth/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -45,7 +45,10 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
       if (route.request().method() === "PUT") state.passwordUpdates++;
       await route.fulfill({ json: fakeUser });
     }
-    else if (path.endsWith("/logout")) await route.fulfill({ status: 204 });
+    else if (path.endsWith("/logout")) {
+      state.logoutCount++;
+      await route.fulfill(state.logoutStatus === 204 ? { status: 204 } : { status: state.logoutStatus, json: { msg: "Unavailable" } });
+    }
     else await route.fulfill({ status: 400, json: { error: "unexpected_auth_request" } });
   });
   await page.context().route("**/api/v1/**", async (route) => {

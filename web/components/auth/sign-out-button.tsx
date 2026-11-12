@@ -3,8 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { getSupabase } from "@/lib/auth/client";
-import { clearSetup } from "@/lib/db/onboarding";
+import { signOutOnDevice } from "@/lib/app-lock/session";
 
 export function SignOutButton({ pending, onError }: Readonly<{ pending: boolean; onError: (error: unknown) => void }>) {
   const t = useTranslations("Setup");
@@ -13,9 +12,7 @@ export function SignOutButton({ pending, onError }: Readonly<{ pending: boolean;
   const signOut = async () => {
     setBusy(true);
     try {
-      await clearSetup();
-      const { error } = await getSupabase().auth.signOut({ scope: "local" });
-      if (error) throw error;
+      await signOutOnDevice();
     } catch (error) { onError(error); }
     finally { setBusy(false); }
   };

@@ -16,7 +16,7 @@ jobs:
   web:
     name: web
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
       NEXT_PUBLIC_SUPABASE_URL: https://thinkbee-test.supabase.co
@@ -38,6 +38,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit dependencies
+        run: npm audit --audit-level=moderate
+
       - name: Set up Python for the API contract
         uses: actions/setup-python@v5
         with:
@@ -46,7 +49,7 @@ jobs:
       - name: Export API contract
         working-directory: api
         run: |
-          pip install -e .
+          pip install -c requirements.lock -e .
           python scripts/export_openapi.py --output openapi.json
 
       - name: Check API contract snapshot
@@ -118,10 +121,15 @@ jobs:
         with:
           python-version-file: .python-version
           cache: pip
-          cache-dependency-path: api/pyproject.toml
+          cache-dependency-path: api/requirements.lock
 
       - name: Install dependencies
-        run: pip install -e '.[dev]'
+        run: pip install -c requirements.lock -e '.[dev]'
+
+      - name: Audit dependencies
+        run: |
+          pip install pip-audit==2.10.1
+          pip-audit --disable-pip --no-deps -r requirements.lock
 
       - name: Lint
         run: ruff check .
@@ -152,7 +160,7 @@ jobs:
         with:
           python-version-file: .python-version
           cache: pip
-          cache-dependency-path: api/pyproject.toml
+          cache-dependency-path: api/requirements.lock
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -163,7 +171,7 @@ jobs:
 
       - name: Install API dependencies
         working-directory: api
-        run: pip install -e .
+        run: pip install -c requirements.lock -e .
 
       - name: Install web dependencies
         working-directory: web
