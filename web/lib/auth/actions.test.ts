@@ -1,14 +1,26 @@
 // @vitest-environment jsdom
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const { sdk } = vi.hoisted(() => ({ sdk: { exchangeCodeForSession: vi.fn(), getSession: vi.fn(), signUp: vi.fn(), signInWithPassword: vi.fn(), resend: vi.fn(), resetPasswordForEmail: vi.fn(), updateUser: vi.fn() } }));
 vi.mock("@/lib/auth/client", () => ({ getSupabase: () => ({ auth: sdk }), callbackUrl: () => "https://app.test/auth/callback" }));
+const { registerWithoutConfirmation } = vi.hoisted(() => ({ registerWithoutConfirmation: vi.fn() }));
+vi.mock("@/lib/auth/registration", () => ({ registerWithoutConfirmation }));
 beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_AUTH_REQUIRE_EMAIL_CONFIRMATION", "true");
   vi.resetModules();
   vi.resetAllMocks();
   history.replaceState(null, "", "/auth/callback");
   sdk.getSession.mockResolvedValue({ data: { session: { user: { id: "owner" } } }, error: null });
   sdk.exchangeCodeForSession.mockResolvedValue({ error: null });
+});
+afterEach(() => vi.unstubAllEnvs());
+
+it("uses isolated registration when email confirmation is disabled", async () => {
+  vi.stubEnv("NEXT_PUBLIC_AUTH_REQUIRE_EMAIL_CONFIRMATION", "false");
+  const { registerAccount } = await import("@/lib/auth/actions");
+  await registerAccount("Ada", "a@example.test", "test password");
+  expect(registerWithoutConfirmation).toHaveBeenCalledExactlyOnceWith("Ada", "a@example.test", "test password");
+  expect(sdk.signUp).not.toHaveBeenCalled();
 });
 
 it("registers name and password with a confirmation redirect, and uses password auth for returning users", async () => {

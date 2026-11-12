@@ -11,7 +11,7 @@ async function fillRegistration(page: import("@playwright/test").Page) {
   await page.getByRole("checkbox").check();
 }
 
-test("welcome leads to registration, verifies email and keeps credentials private", async ({ page }, info) => {
+test("registration returns to password sign-in without email or a persisted session", async ({ page }, info) => {
   const state = await mockOnboarding(page, false);
   await page.goto("/welcome");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("A little help");
@@ -39,17 +39,27 @@ test("welcome leads to registration, verifies email and keeps credentials privat
   await page.getByLabel("Confirm password", { exact: true }).fill(password);
   await page.screenshot({ path: info.outputPath("register.png"), fullPage: true });
   await page.getByRole("button", { name: "Create account", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Send again in/ })).toBeDisabled();
+  await expect(page).toHaveURL(/\/sign-in\?registered=1$/);
+  await expect(page.locator(".setup-feedback[role=status]")).toContainText("Account created successfully.");
+  await expect(page.getByLabel("Password", { exact: true })).toHaveValue("");
   expect(state.signupCount).toBe(1);
+  expect(state.signupHasCodeChallenge).toBe(false);
+  expect(state.resendCount).toBe(0);
+  expect(state.bootstrapCount).toBe(0);
+  expect(state.passwordCount).toBe(0);
   const stored = await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }));
   expect(stored).not.toContain("farmer@example.test");
   expect(stored).not.toContain(password);
   expect(stored).not.toContain("Ada Okoro");
-  await page.goto("/auth/callback?code=synthetic-confirmation");
+  expect(stored).not.toContain("fake-refresh-for-browser-tests");
+  await page.screenshot({ path: info.outputPath("account-created.png"), fullPage: true, animations: "disabled" });
+  await page.getByLabel("Email address").fill("farmer@example.test");
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/setup\/profile$/);
   await expect(page.getByLabel("Display name")).toHaveValue("Ada Okoro");
-  expect(state.tokenCount).toBe(1);
+  expect(state.tokenCount).toBe(0);
+  expect(state.passwordCount).toBe(1);
 });
 
 test("password sign-in handles invalid credentials, verification and successful login", async ({ page }, info) => {
@@ -66,10 +76,9 @@ test("password sign-in handles invalid credentials, verification and successful 
   await expect(page.locator("body")).not.toContainText("Private provider information");
   state.signInError = "email_not_confirmed";
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.getByRole("button", { name: "Send verification link", exact: true }).click();
-  await expect(page.getByRole("button", { name: /Send again in/ })).toBeDisabled();
-  expect(state.resendCount).toBe(1);
-  await page.getByRole("link", { name: "Sign in", exact: true }).click();
+  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("Your account still needs activation.");
+  await expect(page.getByRole("button", { name: "Send verification link", exact: true })).toHaveCount(0);
+  expect(state.resendCount).toBe(0);
   state.signInError = "";
   await page.getByLabel("Email address").fill("farmer@example.test");
   await page.getByLabel("Password", { exact: true }).fill(password);
@@ -78,19 +87,32 @@ test("password sign-in handles invalid credentials, verification and successful 
   expect(state.passwordCount).toBe(3);
 });
 
-test("a confirmation at the site root completes PKCE and expired links stay private", async ({ page }) => {
+test("a recovery at the site root completes PKCE and expired links stay private", async ({ page }) => {
   const state = await mockOnboarding(page, false);
-  await page.goto("/register");
-  await fillRegistration(page);
-  await page.getByRole("button", { name: "Create account", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  await page.goto("/forgot-password");
+  await page.getByLabel("Email address").fill("farmer@example.test");
+  await page.getByRole("button", { name: "Send reset link" }).click();
+  await expect(page.getByText(/a reset link is on its way/)).toBeVisible();
   await page.goto("/?code=root-callback-code");
-  await expect(page).toHaveURL(/\/setup\/profile$/);
+  await expect(page).toHaveURL(/\/auth\/reset-password$/);
   expect(state.tokenCount).toBe(1);
   await page.goto("/auth/callback?error=access_denied&error_description=private-provider-details");
   await expect(page.locator(".setup-feedback[role=alert]")).toContainText("This link has expired");
   expect(page.url()).not.toContain("error");
   await expect(page.locator("body")).not.toContainText("private-provider-details");
+});
+
+test("does not promise password sign-in when Supabase still requires confirmation", async ({ page }) => {
+  const state = await mockOnboarding(page, false);
+  state.signupRequiresConfirmation = true;
+  await page.goto("/register");
+  await fillRegistration(page);
+  await page.getByRole("button", { name: "Create account", exact: true }).click();
+  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("Your account still needs activation.");
+  await expect(page).toHaveURL(/\/register$/);
+  await expect(page.getByText("Account created successfully.", { exact: false })).toHaveCount(0);
+  expect(state.resendCount).toBe(0);
+  expect(state.bootstrapCount).toBe(0);
 });
 
 test("password recovery exchanges its link and updates the password", async ({ page }) => {
@@ -120,6 +142,8 @@ test("registration failures and offline password login remain recoverable", asyn
   await expect(page.locator(".setup-feedback[role=alert]")).toContainText("Too many attempts");
   await expect(page.getByRole("heading", { name: "Check your email" })).toHaveCount(0);
   await page.getByRole("link", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Welcome back." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeEnabled();
   await context.setOffline(true);
   await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeDisabled();
   await expect(page.getByText("Connect to the internet to sign in.")).toBeVisible();

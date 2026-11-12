@@ -333,6 +333,8 @@
     "hideConfirmPassword": "Hide confirmation password",
     "signingIn": "Signing you in…",
     "registering": "Creating your account…",
+    "accountCreated": "Account created successfully. Sign in with your email and password to continue.",
+    "activationRequired": "Your account still needs activation. Please contact Think Bee support before signing in.",
     "verifyTitle": "Check your email",
     "forgotPassword": "Forgot password?",
     "forgotTitle": "A fresh start.",

@@ -11,7 +11,7 @@ Base: `/api/v1`. JSON. Authenticated requests use `Authorization: Bearer <supaba
 The generated OpenAPI document defines an HTTP bearer security scheme with `bearerFormat: JWT` and applies it to protected operations. Health endpoints and any future public metadata endpoints explicitly opt out.
 
 ## Authentication and security
-Supabase Auth handles name/email/password registration, one-time email verification links, email/password sign-in, password recovery, session persistence, refresh and authentication rate limits. Passwords are sent only to Supabase; the FastAPI contract is unchanged. The Think Bee API does not send OTPs, set auth cookies, issue JWTs, refresh sessions or expose logout endpoints.
+Supabase Auth handles name/email/password registration, email/password sign-in, password recovery, session persistence, refresh and authentication rate limits. Pilot registration temporarily skips email confirmation and returns the farmer to sign-in; Supabase Confirm email must be off. Passwords are sent only to Supabase; the FastAPI contract is unchanged. The Think Bee API does not send OTPs, set auth cookies, issue JWTs, refresh sessions or expose logout endpoints. The SDK's existing PKCE callback remains available for recovery and older verification links.
 
 Every protected FastAPI route uses one shared auth dependency. It reads the bearer token, validates its signature against the Supabase project JWKS, and checks `iss`, `aud`, `exp` and `sub`. The dependency maps `sub` to `users.supabase_user_id`, rejects missing, invalid or expired tokens with `401`, and rejects suspended or deleted local users with `403`. JWKS may be cached with a short TTL, but a signing-key miss triggers one refresh before rejection.
 

@@ -4,8 +4,7 @@ import { AppError } from "@/lib/api/errors";
 
 let client: SupabaseClient | undefined;
 
-export function getSupabase(): SupabaseClient {
-  if (client) return client;
+export function getSupabaseConfiguration(): { url: string; key: string } {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key || key.startsWith("sb_secret_")) throw new AppError("auth_configuration");
@@ -15,6 +14,12 @@ export function getSupabase(): SupabaseClient {
       if (claims.role !== "anon") throw new AppError("auth_configuration");
     } catch { throw new AppError("auth_configuration"); }
   }
+  return { url, key };
+}
+
+export function getSupabase(): SupabaseClient {
+  if (client) return client;
+  const { url, key } = getSupabaseConfiguration();
   // This singleton is the only owner of browser auth persistence and refresh.
   client = createClient(url, key, {
     auth: { flowType: "pkce", detectSessionInUrl: false, persistSession: true, autoRefreshToken: true },

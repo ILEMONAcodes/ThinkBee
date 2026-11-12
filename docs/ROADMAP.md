@@ -15,7 +15,8 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] BE: farmer ID generation, Supabase user mapping and session validation
 - [x] BE: users, farms, farm units (hives, crop blocks), account deletion
 - [x] FE: app shell, floating nav, desktop rail, theme switch
-- [x] FE: onboarding (splash, welcome, name/email/password registration, email verification, password sign-in/recovery, profile, add farm)
+- [x] FE: onboarding (splash, welcome, name/email/password registration, password sign-in/recovery, profile, add farm; email confirmation deferred during the pilot)
+- [x] FE: pilot registration returns to password sign-in with a success message and no email-verification step
 - [x] FE: increase mobile spacing between the auth wordmark and rounded form sheet to match the supplied reference
 - [x] FE: PWA manifest, service worker, offline page, install prompt
 - [x] FE: prevent reconnect reloads from interrupting offline fallback navigation; recover through cached Home
@@ -147,3 +148,11 @@ Docker contexts exclude local environment files, the web builder accepts public 
 Validation: web lint, type check, 98 unit tests, production Webpack/Serwist build and the Home budget passed (168.4 KB gzipped). All 188 Chrome browser checks passed with no retries at 390px and 1440px in light and dark, including app lock, platform authenticator assertions, recovery failures, cross-tab cooldowns, offline drafts, blocked storage, delayed scripts and slow network/CPU. Reviewed lock screenshots in all four combinations. API lint, strict types, dependency compatibility, all 75 tests with no database skips, migration graph, worker import and the unchanged OpenAPI snapshot passed. Database tests used isolated schemas in temporary PostgreSQL 18; CI targets PostgreSQL 17. No configured application database or live account was modified.
 
 The existing app-lock implementation is now checked off. Physical Android/iPhone installation and native device-unlock prompts, live Supabase email flows, and actual Docker image builds remain separate verification steps; Docker is unavailable on this host. The next unchecked feature task is the phase 2 AI provider interface and Gemini implementation.
+
+## Handoff — registration without email confirmation (2026-11-12)
+
+The team explicitly deferred email verification because the temporary mail service prevented farmers from completing registration. Successful registration now returns to `/sign-in?registered=1` with an account-created message. Farmers enter their email/password to start setup. `NEXT_PUBLIC_AUTH_REQUIRE_EMAIL_CONFIRMATION` defaults to false; the public Supabase settings check confirmed that email is enabled and autoconfirm is now on after the team changed the dashboard setting.
+
+Registration uses an isolated SDK client with no session persistence, refresh or URL detection. Its implicit signup request works with Supabase autoconfirm, and its temporary session is never copied into application state or browser storage. The client is disposed after the response. The main SDK singleton retains PKCE recovery, session persistence and refresh. Existing unconfirmed accounts show an activation message and need an explicit admin step. A hosted setting mismatch does not report registration as ready for password sign-in. No backend endpoint, schema or token-verification change was needed; future code verification remains separate work.
+
+Validation: lint, TypeScript, 103 unit tests, production Webpack/Serwist build and the 168.4 KB initial Home JavaScript budget passed. All 52 focused Chrome browser checks passed without retries at 390px/1440px in light/dark, covering session isolation, manual password sign-in, registration failures, setting mismatch, recovery callbacks, offline state, setup sync and sign-out. Run crypto-heavy unit tests separately from browser workers on resource-constrained machines. Set the public flag to false for Vercel and deploy this branch before using the new flow in production. Password recovery still needs email delivery.
