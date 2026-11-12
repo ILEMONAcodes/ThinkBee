@@ -15,6 +15,7 @@ npm run typecheck
 npm test
 npm run build
 npm run check:bundle
+npm audit
 npx playwright install chromium
 npm run test:e2e
 ```
@@ -30,6 +31,8 @@ Authentication uses `@supabase/supabase-js` for name/email/password registration
 Builds, type checks and development startup automatically generate the ignored TypeScript schema at `lib/api/schema.d.ts` from the committed `lib/api/openapi.json` contract snapshot. A frontend-only deployment needs Node.js, not the Python backend. CI checks the snapshot against a fresh FastAPI export; update it with `python scripts/export_openapi.py --output ../web/lib/api/openapi.json` from `api/` whenever the backend contract changes.
 
 Run `npm run generate:mocks` to create schema-driven MSW handlers for Node and the browser. Run `npx msw init public --save` once after installing dependencies to create the ignored browser worker.
+
+Docker builds exclude local environment files. Pass public configuration at build time with `--build-arg NEXT_PUBLIC_API_URL=...`, `--build-arg NEXT_PUBLIC_SUPABASE_URL=...` and `--build-arg NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...`. Next.js embeds these values in browser bundles; setting them only when starting a built image cannot configure authentication. The Dockerfile also accepts the optional public settings in `env/web.env.example`. Never pass the Supabase service-role key to the web build.
 
 First visits open `/welcome`; skipping lets users explore the shell. `/register` creates the Supabase account and requests email verification; `/sign-in` accepts the saved password. `/auth/callback` exchanges the verification code and bootstraps the account, and `/setup/profile` and `/setup/farm` create the initial profile and private farm. `/forgot-password` requests a recovery link whose callback opens `/auth/reset-password`. Me shows the account/farms, resumes setup and signs out. The welcome marker only controls navigation; it never authorises API access.
 

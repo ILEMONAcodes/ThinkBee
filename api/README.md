@@ -9,23 +9,25 @@ Python 3.12 is required. Copy `../env/api.env.example` to `.env`, then install t
 ```sh
 python3.12 -m venv .venv
 . .venv/bin/activate
-pip install -e '.[dev]'
+pip install -c requirements.lock -e '.[dev]'
 uvicorn app.main:app --reload
 ```
 
 Quality checks: `ruff check .`, `mypy app tests`, and `pytest`.
 
+`requirements.lock` pins runtime and development dependencies across supported platforms. Use it as constraints for both `pip install -c requirements.lock .` (production) and the editable development command above; production does not install the optional test tools. To refresh the lock with uv installed, run `uv pip compile pyproject.toml --extra dev --universal --python-version 3.12 -o requirements.lock`, then run the full checks and `pip-audit --disable-pip --no-deps -r requirements.lock`. CI audits both the Python lock and the npm lock on every run.
+
 Export the current OpenAPI schema with `python scripts/export_openapi.py --output openapi.json`.
 
 ## Supabase Auth
 
-Create or select a Supabase project, enable the Email provider, and configure the app's production and local magic-link redirect URLs in the Supabase Auth URL settings. The browser owns sign-in and session refresh through `@supabase/supabase-js`; this API only verifies access tokens.
+Create or select a Supabase project, enable the Email provider with email confirmation, and configure the app's production and local `/auth/callback` URLs in the Supabase Auth redirect allowlist. The browser owns email/password sign-in, verification, recovery and session refresh through `@supabase/supabase-js`; this API only verifies access tokens. No social sign-in is used.
 
 Set `SUPABASE_URL` to the project URL. `SUPABASE_JWT_ISSUER` normally stays empty so it derives as `<SUPABASE_URL>/auth/v1`, and `SUPABASE_JWT_AUDIENCE` defaults to `authenticated`. The verifier fetches asymmetric signing keys from the project's JWKS endpoint, caches them briefly, and refreshes once when a token references an unknown key ID.
 
 Protected application routes depend on `require_current_user` from `app.modules.auth.service`. It validates the Supabase identity and loads the local account on every request, rejecting suspended or deleted users. Bootstrap alone depends on `require_authenticated_identity` from `app.core.security`, which validates the signature, algorithm, issuer, audience, expiry, issued-at time, authenticated role and UUID subject. The service-role key is never used to verify browser tokens and must never leave the backend.
 
-Local tests use generated signing keys and do not need a live Supabase project. A deployment smoke test still requires real project values and a magic-link sign-in from an allowed redirect URL.
+Local tests use generated signing keys and do not need a live Supabase project. A deployment smoke test still requires real project values, registration, verification through an allowed redirect URL, password sign-in and password recovery.
 
 ## Farmer accounts
 

@@ -8,6 +8,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] CI: lint, type check, tests on both sides
 - [x] OpenAPI to TypeScript client generation
 - [x] MSW mock server from the OpenAPI schema
+- [x] Dependency audit: patch affected packages, lock API dependencies, align local Python 3.12, add CI vulnerability scans and correct Docker/setup configuration
 
 ## Phase 1: Foundation
 - [x] BE: Supabase Auth setup (Email / Magic Link), token verification middleware
@@ -18,7 +19,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] FE: increase mobile spacing between the auth wordmark and rounded form sheet to match the supplied reference
 - [x] FE: PWA manifest, service worker, offline page, install prompt
 - [x] FE: prevent reconnect reloads from interrupting offline fallback navigation; recover through cached Home
-- [ ] FE: app lock (PIN or biometrics where available)
+- [x] FE: app lock (PIN or biometrics where available)
 
 ## Phase 2: AI core
 - [ ] BE: `AIProvider` interface and Gemini implementation, structured scan output, prompt versioning
@@ -136,3 +137,13 @@ Fixed the earlier CI fallback failure by disabling Serwist's reload on reconnect
 Validation: lint, TypeScript, all 74 unit tests, a fresh production Webpack/Serwist build, the 169.8 KB Home JavaScript budget and all 116 Chrome browser checks passed. Browser checks ran with zero retries in 8.1 minutes at 390px/1440px in light and dark, including offline/slow-network paths, recovery, private cache exclusions and setup sync. Reviewed welcome, registration, sign-in and Home screenshots in all four combinations. The overnight artifacts contained browser-launch failures and long gaps between trace events; none recurred in the fresh run with system sleep inhibited. No additional application defect was reproduced. Authentication transport used synthetic fixtures; live email-link completion and physical-device installation remain manual checks.
 
 Next roadmap task: FE app lock (PIN or biometrics where available).
+
+## Handoff — dependency and setup audit (2026-11-12)
+
+Updated Next.js and its ESLint config to 16.4.6, Vitest to 4.1.12, and affected nested Zod/glob/minimatch dependencies. A clean offline `npm ci` passed. Both npm and Python dependency audits report no known vulnerabilities. The API now uses a universal constraints lock in local setup, CI and Docker; patched pytest/pytest-asyncio versions are tested on Python 3.12.16. The local API virtual environment was rebuilt with Python 3.12, and async fixture loop scope is explicit.
+
+Docker contexts exclude local environment files, the web builder accepts public configuration as build arguments, and MinIO setup stops on the first failure. Setup instructions include migrations and the account-deletion worker. Agent instructions now match the implemented email/password verification and recovery flow. CI scans both dependency locks and allows 25 minutes for the four browser projects.
+
+Validation: web lint, type check, 98 unit tests, production Webpack/Serwist build and the Home budget passed (168.4 KB gzipped). All 188 Chrome browser checks passed with no retries at 390px and 1440px in light and dark, including app lock, platform authenticator assertions, recovery failures, cross-tab cooldowns, offline drafts, blocked storage, delayed scripts and slow network/CPU. Reviewed lock screenshots in all four combinations. API lint, strict types, dependency compatibility, all 75 tests with no database skips, migration graph, worker import and the unchanged OpenAPI snapshot passed. Database tests used isolated schemas in temporary PostgreSQL 18; CI targets PostgreSQL 17. No configured application database or live account was modified.
+
+The existing app-lock implementation is now checked off. Physical Android/iPhone installation and native device-unlock prompts, live Supabase email flows, and actual Docker image builds remain separate verification steps; Docker is unavailable on this host. The next unchecked feature task is the phase 2 AI provider interface and Gemini implementation.

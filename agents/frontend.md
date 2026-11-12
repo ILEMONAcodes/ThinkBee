@@ -11,7 +11,7 @@ Folder: `web/`. Read `AGENTS.md`, `docs/UI_DESIGN.md`, `docs/PWA_OFFLINE.md`, `d
 - App shell, routing, navigation (mobile pill, desktop rail), themes.
 - All screens in `UI_DESIGN.md` section 8, mobile and desktop, with loading, empty, error and offline states.
 - Local-first data layer (Dexie), outbox, sync, realtime client, push registration.
-- Supabase email magic-link authentication through `@supabase/supabase-js`; optional OAuth providers remain configuration-driven.
+- Supabase email/password authentication with email verification and recovery through `@supabase/supabase-js`; no social sign-in.
 - Camera, gallery and voice recorder components with permission handling on first use.
 - Location permission, saved-farm fallback, weather freshness states and the daily briefing card defined in `docs/AI_WEATHER_INTEGRATION.md`.
 - Motion from `design/motion.ts`, honouring reduced motion.
