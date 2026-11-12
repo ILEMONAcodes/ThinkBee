@@ -186,7 +186,7 @@ Design every screen below in light and dark, mobile and desktop where noted (M =
 5. **Create profile**: display name, optional photo (camera or gallery), short bio. Shows exactly what others will see in a live preview card.
 6. **Add your farm or apiary**: type (crops, bees, both), name, general location (state, LGA), number and type of hives or crops. Skippable, can add later.
 7. **Permissions primer**: shown only when a feature first needs camera, microphone, gallery, notifications or location. One sentence on why, a clear "Not now" that keeps the rest of the app working.
-8. **App lock** (optional): PIN or fingerprint.
+8. **App lock** (optional): a card in Me for a confirmed six-digit PIN, current-PIN checks for changes/removal, and optional device unlock (fingerprint, face or device passcode). The lock is a full-screen modal with a neutral loading cover before startup, no private account details, visible errors and retry delay, keyboard focus containment and offline PIN support. Keep the underlying app mounted so drafts survive locking. Forgotten-PIN recovery clearly confirms local draft loss and sign-out; it needs a connection.
 
 ### 8.2 Home (M, D)
 - Greeting in Fraunces with the farmer's name and the date. One line of context under it, written plainly (for example "2 reminders today").

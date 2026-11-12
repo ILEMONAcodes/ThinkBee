@@ -49,10 +49,15 @@ test("theme follows device changes and persists overrides", async ({ page }) => 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 });
 
-test("offline shell and blocked storage remain usable", async ({ page, context }) => {
+test("offline shell and blocked preferences remain usable", async ({ page, context }) => {
   await page.addInitScript(() => {
+    const getItem = Storage.prototype.getItem;
     Storage.prototype.setItem = () => { throw new Error("Storage unavailable"); };
-    Storage.prototype.getItem = () => { throw new Error("Storage unavailable"); };
+    // Lock storage has its own fail-closed tests; appearance failures stay local.
+    Storage.prototype.getItem = function (key) {
+      if (key === "thinkbee-app-lock") return getItem.call(this, key);
+      throw new Error("Storage unavailable");
+    };
   });
   await page.goto("/me");
   await context.setOffline(true);

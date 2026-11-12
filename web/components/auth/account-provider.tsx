@@ -4,7 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 import { getSupabase } from "@/lib/auth/client";
-import { clearSetup } from "@/lib/db/onboarding";
+import { clearLockAfterSignOut } from "@/lib/app-lock/session";
+import { setLockState, useAppLock } from "@/lib/app-lock/state";
 
 type Identity = { owner: string | null; ready: boolean; error?: unknown };
 const IdentityContext = createContext<Identity>({ owner: null, ready: false });
@@ -22,7 +23,9 @@ export function AccountProvider({ children }: Readonly<{ children: ReactNode }>)
         if (active) setIdentity({ owner: session?.user.id ?? null, ready: true });
         if (event === "SIGNED_OUT") {
           query.clear();
-          void clearSetup().catch(() => undefined);
+          void clearLockAfterSignOut().catch(() => {
+            if (useAppLock.getState().record) setLockState("unavailable", useAppLock.getState().record, true);
+          });
         }
       });
       unsubscribe = () => data.subscription.unsubscribe();

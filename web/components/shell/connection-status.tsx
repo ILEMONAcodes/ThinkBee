@@ -1,16 +1,14 @@
-"use client";
+import { WifiSlash } from "@phosphor-icons/react/dist/ssr/WifiSlash";
+import { getTranslations } from "next-intl/server";
 
-import { WifiSlash } from "@phosphor-icons/react/dist/csr/WifiSlash";
-import { useTranslations } from "next-intl";
+import { ConnectionBand } from "@/components/shell/connection-band";
 
-import { useOnline } from "@/lib/hooks/use-online";
-
-export function ConnectionStatus() {
-  const t = useTranslations("Shell");
-  const online = useOnline();
+export async function ConnectionStatus() {
+  const t = await getTranslations("Shell");
   return (
-    <div role="status" aria-live="polite" aria-atomic="true">
-      {!online ? <div className="connection-band"><WifiSlash aria-hidden size={22} className="shrink-0" /><p>{t("offline")}</p></div> : null}
-    </div>
+    <ConnectionBand>
+      <WifiSlash aria-hidden size={22} className="shrink-0" />
+      <p>{t("offline")}</p>
+    </ConnectionBand>
   );
 }
