@@ -32,7 +32,7 @@ Think Bee is a Progressive Web App for farmers and beekeepers in Nigeria. A farm
 | Files | S3-compatible object storage, upload through presigned URLs |
 | AI | Google Gemini through an `AIProvider` interface (`docs/AI_SAFETY.md`) |
 | Weather | Open-Meteo through a `WeatherProvider` interface, cached in Redis |
-| Auth | Supabase Auth free tier, email/password with email verification and recovery; no social sign-in; FastAPI validates Supabase JWTs |
+| Auth | Supabase Auth free tier, email/password; email confirmation temporarily disabled for the pilot, recovery remains available; no social sign-in; FastAPI validates Supabase JWTs |
 | Tests | Vitest and Playwright (web), Pytest and httpx (api) |
 | Local dev | Docker Compose for Postgres, Redis, and an S3 emulator |
 

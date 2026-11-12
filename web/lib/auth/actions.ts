@@ -1,11 +1,16 @@
 import { AppError } from "@/lib/api/errors";
 import { callbackUrl, getSupabase } from "@/lib/auth/client";
+import { requiresEmailConfirmation } from "@/lib/auth/policy";
 
 function authFailure(error: { code?: string; status?: number }): AppError {
   return new AppError(error.code ?? "auth_unavailable", error.status);
 }
 
 export async function registerAccount(name: string, email: string, password: string): Promise<void> {
+  if (!requiresEmailConfirmation) {
+    const { registerWithoutConfirmation } = await import("@/lib/auth/registration");
+    return registerWithoutConfirmation(name, email, password);
+  }
   const { error } = await getSupabase().auth.signUp({
     email, password,
     options: { emailRedirectTo: callbackUrl(), data: { display_name: name, chat_age_confirmed: true } },

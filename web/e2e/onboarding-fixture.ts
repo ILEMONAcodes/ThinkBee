@@ -23,14 +23,15 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
       sessionStorage.setItem("seeded", "1");
     }
   }, { storageKey, session, signedIn });
-  const state = { profile: withProfile ? { ...profile } : undefined as Schema["ProfileResponse"] | undefined, farms: new Map<string, Schema["FarmResponse"]>(), units: new Map<string, Schema["UnitResponse"]>(), signupCount: 0, resendCount: 0, recoverCount: 0, passwordCount: 0, passwordUpdates: 0, tokenCount: 0, signupStatus: 200, signInError: "", failUnitOnce: false, bootstrapStatus: 200, profileWrites: 0, logoutStatus: 204, logoutCount: 0 };
+  const state = { profile: withProfile ? { ...profile } : undefined as Schema["ProfileResponse"] | undefined, farms: new Map<string, Schema["FarmResponse"]>(), units: new Map<string, Schema["UnitResponse"]>(), signupCount: 0, signupHasCodeChallenge: false, signupRequiresConfirmation: false, bootstrapCount: 0, resendCount: 0, recoverCount: 0, passwordCount: 0, passwordUpdates: 0, tokenCount: 0, signupStatus: 200, signInError: "", failUnitOnce: false, bootstrapStatus: 200, profileWrites: 0, logoutStatus: 204, logoutCount: 0 };
   // Context routes also intercept fetches made by the controlling service worker.
   await page.context().route("**/auth/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith("/signup")) {
       state.signupCount++;
       fakeUser.user_metadata.display_name = route.request().postDataJSON().data.display_name;
-      await route.fulfill({ status: state.signupStatus, json: state.signupStatus === 200 ? fakeUser : { code: "over_email_send_rate_limit", msg: "Private provider information" } });
+      state.signupHasCodeChallenge = !!route.request().postDataJSON().code_challenge;
+      await route.fulfill({ status: state.signupStatus, json: state.signupStatus === 200 ? state.signupRequiresConfirmation ? fakeUser : session : { code: "over_request_rate_limit", msg: "Private provider information" } });
     }
     else if (path.endsWith("/resend")) { state.resendCount++; await route.fulfill({ json: {} }); }
     else if (path.endsWith("/recover")) { state.recoverCount++; await route.fulfill({ json: {} }); }
@@ -57,7 +58,10 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
     const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization,content-type", "access-control-allow-methods": "GET,POST,PATCH,OPTIONS" };
     if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
     if (!request.headers().authorization?.startsWith("Bearer ")) return route.fulfill({ status: 401, headers, json: { error: { code: "auth_required", message: "Sign in" } } });
-    if (path === "/auth/bootstrap") return route.fulfill({ status: state.bootstrapStatus, headers, json: state.bootstrapStatus === 200 ? { user, is_new: !state.profile } : { error: { code: state.bootstrapStatus === 403 ? "account_suspended" : "account_store_unavailable", message: "Internal details must not appear" } } });
+    if (path === "/auth/bootstrap") {
+      state.bootstrapCount++;
+      return route.fulfill({ status: state.bootstrapStatus, headers, json: state.bootstrapStatus === 200 ? { user, is_new: !state.profile } : { error: { code: state.bootstrapStatus === 403 ? "account_suspended" : "account_store_unavailable", message: "Internal details must not appear" } } });
+    }
     if (path === "/me/chat-profile") {
       if (request.method() === "PATCH") { state.profileWrites++; state.profile = { ...profile, ...request.postDataJSON() }; }
       return route.fulfill({ status: state.profile ? 200 : 404, headers, json: state.profile ?? { error: { code: "profile_not_found", message: "Add profile" } } });

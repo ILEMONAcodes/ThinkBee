@@ -16,6 +16,7 @@ import { PasswordField } from "@/components/onboarding/password-field";
 import { VerificationNotice } from "@/components/onboarding/verification-notice";
 import { registerAccount } from "@/lib/auth/actions";
 import { registerSchema } from "@/lib/auth/forms";
+import { requiresEmailConfirmation } from "@/lib/auth/policy";
 import { useOnline } from "@/lib/hooks/use-online";
 
 export function RegisterForm() {
@@ -34,7 +35,9 @@ export function RegisterForm() {
     setError(undefined);
     try {
       await registerAccount(name, email, password);
-      resetField("password"); resetField("confirmPassword"); setSent(email);
+      resetField("password"); resetField("confirmPassword");
+      if (requiresEmailConfirmation) setSent(email);
+      else router.replace("/sign-in?registered=1");
     } catch (failure) { setError(failure); }
   };
   if (sent) return <VerificationNotice email={sent} onBack={() => setSent(undefined)} />;

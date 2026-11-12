@@ -21,13 +21,13 @@ Export the current OpenAPI schema with `python scripts/export_openapi.py --outpu
 
 ## Supabase Auth
 
-Create or select a Supabase project, enable the Email provider with email confirmation, and configure the app's production and local `/auth/callback` URLs in the Supabase Auth redirect allowlist. The browser owns email/password sign-in, verification, recovery and session refresh through `@supabase/supabase-js`; this API only verifies access tokens. No social sign-in is used.
+Create or select a Supabase project, enable the Email provider and temporarily turn **Confirm email off** for the pilot. Set the web build's `NEXT_PUBLIC_AUTH_REQUIRE_EMAIL_CONFIRMATION=false`. Registration returns to password sign-in without an email step. Keep production and local `/auth/callback` URLs in the Supabase Auth redirect allowlist for recovery and older links. The browser owns registration, sign-in, recovery and session refresh through `@supabase/supabase-js`; this API only verifies access tokens. No social sign-in is used. Earlier unconfirmed accounts need explicit admin activation; changing the project setting does not activate them.
 
 Set `SUPABASE_URL` to the project URL. `SUPABASE_JWT_ISSUER` normally stays empty so it derives as `<SUPABASE_URL>/auth/v1`, and `SUPABASE_JWT_AUDIENCE` defaults to `authenticated`. The verifier fetches asymmetric signing keys from the project's JWKS endpoint, caches them briefly, and refreshes once when a token references an unknown key ID.
 
 Protected application routes depend on `require_current_user` from `app.modules.auth.service`. It validates the Supabase identity and loads the local account on every request, rejecting suspended or deleted users. Bootstrap alone depends on `require_authenticated_identity` from `app.core.security`, which validates the signature, algorithm, issuer, audience, expiry, issued-at time, authenticated role and UUID subject. The service-role key is never used to verify browser tokens and must never leave the backend.
 
-Local tests use generated signing keys and do not need a live Supabase project. A deployment smoke test still requires real project values, registration, verification through an allowed redirect URL, password sign-in and password recovery.
+Local tests use generated signing keys and do not need a live Supabase project. A deployment smoke test requires real project values, registration returning to sign-in, explicit password sign-in and profile setup. Password recovery remains a separate email-delivery check.
 
 ## Farmer accounts
 

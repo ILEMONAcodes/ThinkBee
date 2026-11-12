@@ -8,6 +8,8 @@
 
 **Offline checks**: run Playwright with the network offline and with throttling. Every screen listed in `docs/UI_DESIGN.md` has an offline state test or screenshot.
 
+**Pilot registration**: use `NEXT_PUBLIC_AUTH_REQUIRE_EMAIL_CONFIRMATION=false` for the browser build. Mock Supabase returning an autoconfirm session and prove signup does not persist it, broadcast it to the normal client, bootstrap the local account or request an email link. Success returns to sign-in; only an explicit password login starts setup. Cover provider failures and a hosted setting mismatch returning no session. Keep PKCE password-recovery and root-callback regressions. Turning off confirmation in the hosted dashboard and activating earlier unconfirmed test accounts are separate deployment/admin steps.
+
 **Shell startup**: block JavaScript requested after the initial page scripts and verify that appearance controls still initialize and switch themes offline. Also exercise blocked preference storage; do not wait for optional downloads before disconnecting.
 
 **AI safety evals**: a fixed set of sample photos and questions in `api/tests/ai_evals/`. Assertions: result has confidence, likely cause not "confirmed", pollinator warning present when treatment is mentioned, label notice present, no claim about queen status or swarming from a photo, expert referral on serious cases. Run on every prompt change.

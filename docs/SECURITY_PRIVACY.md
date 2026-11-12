@@ -3,7 +3,7 @@
 Checklist. Tick before pilot.
 
 ## Authentication and sessions
-- [ ] Supabase email/password registration with email verification and recovery configured with approved redirect URLs; no social sign-in
+- [ ] Supabase email/password registration and recovery configured with approved redirect URLs; pilot email confirmation is temporarily off, with no social sign-in
 - [ ] FastAPI verifies Supabase JWT signature, issuer, audience, expiry and subject through one shared dependency
 - [ ] Missing, invalid and expired bearer tokens return stable `401` errors; suspended or deleted local users return `403`
 - [ ] The web app delegates token persistence and refresh to `@supabase/supabase-js`; application code never copies tokens into custom storage
@@ -11,6 +11,8 @@ Checklist. Tick before pilot.
 - [ ] Optional app lock stored as a hashed PIN on device only
 
 ## Data
+
+Pilot registration does not establish ownership of the submitted email address. Supabase autoconfirm metadata must not be treated as proof of ownership or used to grant privileges. Registration's isolated SDK client does not persist its issued session; farmers explicitly sign in with their password. Existing unconfirmed test accounts require explicit admin activation. Restore verification through a separately reviewed delivery/code flow.
 - [ ] TLS everywhere, database and object storage encrypted at rest
 - [ ] Authentication email addresses stay in Supabase Auth and are never exposed in chat profiles or public API responses
 - [ ] Exact farm coordinates never in any response to other users

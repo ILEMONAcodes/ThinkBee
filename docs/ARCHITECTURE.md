@@ -4,7 +4,7 @@
 
 ```
 Browser (PWA: Next.js, Serwist SW, Dexie)
-   |  Supabase Auth (email/password + email verification)
+   |  Supabase Auth (email/password; confirmation deferred for pilot)
    |  HTTPS REST + SSE with Bearer JWT     |  WebSocket auth event (chat)
    v                                       v
 FastAPI (api/)  ---- Redis (pub/sub, app rate limits, presence, weather cache)
@@ -48,7 +48,7 @@ Background work: `arq` (Redis) workers for media processing, push delivery, dail
 
 ## Authentication design
 
-- The web app registers name/email/password with Supabase, verifies email through a one-time PKCE link and signs returning users in with email/password. Recovery links use the same callback and route to password reset. No social sign-in is presented, and no backend auth endpoint changes are needed.
+- Pilot registration sends name/email/password through a temporary SDK client using an implicit signup request with no session persistence, refresh or URL detection. Supabase Confirm email is off, and `NEXT_PUBLIC_AUTH_REQUIRE_EMAIL_CONFIRMATION` defaults to false. The temporary client is disposed after signup; its session never reaches the app's persistent auth client. Success returns to password sign-in. The normal client keeps PKCE for recovery and legacy verification callbacks. No social sign-in is presented, and no backend auth endpoint changes are needed.
 - FastAPI never accepts a Supabase service-role key from the browser and never issues or refreshes user tokens.
 - One dependency verifies bearer tokens with the Supabase JWKS and validates issuer, audience, expiry and subject. It maps the `sub` claim to `users.supabase_user_id`.
 - `POST /auth/bootstrap` creates the local user and farmer ID once, then returns the same mapping on retries.

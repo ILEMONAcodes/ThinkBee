@@ -5,7 +5,7 @@ import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -14,9 +14,11 @@ import { AuthError } from "@/components/onboarding/auth-error";
 import { EmailField } from "@/components/onboarding/email-field";
 import { PasswordField } from "@/components/onboarding/password-field";
 import { VerificationNotice } from "@/components/onboarding/verification-notice";
+import { RegistrationNotice } from "@/components/onboarding/registration-notice";
 import { AppError } from "@/lib/api/errors";
 import { resendVerification, signInWithPassword } from "@/lib/auth/actions";
 import { signInSchema } from "@/lib/auth/forms";
+import { requiresEmailConfirmation } from "@/lib/auth/policy";
 import { useOnline } from "@/lib/hooks/use-online";
 
 export function SignInForm() {
@@ -49,13 +51,14 @@ export function SignInForm() {
   return <section className="auth-form" aria-labelledby="auth-title">
     <p className="setup-kicker">{t("emailStep")}</p><h1 className="auth-title" id="auth-title">{t("signInTitle")}</h1>
     <p className="auth-description">{t("signInBody")}</p>
+    <Suspense fallback={null}><RegistrationNotice /></Suspense>
     <form className="auth-fields" onSubmit={handleSubmit(submit)} noValidate aria-busy={isSubmitting}>
       <EmailField field={register("email")} invalid={!!errors.email} />
       <PasswordField field={register("password")} error={errors.password ? t("passwordRequired") : undefined} />
       <Link className="auth-forgot" href="/forgot-password">{t("forgotPassword")}</Link>
       {!online ? <p className="setup-feedback" role="status">{t("connectionRequired")}</p> : null}
       {error || identity.error ? <AuthError error={error || identity.error} /> : null}
-      {error instanceof AppError && error.code === "email_not_confirmed" ? <button className="setup-secondary" type="button" disabled={!online || resending} onClick={() => void resend()}>{resending ? t("sending") : t("verifyAction")}</button> : null}
+      {requiresEmailConfirmation && error instanceof AppError && error.code === "email_not_confirmed" ? <button className="setup-secondary" type="button" disabled={!online || resending} onClick={() => void resend()}>{resending ? t("sending") : t("verifyAction")}</button> : null}
       <button className="setup-primary auth-submit" type="submit" disabled={!identity.ready || isSubmitting || !online}>{isSubmitting ? t("signingIn") : t("signIn")}<ArrowRight size={20} aria-hidden="true" /></button>
       <p className="auth-private-note">{t("privacyShort")} <Link href="/privacy">{t("privacyLink")}</Link></p>
     </form>
