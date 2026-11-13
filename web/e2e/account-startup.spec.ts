@@ -11,6 +11,8 @@ test("waits through a slow account startup instead of failing after fifteen seco
   await expect(page.getByText(/Still connecting to your account/)).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".setup-feedback[role=alert]")).toHaveCount(0);
   await expect(page).toHaveURL(/\/setup\/profile$/, { timeout: 30_000 });
+  // Check after the destination's account query resolves, not just its navigation.
+  await expect(page.getByText("TB-12345678", { exact: true })).toBeVisible({ timeout: 30_000 });
   expect(state.bootstrapCount).toBe(1);
 });
 
@@ -26,6 +28,8 @@ test("reports an unavailable account service and retries without another sign-in
   state.bootstrapStatus = 200;
   await page.getByRole("button", { name: "Try again", exact: true }).click();
   await expect(page).toHaveURL(/\/setup\/profile$/);
+  await expect(page.getByText("TB-12345678", { exact: true })).toBeVisible();
+  expect(state.bootstrapCount).toBe(2); // The failed attempt and the explicit retry.
   expect(state.passwordCount).toBe(0);
   expect(state.signupCount).toBe(0);
 });

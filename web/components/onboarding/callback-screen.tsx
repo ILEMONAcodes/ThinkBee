@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -14,6 +15,7 @@ import { loadAccount } from "@/lib/onboarding/account";
 export function CallbackScreen() {
   const t = useTranslations("Setup");
   const router = useRouter();
+  const queryClient = useQueryClient();
   const online = useOnline();
   const [error, setError] = useState<unknown>();
   const [attempt, setAttempt] = useState(0);
@@ -30,14 +32,18 @@ export function CallbackScreen() {
       const { data } = await getSupabase().auth.getSession();
       if (!data.session) throw new AppError("link_expired");
       if (recovery) { if (active) router.replace("/auth/reset-password"); return; }
-      const account = await loadAccount(data.session.user.id);
+      const owner = data.session.user.id;
+      const account = await queryClient.fetchQuery({
+        queryKey: ["account", owner],
+        queryFn: () => loadAccount(owner), networkMode: "always",
+      });
       if (!active) return;
       try { localStorage.setItem("thinkbee-welcome-seen", "1"); } catch { /* Cosmetic only. */ }
       router.replace(!account.profile && !account.profileJob ? "/setup/profile" : account.farmJob || account.profileJob ? "/setup/farm" : "/");
     };
     void finish().catch((failure: unknown) => { if (active) setError(failure); }).finally(() => clearTimeout(slowTimer));
     return () => { active = false; clearTimeout(slowTimer); unsubscribe(); };
-  }, [attempt, router]);
+  }, [attempt, queryClient, router]);
   return <section className="setup-narrow"><h1 className="setup-title">{t("returning")}</h1>
     {!online ? <p className="mt-5" role="status">{t("connectionRequired")}</p> : null}
     {error ? <SetupError error={error} retry={() => { setError(undefined); setTakingLonger(false); setAttempt((value) => value + 1); }} /> : <p className="mt-5" role="status">{t(takingLonger ? "accountConnecting" : "loading")}</p>}

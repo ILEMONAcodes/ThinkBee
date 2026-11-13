@@ -167,3 +167,11 @@ Public Render responses took 34–37 seconds while the frontend stopped account 
 Validation: web lint, TypeScript, 109 unit tests, production Webpack/Serwist build and the 168.4 KB Home budget passed. All 44 focused Chrome browser checks passed without retries at 390px/1440px in light/dark, including a 20-second bootstrap response, service failure/retry without login, password registration/recovery and offline setup. Reviewed the service-error screenshots in all four combinations. API lint, strict types and the full 83-test database suite passed; the subsequently added readiness-deadline regression passed with all eight health tests against the isolated test database. No live farmer account or hosted database was modified.
 
 Deploy both frontend and API after merge. Live authenticated bootstrap and hosted database configuration still need verification; the previous readiness endpoint could not establish that the database was usable. Render logs or a connected Render integration are needed if a warmed-up retry still fails. The next feature task remains phase 2's AI provider interface.
+
+### Follow-up — reuse the callback account query
+
+- [x] Share the account query between the sign-in callback and setup page, and check request counts after the destination account data renders.
+
+CI exposed a race in the original startup assertion: callback navigation was complete before the profile page's separate `useAccount` fetch started. The callback now uses the same owner-keyed TanStack query as setup, inheriting the existing 30-second freshness and disabled automatic retries. Setup reuses the successful result instead of bootstrapping again. Failed requests remain retryable and sign-out still clears the provider's query cache. Browser assertions now wait for the farmer ID before checking counts: one request on success, two after a failed attempt and explicit retry.
+
+Validation: lint, TypeScript, 109 unit tests, production build and the unchanged 168.4 KB Home budget passed. Startup/retry checks passed twice in each of the four viewport/theme combinations (16 runs), followed by all 36 onboarding checks, with no retries. CI must rerun on the new commit; the earlier local assertion was insufficient because it checked navigation before destination data readiness.
