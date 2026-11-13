@@ -10,6 +10,10 @@ Base: `/api/v1`. JSON. Authenticated requests use `Authorization: Bearer <supaba
 
 The generated OpenAPI document defines an HTTP bearer security scheme with `bearerFormat: JWT` and applies it to protected operations. Health endpoints and any future public metadata endpoints explicitly opt out.
 
+Health endpoints are outside `/api/v1`: `GET /health/live` returns `200 {status: ok}` when the process runs. `GET /health/ready` checks database connectivity and the user/profile schema without fetching farmer data. It returns `200 {status: ready}` or `503 account_store_unavailable`; its deadline is `READINESS_TIMEOUT_SECONDS` (default 5). Database connections have a separate `DATABASE_CONNECT_TIMEOUT_SECONDS` deadline (default 10).
+
+The web account bootstrap and initial profile read allow `NEXT_PUBLIC_ACCOUNT_TIMEOUT_SECONDS` (default 90, range 15–180) for an idle API to wake. Ordinary writes retain their 15-second deadline. Startup timeouts and service/database failures have separate feedback from offline failures; retry keeps the SDK session and uses the idempotent bootstrap route.
+
 ## Authentication and security
 Supabase Auth handles name/email/password registration, email/password sign-in, password recovery, session persistence, refresh and authentication rate limits. Pilot registration temporarily skips email confirmation and returns the farmer to sign-in; Supabase Confirm email must be off. Passwords are sent only to Supabase; the FastAPI contract is unchanged. The Think Bee API does not send OTPs, set auth cookies, issue JWTs, refresh sessions or expose logout endpoints. The SDK's existing PKCE callback remains available for recovery and older verification links.
 

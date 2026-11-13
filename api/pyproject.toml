@@ -50,3 +50,8 @@ select = ["E", "F", "I", "UP", "B", "ASYNC"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# asyncpg does not ship type declarations; keep the exception-only imports scoped.
+module = "asyncpg"
+ignore_missing_imports = true

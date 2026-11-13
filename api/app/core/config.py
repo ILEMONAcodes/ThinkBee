@@ -9,6 +9,8 @@ class Settings(BaseSettings):
 
     app_env: str = "local"
     database_url: str = "postgresql+asyncpg://thinkbee:thinkbee@localhost:5432/thinkbee"
+    database_connect_timeout_seconds: float = Field(default=10, gt=0, le=60)
+    readiness_timeout_seconds: float = Field(default=5, gt=0, le=30)
     redis_url: str = "redis://localhost:6379/0"
     allowed_origins: str = "http://localhost:3000"
     supabase_url: str = ""

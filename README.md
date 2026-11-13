@@ -16,6 +16,8 @@ Use Node.js 24 from `.nvmrc` and Python 3.12 from `.python-version`; an old virt
 
 Read `AGENTS.md` before making changes. The current build order is tracked in `docs/ROADMAP.md`.
 
+For hosted account startup, set Vercel `NEXT_PUBLIC_API_URL=https://thinkbee.onrender.com/api/v1` and optionally `NEXT_PUBLIC_ACCOUNT_TIMEOUT_SECONDS=90`, then redeploy (public values are built into the app). Render needs its PostgreSQL `DATABASE_URL`, applied Alembic migrations and `ALLOWED_ORIGINS` including `https://think-bee.vercel.app`. Check `/health/ready` for database/schema readiness; `/health/live` only confirms the process is running. Keep database credentials and Supabase service-role keys backend-only. A free Render service can take time to wake, so account startup allows longer than ordinary writes.
+
 ## Contents
 
 | Path | Purpose |

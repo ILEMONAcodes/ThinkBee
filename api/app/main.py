@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.core.config import get_settings
-from app.core.errors import AppError, app_error_handler, validation_error_handler
+from app.core.errors import AppError, ErrorResponse, app_error_handler, validation_error_handler
+from app.db.health import check_account_store
 from app.modules.auth.router import router as auth_router
 from app.modules.farms.router import router as farms_router
 from app.modules.users.router import router as users_router
@@ -56,8 +57,12 @@ def create_app() -> FastAPI:
         "/health/ready",
         response_model=HealthResponse,
         summary="Check that the API is ready to receive requests",
+        responses={
+            503: {"model": ErrorResponse, "description": "Account database or schema unavailable"}
+        },
     )
     async def health_ready() -> HealthResponse:
+        await check_account_store()
         return HealthResponse(status="ready")
 
     return application

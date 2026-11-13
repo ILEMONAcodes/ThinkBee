@@ -2331,6 +2331,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Account database or schema unavailable"
           }
         },
         "summary": "Check that the API is ready to receive requests"

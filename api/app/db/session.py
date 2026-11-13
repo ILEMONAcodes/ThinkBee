@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 
+from asyncpg import PostgresError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -7,7 +8,12 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 
 settings = get_settings()
-engine = create_async_engine(settings.database_url, pool_pre_ping=True, hide_parameters=True)
+engine = create_async_engine(
+    settings.database_url,
+    pool_pre_ping=True,
+    hide_parameters=True,
+    connect_args={"timeout": settings.database_connect_timeout_seconds},
+)
 async_session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
@@ -15,7 +21,7 @@ async def get_session() -> AsyncIterator[AsyncSession]:
     try:
         async with async_session_factory() as session:
             yield session
-    except (SQLAlchemyError, OSError) as exc:
+    except (SQLAlchemyError, PostgresError, OSError, TimeoutError) as exc:
         raise AppError(
             status_code=503,
             code="account_store_unavailable",

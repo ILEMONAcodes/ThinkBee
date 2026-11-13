@@ -215,6 +215,7 @@
     "retry": "Try again",
     "signIn": "Sign in",
     "loading": "Getting your account ready…",
+    "accountConnecting": "Still connecting to your account. This can take a little longer the first time. Please keep this page open.",
     "sessionTitle": "Sign in to continue",
     "back": "Back",
     "home": "Go to Home",
@@ -295,6 +296,8 @@
     "errors": {
       "session": "Your session needs checking. Sign in again; drafts stay on this device until you sign out.",
       "unavailable": "We could not reach the service. Your saved drafts are safe on this device. Try again when you have a connection.",
+      "accountUnavailable": "The account service is temporarily unavailable. Please try again shortly.",
+      "accountTimeout": "Connecting to your account took too long. Please try again. You do not need to register again.",
       "invalid": "Some details could not be accepted. Check your entries and try again.",
       "limited": "The request limit has been reached. Wait a little, then try again.",
       "storage": "We could not save on this device. Free some browser storage or allow site storage, then try again. Your entries are still on this page.",

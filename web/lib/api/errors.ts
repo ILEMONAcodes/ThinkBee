@@ -5,8 +5,11 @@ export class AppError extends Error {
   }
 }
 
-export function errorKey(error: unknown): "session" | "unavailable" | "invalid" | "limited" | "storage" | "expired" | "configuration" | "suspended" | "deleted" {
+export function errorKey(error: unknown): "session" | "unavailable" | "accountUnavailable" | "accountTimeout" | "invalid" | "limited" | "storage" | "expired" | "configuration" | "suspended" | "deleted" {
   if (!(error instanceof AppError)) return "unavailable";
+  if (error.code === "account_startup_timeout") return "accountTimeout";
+  if (["account_store_unavailable", "auth_verifier_unavailable", "farmer_id_unavailable"].includes(error.code)) return "accountUnavailable";
+  if (error.status >= 500) return "accountUnavailable";
   if (error.code === "storage_unavailable") return "storage";
   if (error.code === "auth_configuration") return "configuration";
   if (error.code === "link_expired") return "expired";
