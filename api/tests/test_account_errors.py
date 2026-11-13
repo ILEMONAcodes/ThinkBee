@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+from asyncpg import InvalidPasswordError
 from httpx import ASGITransport, AsyncClient
 
 from app.core.security import (
@@ -32,11 +33,19 @@ async def test_account_routes_require_valid_bearer(path: str, authorization: str
     assert response.headers["www-authenticate"] == "Bearer"
 
 
+@pytest.mark.parametrize(
+    "failure",
+    [
+        OSError("private connection details"),
+        InvalidPasswordError("private connection details"),
+        TimeoutError("private connection details"),
+    ],
+)
 async def test_unavailable_database_has_safe_retryable_error(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, failure: Exception,
 ) -> None:
     broken_session = AsyncMock()
-    broken_session.__aenter__.side_effect = OSError("private connection details")
+    broken_session.__aenter__.side_effect = failure
     monkeypatch.setattr(database, "async_session_factory", lambda: broken_session)
     application = create_app()
     application.dependency_overrides[require_authenticated_identity] = lambda: (
@@ -45,7 +54,8 @@ async def test_unavailable_database_has_safe_retryable_error(
     async with AsyncClient(
         transport=ASGITransport(app=application), base_url="http://test"
     ) as client:
-        response = await client.get("/api/v1/me")
+        response = await client.get("/api/v1/me", headers={"Origin": "http://localhost:3000"})
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "account_store_unavailable"
     assert "private connection details" not in response.text
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"

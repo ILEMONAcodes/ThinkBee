@@ -205,7 +205,7 @@ test("account failures and denied local storage do not report success", async ({
   const state = await mockOnboarding(page);
   state.bootstrapStatus = 503;
   await page.goto("/setup/profile");
-  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("We could not reach the service");
+  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("The account service is temporarily unavailable");
   await expect(page.locator("body")).not.toContainText("Internal details");
   state.bootstrapStatus = 200;
   await page.getByRole("button", { name: "Try again" }).click();

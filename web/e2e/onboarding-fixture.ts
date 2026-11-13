@@ -23,7 +23,7 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
       sessionStorage.setItem("seeded", "1");
     }
   }, { storageKey, session, signedIn });
-  const state = { profile: withProfile ? { ...profile } : undefined as Schema["ProfileResponse"] | undefined, farms: new Map<string, Schema["FarmResponse"]>(), units: new Map<string, Schema["UnitResponse"]>(), signupCount: 0, signupHasCodeChallenge: false, signupRequiresConfirmation: false, bootstrapCount: 0, resendCount: 0, recoverCount: 0, passwordCount: 0, passwordUpdates: 0, tokenCount: 0, signupStatus: 200, signInError: "", failUnitOnce: false, bootstrapStatus: 200, profileWrites: 0, logoutStatus: 204, logoutCount: 0 };
+  const state = { profile: withProfile ? { ...profile } : undefined as Schema["ProfileResponse"] | undefined, farms: new Map<string, Schema["FarmResponse"]>(), units: new Map<string, Schema["UnitResponse"]>(), signupCount: 0, signupHasCodeChallenge: false, signupRequiresConfirmation: false, bootstrapCount: 0, bootstrapDelayMs: 0, resendCount: 0, recoverCount: 0, passwordCount: 0, passwordUpdates: 0, tokenCount: 0, signupStatus: 200, signInError: "", failUnitOnce: false, bootstrapStatus: 200, profileWrites: 0, logoutStatus: 204, logoutCount: 0 };
   // Context routes also intercept fetches made by the controlling service worker.
   await page.context().route("**/auth/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -60,6 +60,7 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
     if (!request.headers().authorization?.startsWith("Bearer ")) return route.fulfill({ status: 401, headers, json: { error: { code: "auth_required", message: "Sign in" } } });
     if (path === "/auth/bootstrap") {
       state.bootstrapCount++;
+      if (state.bootstrapDelayMs) await new Promise((resolve) => setTimeout(resolve, state.bootstrapDelayMs));
       return route.fulfill({ status: state.bootstrapStatus, headers, json: state.bootstrapStatus === 200 ? { user, is_new: !state.profile } : { error: { code: state.bootstrapStatus === 403 ? "account_suspended" : "account_store_unavailable", message: "Internal details must not appear" } } });
     }
     if (path === "/me/chat-profile") {
