@@ -65,7 +65,7 @@ class MockAIProvider(AIProvider):
     def stream_answer(self, req: QuestionRequest) -> AsyncIterator[str]:
         """Stream a mock answer."""
 
-        async def _stream():
+        async def _stream() -> AsyncIterator[str]:
             text = (
                 "Based on your farm details and current weather, "
                 "wait for a dry period before inspecting the hives."

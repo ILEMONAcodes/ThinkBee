@@ -1,5 +1,6 @@
 """Assistant router."""
 
+from collections.abc import AsyncIterator
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -82,11 +83,11 @@ async def stream_message(
     db: AsyncSession = Depends(get_session),
     user_id: UUID = Depends(get_current_user_id),
     service: AssistantService = Depends(get_assistant_service),
-):
+) -> StreamingResponse:
     """Stream an answer for a message (SSE)."""
     try:
 
-        async def event_generator():
+        async def event_generator() -> AsyncIterator[str]:
             async for chunk in service.stream_message(
                 db,
                 thread_id,

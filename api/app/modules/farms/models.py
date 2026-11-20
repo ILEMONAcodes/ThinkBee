@@ -12,8 +12,7 @@ from app.db.ids import uuid7
 from app.db.models import Base, TimestampMixin
 
 if TYPE_CHECKING:
-    from app.db.models import DailyBriefing, PredictiveAlert, Scan
-    from app.modules.assistant.models import AssistantThread
+    from app.db.models import AssistantThread, DailyBriefing, PredictiveAlert, Scan
     from app.modules.users.models import User
 
 

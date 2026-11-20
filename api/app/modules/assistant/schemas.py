@@ -1,7 +1,7 @@
 """Assistant thread and message schemas."""
 
 from datetime import datetime
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -77,6 +77,6 @@ class MessageResponse(BaseModel):
     role: Literal["user", "assistant"]
     body: str
     attachments: list[str] | None
-    safety: dict | None
+    safety: dict[str, Any] | None
     feedback: Literal["up", "down"] | None
     created_at: datetime

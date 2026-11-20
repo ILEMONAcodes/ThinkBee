@@ -4,9 +4,10 @@ import json
 import logging
 from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import Any
 
-from google import genai
-from google.genai import types
+from google import genai  # type: ignore[import-not-found]
+from google.genai import types  # type: ignore[import-not-found]
 
 from app.core.config import get_settings
 from app.modules.assistant.schemas import AnswerResult, QuestionRequest
@@ -49,7 +50,7 @@ class GeminiProvider(AIProvider):
                 content = parts[2].strip()
         return content
 
-    def _build_context_text(self, context: dict) -> str:
+    def _build_context_text(self, context: dict[str, Any]) -> str:
         """Render context dict as text for the prompt."""
         lines = []
         lines.append(f"CONTEXT VERSION: {context.get('context_version', '1')}")
@@ -236,7 +237,7 @@ class GeminiProvider(AIProvider):
                     )
                 )
 
-        async def _stream():
+        async def _stream() -> AsyncIterator[str]:
             async for chunk in self.client.aio.models.generate_content_stream(
                 model=self.model,
                 contents=contents + image_parts,

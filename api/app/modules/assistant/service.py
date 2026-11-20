@@ -1,6 +1,7 @@
 """Assistant thread and message service."""
 
 import logging
+from collections.abc import AsyncIterator
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
@@ -125,7 +126,7 @@ class AssistantService:
         thread_id: UUID,
         user_id: UUID,
         req: QuestionRequest,
-    ):
+    ) -> AsyncIterator[str]:
         """Stream an answer for a message."""
         # Verify thread ownership
         thread = await self.get_thread(db, thread_id, user_id)
