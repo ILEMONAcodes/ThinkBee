@@ -107,7 +107,7 @@ export default function CreateSpacePage() {
                   : "border-line hover:border-muted"
               }`}>
                 <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-xl bg-honey-100 flex items-center justify-center text-forest-900 dark:bg-forest-800 dark:text-mint">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-bark-100 text-bark-900 dark:bg-bark-900 dark:text-bark-100">
                     <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
                   </div>
                   <div>
@@ -132,7 +132,7 @@ export default function CreateSpacePage() {
                   : "border-line hover:border-muted"
               }`}>
                 <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-xl bg-honey-100 flex items-center justify-center text-forest-900 dark:bg-forest-800 dark:text-mint">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-bark-100 text-bark-900 dark:bg-bark-900 dark:text-bark-100">
                     <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9h4V5H3v4zm0 5h4v-4H3v4zm0 5h4v-4H3v4zm5 0h12v-4H8v4zm0-5h12v-4H8v4zm0-5h12V5H8v4z"/></svg>
                   </div>
                   <div>
@@ -163,7 +163,7 @@ export default function CreateSpacePage() {
                   : "border-line hover:border-muted"
               }`}>
                 <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-xl bg-honey-100 flex items-center justify-center text-forest-900 dark:bg-forest-800 dark:text-mint">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-bark-100 text-bark-900 dark:bg-bark-900 dark:text-bark-100">
                     <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zm0 1.5c2.3 0 4.45 1.17 5.73 3h-11.46C7.55 7.17 9.7 6 12 6zm0 12c-2.3 0-4.45-1.17-5.73-3h11.46c1.28 1.83 3.43 3 5.73 3z"/></svg>
                   </div>
                   <div>
@@ -188,7 +188,7 @@ export default function CreateSpacePage() {
                   : "border-line hover:border-muted"
               }`}>
                 <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-xl bg-honey-100 flex items-center justify-center text-forest-900 dark:bg-forest-800 dark:text-mint">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-bark-100 text-bark-900 dark:bg-bark-900 dark:text-bark-100">
                     <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V7c0-2.76-2.24-5-5-5S7 4.24 7 7v1H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V7c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v1z"/></svg>
                   </div>
                   <div>

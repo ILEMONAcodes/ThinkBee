@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 
+import { mockOnboarding } from "./onboarding-fixture";
+
 test.use({ serviceWorkers: "block" });
+
+test.beforeEach(async ({ page }) => { await mockOnboarding(page, true, true); });
 
 test("appearance works offline when scripts requested after startup cannot load", async ({ page, context }) => {
   const response = await page.request.get("/me");

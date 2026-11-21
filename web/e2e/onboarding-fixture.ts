@@ -10,19 +10,19 @@ type Schema = components["schemas"];
 export const user: Schema["UserResponse"] = { id: "019a4ff0-0000-7000-8000-000000000001", farmer_id: "TB-12345678", status: "active", is_think_bee_admin: false, locale: "en-NG", last_seen_at: timestamp, created_at: timestamp, updated_at: timestamp };
 export const profile: Schema["ProfileResponse"] = { display_name: "Ada", bio: "I grow cassava.", photo_key: null, area_state: null, area_lga: null, show_crops: false, show_hive_type: false, created_at: timestamp, updated_at: timestamp };
 
-export async function mockOnboarding(page: Page, signedIn = true, withProfile = false) {
+export async function mockOnboarding(page: Page, signedIn = true, withProfile = false, welcomeSeen = true) {
   const fakeUser = { id: owner, aud: "authenticated", role: "authenticated", email: "farmer@example.test", app_metadata: { provider: "email" }, user_metadata: {} as { display_name?: string }, created_at: timestamp };
   const jwt = `${Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")}.${Buffer.from(JSON.stringify({ sub: owner, role: "authenticated", exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.test-signature`;
   const session = { access_token: jwt, refresh_token: "fake-refresh-for-browser-tests", token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: fakeUser };
   const storageKey = `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`;
-  await page.addInitScript(({ storageKey, session, signedIn }) => {
-    localStorage.setItem("thinkbee-welcome-seen", "1");
+  await page.addInitScript(({ storageKey, session, signedIn, welcomeSeen }) => {
+    if (welcomeSeen) localStorage.setItem("thinkbee-welcome-seen", "1");
     // Synthetic SDK-owned session fixture; production never copies auth tokens.
     if (signedIn && !sessionStorage.getItem("seeded")) {
       localStorage.setItem(storageKey, JSON.stringify(session));
       sessionStorage.setItem("seeded", "1");
     }
-  }, { storageKey, session, signedIn });
+  }, { storageKey, session, signedIn, welcomeSeen });
   const state = { profile: withProfile ? { ...profile } : undefined as Schema["ProfileResponse"] | undefined, farms: new Map<string, Schema["FarmResponse"]>(), units: new Map<string, Schema["UnitResponse"]>(), signupCount: 0, signupHasCodeChallenge: false, signupRequiresConfirmation: false, bootstrapCount: 0, bootstrapDelayMs: 0, resendCount: 0, recoverCount: 0, passwordCount: 0, passwordUpdates: 0, tokenCount: 0, signupStatus: 200, signInError: "", failUnitOnce: false, bootstrapStatus: 200, profileWrites: 0, logoutStatus: 204, logoutCount: 0 };
   // Context routes also intercept fetches made by the controlling service worker.
   await page.context().route("**/auth/v1/**", async (route) => {

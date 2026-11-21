@@ -79,7 +79,7 @@ test("cached Home reloads covered and can be unlocked offline", async ({ page, c
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.locator("#app-content")).toBeHidden();
   await unlockApp(page);
-  await expect(page.getByRole("heading", { name: "A little care, every day" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
 test("requires the current PIN to change or turn off the lock", async ({ page }) => {

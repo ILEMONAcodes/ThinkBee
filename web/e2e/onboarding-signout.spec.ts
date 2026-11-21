@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 import { mockOnboarding } from "./onboarding-fixture";
 
+test.use({ serviceWorkers: "block" });
+
 test("sign-out asks before discarding an unsent farm draft", async ({ page }) => {
   await mockOnboarding(page, true, true);
   await page.goto("/setup/farm");
@@ -16,7 +18,8 @@ test("sign-out asks before discarding an unsent farm draft", async ({ page }) =>
   await page.goto("/me");
   await page.getByRole("button", { name: "Sign out on this device" }).click();
   await page.getByRole("button", { name: "Discard drafts and sign out" }).click();
-  await expect(page.getByRole("link", { name: "Sign in", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/sign-in$/);
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
   const count = await page.evaluate(() => new Promise<number>((resolve, reject) => {
     const request = indexedDB.open("thinkbee-onboarding");
     request.onerror = () => reject(request.error);

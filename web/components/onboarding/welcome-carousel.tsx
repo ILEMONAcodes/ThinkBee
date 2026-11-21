@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { WelcomeArt, welcomePanels } from "@/components/onboarding/welcome-art";
-import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { BrandMark } from "@/components/ui/brand-mark";
 
 function rememberWelcome() { try { localStorage.setItem("thinkbee-welcome-seen", "1"); } catch { /* Optional preference. */ } }
@@ -15,6 +14,8 @@ export function WelcomeCarousel({ connectionStatus }: Readonly<{ connectionStatu
   const t = useTranslations("Welcome");
   const [index, setIndex] = useState(0);
   const [splash, setSplash] = useState(true);
+  const finalAction = useRef<HTMLAnchorElement>(null);
+  const focusFinalAction = useRef(false);
   const start = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     const timer = window.setTimeout(() => setSplash(false), window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900);
@@ -22,13 +23,18 @@ export function WelcomeCarousel({ connectionStatus }: Readonly<{ connectionStatu
   }, []);
   const move = (step: number) => setIndex((value) => Math.max(0, Math.min(welcomePanels.length - 1, value + step)));
   const panel = welcomePanels[index];
+  const isLastPanel = index === welcomePanels.length - 1;
+  useEffect(() => {
+    if (isLastPanel && focusFinalAction.current) {
+      finalAction.current?.focus();
+      focusFinalAction.current = false;
+    }
+  }, [isLastPanel]);
+
+  const arrow = <span className="welcome-cta-arrow"><ArrowRight size={24} aria-hidden="true" /></span>;
   return <div className="welcome-page">
     {splash ? <div className="welcome-splash" aria-hidden="true"><BrandMark width={280} priority /><span>{t.rich("byMacaney", { macaney: (chunks) => chunks })}</span></div> : null}
     {connectionStatus}
-    <header className="welcome-header">
-      <Link aria-label={t("brand")} className="welcome-brand" href="/" onClick={rememberWelcome}><BrandMark /></Link>
-      <div className="welcome-header-actions"><Link className="welcome-skip" href="/" onClick={rememberWelcome}>{t("skip")}</Link><ThemeToggle /></div>
-    </header>
     <main className="welcome-main">
       <section className="welcome-panel" aria-roledescription="carousel" aria-label={t("intro")} tabIndex={0}
         onTouchStart={(event) => { const touch = event.touches[0]; start.current = { x: touch.clientX, y: touch.clientY }; }}
@@ -43,24 +49,43 @@ export function WelcomeCarousel({ connectionStatus }: Readonly<{ connectionStatu
         onTouchCancel={() => { start.current = null; }}
         onKeyDown={(event) => { if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); move(event.key === "ArrowRight" ? 1 : -1); } }}>
         <WelcomeArt panel={panel} />
+        <header className="welcome-header">
+          <Link aria-label={t("brand")} className="welcome-brand" href="/sign-in" onClick={rememberWelcome}>
+            <BrandMark surface="dark" priority />
+          </Link>
+          <Link className="welcome-skip" href="/sign-in" onClick={rememberWelcome}>{t("skip")}</Link>
+        </header>
         <div className="welcome-content">
-          <div className="welcome-panel-top">
-            <p className="welcome-count"><span>0{index + 1}</span> / 0{welcomePanels.length}</p>
-            <nav className="welcome-pagination" aria-label={t("panels")}>{welcomePanels.map((name, position) => <button type="button" key={name} aria-label={t("panel", { number: position + 1 })} aria-current={position === index ? "step" : undefined} onClick={() => setIndex(position)}><span /></button>)}</nav>
+          <nav className="welcome-pagination" aria-label={t("panels")}>
+            {welcomePanels.map((name, position) => (
+              <button type="button" key={name} aria-label={t("panel", { number: position + 1 })}
+                aria-current={position === index ? "step" : undefined} onClick={() => setIndex(position)}>
+                <span />
+              </button>
+            ))}
+          </nav>
+          <div className="welcome-copy" aria-live="polite" aria-atomic="true">
+            <div key={panel} className="welcome-slide-text">
+              <h1 className="welcome-title">{t(`${panel}.title`)}</h1>
+              <p className="welcome-body">{t(`${panel}.body`)}</p>
+            </div>
           </div>
-          <div className="welcome-copy" key={panel} aria-live="polite" aria-atomic="true">
-            <p className="setup-kicker">{t(`${panel}.kicker`)}</p>
-            <h1 className="welcome-title">{t.rich(`${panel}.title`, { em: (chunks) => <em>{chunks}</em> })}</h1>
-            <p className="welcome-body">{t(`${panel}.body`)}</p>
-          </div>
-          <div className="welcome-actions">
-            <Link className="setup-primary welcome-start" href="/register" onClick={rememberWelcome}>{t("start")}<ArrowRight size={22} aria-hidden="true" /></Link>
-            {index < welcomePanels.length - 1 ? <button className="welcome-next" type="button" onClick={() => move(1)}>{t("next")}<ArrowRight size={20} aria-hidden="true" /></button> : null}
-          </div>
+          {isLastPanel ? (
+            <Link ref={finalAction} className="welcome-cta" href="/register" onClick={rememberWelcome}>
+              {arrow}<span>{t("start")}</span>
+            </Link>
+          ) : (
+            <button className="welcome-cta" type="button" onClick={(event) => {
+              focusFinalAction.current = index === welcomePanels.length - 2 && document.activeElement === event.currentTarget;
+              move(1);
+            }}>
+              {arrow}<span>{t("next")}</span>
+            </button>
+          )}
           <p className="welcome-sign-in">{t("hasAccount")} <Link href="/sign-in" onClick={rememberWelcome}>{t("signIn")}</Link></p>
         </div>
       </section>
     </main>
-    <footer className="welcome-footer"><span>{t("footer")}</span><span>{t.rich("byMacaney", { macaney: (chunks) => <a className="brand-credit" href="https://www.macaney.com/">{chunks}</a> })}</span></footer>
+    <footer className="welcome-footer"><span>{t.rich("byMacaney", { macaney: (chunks) => <a className="brand-credit" href="https://www.macaney.com/">{chunks}</a> })}</span></footer>
   </div>;
 }

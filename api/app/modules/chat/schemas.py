@@ -45,6 +45,11 @@ class ChatSpaceResponse(ChatSpaceBase):
     class Config:
         from_attributes = True
 
+    @property
+    def cover(self) -> str | None:
+        """Alias for avatar_key to match frontend expectation."""
+        return self.avatar_key
+
 
 class ChatSpaceMemberResponse(BaseModel):
     """Chat space member response."""

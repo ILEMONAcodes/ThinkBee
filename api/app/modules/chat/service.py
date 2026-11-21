@@ -74,7 +74,11 @@ class ChatService:
         )
         space = result.scalar_one_or_none()
         if space:
-            return ChatSpaceResponse.model_validate(space)
+            response = ChatSpaceResponse.model_validate(space)
+            # Ensure cover is populated from avatar_key
+            if space.avatar_key and not response.cover:
+                response.cover = space.avatar_key
+            return response
         return None
 
     async def update_space(
@@ -138,7 +142,12 @@ class ChatService:
             spaces = spaces[:limit]
             next_cursor = spaces[-1].id
 
-        return [ChatSpaceResponse.model_validate(s) for s in spaces], next_cursor
+        responses = [ChatSpaceResponse.model_validate(s) for s in spaces]
+        # Ensure cover is populated from avatar_key
+        for r in responses:
+            if r.avatar_key and not r.cover:
+                r.cover = r.avatar_key
+        return responses, next_cursor
 
     async def list_public_communities(
         self,
@@ -443,6 +452,7 @@ async def ensure_system_spaces(db: AsyncSession) -> None:
             kind="community",
             visibility="public",
             is_system=True,
+            avatar_key="/photos/brood-comb.webp",  # Cover image for the community
         )
         db.add(beekeepers)
         await db.flush()
@@ -459,6 +469,7 @@ async def ensure_system_spaces(db: AsyncSession) -> None:
             kind="community",
             visibility="public",
             is_system=True,
+            avatar_key="/photos/olive-foliage.webp",  # Cover image for the community
         )
         db.add(farmers)
         await db.flush()

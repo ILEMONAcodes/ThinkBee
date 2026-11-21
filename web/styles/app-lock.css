@@ -25,7 +25,7 @@ html[data-app-lock] #app-lock-cover { display: grid; position: fixed; inset: 0; 
 .lock-error { padding: 12px 16px; border-radius: var(--radius-sm); background: var(--color-danger-bg); color: var(--color-danger); font-size: 1rem; overflow-wrap: anywhere; }
 .lock-notice { margin-top: 16px; color: var(--text-2); }
 .lock-recovery { margin-top: 24px; }
-.lock-settings { margin-bottom: 24px; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--bg-raised); }
+.lock-settings { margin-bottom: 24px; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--bg-raised); }
 .lock-settings-heading { display: flex; align-items: center; gap: 12px; }
 .lock-settings-heading svg { flex-shrink: 0; color: var(--link); }
 .lock-status { margin-top: 20px; font-weight: 600; }

@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { User } from "@phosphor-icons/react/dist/csr/User";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -46,7 +47,7 @@ export function RegisterForm() {
     <p className="auth-description">{t("registerBody")}</p>
     <form className="auth-fields" onSubmit={handleSubmit(submit)} noValidate aria-busy={isSubmitting}>
       <div className="auth-field-pair">
-      <div><label className="setup-label" htmlFor="name">{t("fullName")}</label><input {...register("name")} id="name" className="setup-input" autoComplete="name" placeholder={t("fullNamePlaceholder")} maxLength={80} aria-invalid={!!errors.name} aria-describedby={errors.name ? "name-error" : undefined} />{errors.name ? <p className="setup-field-error" id="name-error">{t("nameInvalid")}</p> : null}</div>
+      <div><label className="setup-label" htmlFor="name">{t("fullName")}</label><div className="auth-name-field"><User size={22} aria-hidden="true" /><input {...register("name")} id="name" className="setup-input" autoComplete="name" placeholder={t("fullNamePlaceholder")} maxLength={80} aria-invalid={!!errors.name} aria-describedby={errors.name ? "name-error" : undefined} /></div>{errors.name ? <p className="setup-field-error" id="name-error">{t("nameInvalid")}</p> : null}</div>
       <EmailField field={register("email")} invalid={!!errors.email} />
       </div>
       <div className="auth-field-pair">

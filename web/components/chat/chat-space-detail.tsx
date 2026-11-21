@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ChatSpaceAvatar } from "@/components/chat/chat-space-avatar";
+import { PhotoBackdrop } from "@/components/ui/photo-backdrop";
 
 export interface Message {
   id: string;
@@ -24,6 +25,7 @@ interface ChatSpaceDetailProps {
     kind: "community" | "group";
     visibility: "public" | "private";
     memberCount?: number;
+    cover?: string;
     isMember: boolean;
     myRole?: "owner" | "admin" | "moderator" | "member";
   };
@@ -113,8 +115,9 @@ export function ChatSpaceDetail({
       </header>
 
       {!space.isMember ? (
-        <section className="p-4">
-          <p className="text-subtle">{space.description}</p>
+        <section className={space.cover ? "relative isolate mt-4 flex min-h-56 items-end overflow-hidden rounded-xl bg-brand p-5 text-on-brand sm:min-h-70 sm:p-7" : "p-4"}>
+          {space.cover ? <PhotoBackdrop src={space.cover} sizes="(min-width: 1280px) 1120px, calc(100vw - 40px)" /> : null}
+          <p className={space.cover ? "font-display text-2xl sm:text-3xl" : "text-subtle"}>{space.description}</p>
         </section>
       ) : (
         <div
@@ -133,7 +136,7 @@ export function ChatSpaceDetail({
             </div>
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="mx-auto size-16 rounded-full bg-honey-100 flex items-center justify-center text-forest-900 dark:bg-forest-800 dark:text-mint">
+              <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-accent text-on-accent">
                 <Hash size={32} />
               </div>
               <h2 className="mt-4 font-display text-xl">{t("noMessagesTitle")}</h2>
@@ -147,7 +150,7 @@ export function ChatSpaceDetail({
                   className={`flex gap-3 ${message.isCurrentUser ? "flex-row-reverse" : ""}`}
                 >
                   {!message.isCurrentUser && (
-                    <div className="shrink-0 size-8 rounded-full bg-honey-100 flex items-center justify-center text-forest-900 dark:bg-forest-800 dark:text-mint">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-bark-100 text-bark-900 dark:bg-bark-900 dark:text-bark-100">
                       {message.userAvatar ? (
                         <img src={message.userAvatar} alt="" className="size-full rounded-full" />
                       ) : (

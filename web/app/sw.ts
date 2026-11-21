@@ -65,10 +65,21 @@ const runtimeCaching: RuntimeCaching[] = [
   },
 ];
 
-const serwist = new Serwist({
+const serwist: Serwist = new Serwist({
   cacheId: "thinkbee",
   precacheEntries: self.__SW_MANIFEST,
-  precacheOptions: { cleanupOutdatedCaches: true },
+  precacheOptions: {
+    cleanupOutdatedCaches: true,
+    plugins: [{
+      async handlerWillRespond({ request, response }): Promise<Response> {
+        // Navigation preload can return a server error before Serwist checks the precache.
+        if (request.mode === "navigate" && request.url === `${self.location.origin}/` && response.status >= 500) {
+          return await serwist.matchPrecache("/") ?? response;
+        }
+        return response;
+      },
+    }],
+  },
   clientsClaim: true,
   navigationPreload: true,
   skipWaiting: false,
