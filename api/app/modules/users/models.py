@@ -31,9 +31,15 @@ class User(TimestampMixin, Base):
     # Relationships
     farms: Mapped[list["Farm"]] = relationship("Farm", back_populates="user")
     scans: Mapped[list["Scan"]] = relationship("Scan", back_populates="user")
-    assistant_threads: Mapped[list["AssistantThread"]] = relationship("AssistantThread", back_populates="user")
-    daily_briefings: Mapped[list["DailyBriefing"]] = relationship("DailyBriefing", back_populates="user")
-    predictive_alerts: Mapped[list["PredictiveAlert"]] = relationship("PredictiveAlert", back_populates="user")
+    assistant_threads: Mapped[list["AssistantThread"]] = relationship(
+        "AssistantThread", back_populates="user"
+    )
+    daily_briefings: Mapped[list["DailyBriefing"]] = relationship(
+        "DailyBriefing", back_populates="user"
+    )
+    predictive_alerts: Mapped[list["PredictiveAlert"]] = relationship(
+        "PredictiveAlert", back_populates="user"
+    )
 
 
 class ChatProfile(TimestampMixin, Base):
