@@ -1,7 +1,7 @@
 """add chat spaces, memberships, and messages
 
 Revision ID: 581f4544c316
-Revises: ac837f57bac9
+Revises: 405e9c61111c
 Create Date: 2026-11-21 06:31:47.666728
 """
 
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = '581f4544c316'
-down_revision: str | None = 'ac837f57bac9'
+down_revision: str | None = '405e9c61111c'
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

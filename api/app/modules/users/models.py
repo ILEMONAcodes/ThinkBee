@@ -47,7 +47,7 @@ class User(TimestampMixin, Base):
         "PredictiveAlert", back_populates="user"
     )
     chat_space_memberships: Mapped[list["ChatSpaceMember"]] = relationship(
-        "ChatSpaceMember", back_populates="user"
+        "ChatSpaceMember", foreign_keys="ChatSpaceMember.user_id", back_populates="user"
     )
     chat_messages: Mapped[list["ChatMessage"]] = relationship(
         "ChatMessage", back_populates="user"
