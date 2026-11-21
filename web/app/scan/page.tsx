@@ -26,7 +26,11 @@ const topics = [
 
 const generalTopics = /\b(?:pests?|damage|diseases?|stress|health)\b/iu;
 
-export default async function ScanPage({ searchParams }: PageProps<"/scan">) {
+type ScanPageProps = {
+  searchParams: Promise<{ subject?: string | string[]; q?: string | string[] }>;
+};
+
+export default async function ScanPage({ searchParams }: ScanPageProps) {
   const t = await getTranslations("Scan");
   const { subject, q } = await searchParams;
   const query = typeof q === "string" ? q.trim().slice(0, 80) : "";
