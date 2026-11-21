@@ -86,7 +86,7 @@ export function ChatSpaceDetail({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-120px)] min-h-[500px]">
+    <div className="flex flex-col h-[calc(100dvh-120px)] min-h-125">
       {/* Space Header */}
       <header className="flex items-center gap-4 border-b border-line bg-raised/80 px-4 py-3 sticky top-0 z-10 backdrop-blur-sm">
         <Link
