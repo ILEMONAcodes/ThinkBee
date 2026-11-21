@@ -1,6 +1,117 @@
 {
   "components": {
     "schemas": {
+      "AnswerResult": {
+        "description": "Structured result from question answering.",
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "confidence": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "context_used": {
+            "items": {
+              "enum": [
+                "farm_profile",
+                "location",
+                "weather",
+                "conversation",
+                "records",
+                "scans",
+                "scheduled_tasks"
+              ],
+              "type": "string"
+            },
+            "maxItems": 7,
+            "title": "Context Used",
+            "type": "array"
+          },
+          "follow_up_questions": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Follow Up Questions",
+            "type": "array"
+          },
+          "next_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Steps",
+            "type": "array"
+          },
+          "refusal": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refusal"
+          },
+          "status": {
+            "enum": [
+              "answered",
+              "needs_clarification",
+              "refused",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "task": {
+            "const": "question_answering",
+            "title": "Task",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "weather_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weather Summary"
+          }
+        },
+        "required": [
+          "task",
+          "status",
+          "answer",
+          "confidence",
+          "context_used",
+          "weather_summary",
+          "next_steps",
+          "warnings",
+          "follow_up_questions",
+          "refusal"
+        ],
+        "title": "AnswerResult",
+        "type": "object"
+      },
       "BootstrapResponse": {
         "properties": {
           "is_new": {
@@ -16,6 +127,145 @@
           "is_new"
         ],
         "title": "BootstrapResponse",
+        "type": "object"
+      },
+      "BriefingResponse": {
+        "description": "API response for daily briefing.",
+        "properties": {
+          "alerts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Alerts",
+            "type": "array"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "hive_advice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hive Advice"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "local_date": {
+            "format": "date",
+            "title": "Local Date",
+            "type": "string"
+          },
+          "location_label": {
+            "title": "Location Label",
+            "type": "string"
+          },
+          "pest_risks": {
+            "items": {
+              "$ref": "#/components/schemas/PestRisk"
+            },
+            "title": "Pest Risks",
+            "type": "array"
+          },
+          "postponed_tasks": {
+            "items": {
+              "$ref": "#/components/schemas/PostponedTask"
+            },
+            "title": "Postponed Tasks",
+            "type": "array"
+          },
+          "priorities": {
+            "items": {
+              "$ref": "#/components/schemas/Priority"
+            },
+            "title": "Priorities",
+            "type": "array"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "refusal": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refusal"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "limited",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "task": {
+            "const": "daily_briefing",
+            "title": "Task",
+            "type": "string"
+          },
+          "weather_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weather Observed At"
+          },
+          "weather_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weather Summary"
+          }
+        },
+        "required": [
+          "task",
+          "status",
+          "local_date",
+          "location_label",
+          "weather_summary",
+          "priorities",
+          "pest_risks",
+          "hive_advice",
+          "postponed_tasks",
+          "alerts",
+          "limitations",
+          "refusal",
+          "generated_at",
+          "prompt_version",
+          "weather_observed_at"
+        ],
+        "title": "BriefingResponse",
         "type": "object"
       },
       "DeletionResponse": {
@@ -392,6 +642,19 @@
         "title": "FarmResponse",
         "type": "object"
       },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
       "HealthResponse": {
         "properties": {
           "status": {
@@ -403,6 +666,249 @@
           "status"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "LikelyCause": {
+        "description": "A likely cause with confidence and reasoning.",
+        "properties": {
+          "confidence": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reasoning": {
+            "title": "Reasoning",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "confidence",
+          "reasoning"
+        ],
+        "title": "LikelyCause",
+        "type": "object"
+      },
+      "MessageCreate": {
+        "description": "Create a new message in a thread.",
+        "properties": {
+          "image_keys": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Keys"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "MessageCreate",
+        "type": "object"
+      },
+      "MessageResponse": {
+        "description": "Message response.",
+        "properties": {
+          "attachments": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachments"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "enum": [
+                  "up",
+                  "down"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "safety": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Safety"
+          },
+          "thread_id": {
+            "format": "uuid",
+            "title": "Thread Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "thread_id",
+          "role",
+          "body",
+          "attachments",
+          "safety",
+          "feedback",
+          "created_at"
+        ],
+        "title": "MessageResponse",
+        "type": "object"
+      },
+      "PestRisk": {
+        "description": "A pest risk indicator in the briefing.",
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "level": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "level",
+          "reason",
+          "action"
+        ],
+        "title": "PestRisk",
+        "type": "object"
+      },
+      "PostponedTask": {
+        "description": "A postponed task in the briefing.",
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "safer_window": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Safer Window"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "reason",
+          "safer_window"
+        ],
+        "title": "PostponedTask",
+        "type": "object"
+      },
+      "Priority": {
+        "description": "A priority item in the briefing.",
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "source_task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Task Id"
+          },
+          "timing": {
+            "title": "Timing",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "reason",
+          "timing",
+          "source_task_id"
+        ],
+        "title": "Priority",
         "type": "object"
       },
       "ProfilePatch": {
@@ -559,6 +1065,452 @@
           "updated_at"
         ],
         "title": "ProfileResponse",
+        "type": "object"
+      },
+      "ScanDetail": {
+        "description": "Full scan detail including result when done.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "farm_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farm Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScanResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "analysing",
+              "done",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "enum": [
+              "hive",
+              "crop"
+            ],
+            "title": "Subject",
+            "type": "string"
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "farm_id",
+          "unit_id",
+          "subject",
+          "status",
+          "result",
+          "prompt_version",
+          "model",
+          "created_at"
+        ],
+        "title": "ScanDetail",
+        "type": "object"
+      },
+      "ScanRequest": {
+        "description": "Request to analyze a crop or hive photo.",
+        "properties": {
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "farm_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farm Id"
+          },
+          "image_keys": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Image Keys",
+            "type": "array"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "subject": {
+            "enum": [
+              "hive",
+              "crop"
+            ],
+            "title": "Subject",
+            "type": "string"
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id"
+          }
+        },
+        "required": [
+          "subject",
+          "image_keys",
+          "client_id"
+        ],
+        "title": "ScanRequest",
+        "type": "object"
+      },
+      "ScanResponse": {
+        "description": "API response for scan creation.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "analysing",
+              "done",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "ScanResponse",
+        "type": "object"
+      },
+      "ScanResult": {
+        "description": "Structured result from scan analysis.",
+        "properties": {
+          "better_photo_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Better Photo Hint"
+          },
+          "disclaimer_version": {
+            "title": "Disclaimer Version",
+            "type": "string"
+          },
+          "expert_referral": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expert Referral"
+          },
+          "follow_up_questions": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Follow Up Questions",
+            "type": "array"
+          },
+          "label_notice": {
+            "title": "Label Notice",
+            "type": "string"
+          },
+          "likely_causes": {
+            "items": {
+              "$ref": "#/components/schemas/LikelyCause"
+            },
+            "maxItems": 3,
+            "title": "Likely Causes",
+            "type": "array"
+          },
+          "needs_better_photo": {
+            "title": "Needs Better Photo",
+            "type": "boolean"
+          },
+          "next_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Steps",
+            "type": "array"
+          },
+          "observations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Observations",
+            "type": "array"
+          },
+          "overall_confidence": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Overall Confidence",
+            "type": "string"
+          },
+          "pollinator_warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pollinator Warning"
+          },
+          "protective_gear_warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protective Gear Warning"
+          },
+          "refusal": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refusal"
+          },
+          "status": {
+            "enum": [
+              "completed",
+              "needs_clarification",
+              "refused",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "suggested_record": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Record"
+          },
+          "task": {
+            "const": "scan_analysis",
+            "title": "Task",
+            "type": "string"
+          },
+          "weather_relevance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weather Relevance"
+          }
+        },
+        "required": [
+          "task",
+          "status",
+          "likely_causes",
+          "overall_confidence",
+          "observations",
+          "weather_relevance",
+          "needs_better_photo",
+          "better_photo_hint",
+          "follow_up_questions",
+          "next_steps",
+          "protective_gear_warning",
+          "pollinator_warning",
+          "label_notice",
+          "expert_referral",
+          "suggested_record",
+          "refusal",
+          "disclaimer_version"
+        ],
+        "title": "ScanResult",
+        "type": "object"
+      },
+      "ThreadCreate": {
+        "description": "Create a new assistant thread.",
+        "properties": {
+          "farm_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farm Id"
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id"
+          }
+        },
+        "title": "ThreadCreate",
+        "type": "object"
+      },
+      "ThreadResponse": {
+        "description": "Thread response.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "farm_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farm Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "farm_id",
+          "unit_id",
+          "created_at"
+        ],
+        "title": "ThreadResponse",
         "type": "object"
       },
       "UnitCreate": {
@@ -839,6 +1791,46 @@
         ],
         "title": "UserResponse",
         "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -856,6 +1848,295 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/assistant/messages/{message_id}/feedback": {
+      "post": {
+        "description": "Submit feedback on an assistant message.",
+        "operationId": "submit_feedback_api_v1_assistant_messages__message_id__feedback_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "value",
+            "required": true,
+            "schema": {
+              "title": "Value",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "Submit Feedback",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/threads": {
+      "get": {
+        "description": "List assistant threads for the current user.",
+        "operationId": "list_threads_api_v1_assistant_threads_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ThreadResponse"
+                  },
+                  "title": "Response List Threads Api V1 Assistant Threads Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "List Threads",
+        "tags": [
+          "assistant"
+        ]
+      },
+      "post": {
+        "description": "Create a new assistant thread.",
+        "operationId": "create_thread_api_v1_assistant_threads_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ThreadCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "Create Thread",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/threads/{thread_id}/messages": {
+      "post": {
+        "description": "Send a message and get an answer.",
+        "operationId": "send_message_api_v1_assistant_threads__thread_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "thread_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Thread Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "Send Message",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/threads/{thread_id}/messages/stream": {
+      "post": {
+        "description": "Stream an answer for a message (SSE).",
+        "operationId": "stream_message_api_v1_assistant_threads__thread_id__messages_stream_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "thread_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Thread Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "Stream Message",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
     "/api/v1/auth/bootstrap": {
       "post": {
         "operationId": "bootstrap_api_v1_auth_bootstrap_post",
@@ -909,6 +2190,159 @@
         "summary": "Create or retrieve the farmer account for a Supabase session",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/briefings": {
+      "get": {
+        "description": "List briefings for the current user.",
+        "operationId": "list_briefings_api_v1_briefings_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "farm_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Farm Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BriefingResponse"
+                  },
+                  "title": "Response List Briefings Api V1 Briefings Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "List Briefings",
+        "tags": [
+          "briefings"
+        ]
+      }
+    },
+    "/api/v1/briefings/daily": {
+      "get": {
+        "description": "Get or generate a daily briefing for a farm.",
+        "operationId": "get_daily_briefing_api_v1_briefings_daily_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "farm_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Farm Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "local_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Local Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "Get Daily Briefing",
+        "tags": [
+          "briefings"
         ]
       }
     },
@@ -2100,6 +3534,170 @@
         "summary": "Create or edit your farmer profile",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/api/v1/scans": {
+      "get": {
+        "description": "List scans for the current user.",
+        "operationId": "list_scans_api_v1_scans_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScanDetail"
+                  },
+                  "title": "Response List Scans Api V1 Scans Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "List Scans",
+        "tags": [
+          "scans"
+        ]
+      },
+      "post": {
+        "description": "Create a new scan job.",
+        "operationId": "create_scan_api_v1_scans_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "Create Scan",
+        "tags": [
+          "scans"
+        ]
+      }
+    },
+    "/api/v1/scans/{scan_id}": {
+      "get": {
+        "description": "Get a scan by ID.",
+        "operationId": "get_scan_api_v1_scans__scan_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "Get Scan",
+        "tags": [
+          "scans"
         ]
       }
     },

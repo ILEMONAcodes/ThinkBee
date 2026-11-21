@@ -130,9 +130,7 @@ async def test_rejects_expired_token() -> None:
 
     async with _verifier_with_handler(handler) as verifier:
         with pytest.raises(AppError) as error:
-            await verifier.verify(
-                _token(private_key, "key-1", expires_delta=timedelta(seconds=-1))
-            )
+            await verifier.verify(_token(private_key, "key-1", expires_delta=timedelta(seconds=-1)))
 
     assert error.value.status_code == 401
     assert error.value.code == "auth_token_expired"

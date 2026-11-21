@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     deletion_retry_seconds: int = Field(default=60, ge=1, le=3600)
     deletion_max_retry_seconds: int = Field(default=3600, ge=1, le=86400)
     deletion_job_timeout_seconds: int = Field(default=3600, ge=60, le=86400)
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-1.5-flash"
+    s3_endpoint: str = "http://localhost:9000"
+    s3_bucket: str = "thinkbee"
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
+    s3_region: str = "auto"
 
     @property
     def allowed_origin_list(self) -> list[str]:
@@ -58,6 +65,14 @@ class Settings(BaseSettings):
             for algorithm in self.supabase_jwt_algorithms.split(",")
             if algorithm.strip()
         ]
+
+    @property
+    def S3_BUCKET(self) -> str:
+        return self.s3_bucket
+
+    @property
+    def GEMINI_MODEL(self) -> str:
+        return self.gemini_model
 
 
 @lru_cache

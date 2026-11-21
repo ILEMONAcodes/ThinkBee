@@ -42,7 +42,8 @@ async def test_account_routes_require_valid_bearer(path: str, authorization: str
     ],
 )
 async def test_unavailable_database_has_safe_retryable_error(
-    monkeypatch: pytest.MonkeyPatch, failure: Exception,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: Exception,
 ) -> None:
     broken_session = AsyncMock()
     broken_session.__aenter__.side_effect = failure

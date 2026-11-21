@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,3 +34,10 @@ async def require_current_user(
     return await get_active_user(
         session, identity.supabase_user_id, lock=request.method not in {"GET", "HEAD", "OPTIONS"}
     )
+
+
+async def get_current_user_id(
+    user: Annotated[UserResponse, Depends(require_current_user)],
+) -> UUID:
+    """Extract the current user's ID from the authenticated user."""
+    return user.id

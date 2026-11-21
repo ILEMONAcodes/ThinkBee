@@ -32,7 +32,8 @@ async def test_health_live() -> None:
     ],
 )
 async def test_readiness_rejects_an_unavailable_account_store(
-    monkeypatch: pytest.MonkeyPatch, failure: Exception,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: Exception,
 ) -> None:
     engine = MagicMock()
     engine.connect.return_value.__aenter__.side_effect = failure
@@ -47,7 +48,8 @@ async def test_readiness_rejects_an_unavailable_account_store(
 
 
 async def test_readiness_checks_the_migrated_schema(
-    database_engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch,
+    database_engine: AsyncEngine,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(database, "engine", database_engine)
     async with AsyncClient(

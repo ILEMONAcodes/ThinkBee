@@ -9,8 +9,11 @@ from pydantic import BaseModel
 from app.core.config import get_settings
 from app.core.errors import AppError, ErrorResponse, app_error_handler, validation_error_handler
 from app.db.health import check_account_store
+from app.modules.assistant.router import router as assistant_router
 from app.modules.auth.router import router as auth_router
+from app.modules.briefings.router import router as briefings_router
 from app.modules.farms.router import router as farms_router
+from app.modules.scans.router import router as scans_router
 from app.modules.users.router import router as users_router
 
 
@@ -44,6 +47,9 @@ def create_app() -> FastAPI:
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(users_router, prefix="/api/v1")
     application.include_router(farms_router, prefix="/api/v1")
+    application.include_router(scans_router, prefix="/api/v1")
+    application.include_router(assistant_router, prefix="/api/v1")
+    application.include_router(briefings_router, prefix="/api/v1")
 
     @application.get(
         "/health/live",

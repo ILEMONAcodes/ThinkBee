@@ -1,11 +1,16 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, String, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.ids import uuid7
 from app.db.models import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.db.models import AssistantThread, DailyBriefing, PredictiveAlert, Scan
+    from app.modules.farms.models import Farm
 
 
 class User(TimestampMixin, Base):
@@ -22,6 +27,19 @@ class User(TimestampMixin, Base):
     is_think_bee_admin: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     locale: Mapped[str] = mapped_column(String(16), server_default="en-NG")
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # Relationships
+    farms: Mapped[list["Farm"]] = relationship("Farm", back_populates="user")
+    scans: Mapped[list["Scan"]] = relationship("Scan", back_populates="user")
+    assistant_threads: Mapped[list["AssistantThread"]] = relationship(
+        "AssistantThread", back_populates="user"
+    )
+    daily_briefings: Mapped[list["DailyBriefing"]] = relationship(
+        "DailyBriefing", back_populates="user"
+    )
+    predictive_alerts: Mapped[list["PredictiveAlert"]] = relationship(
+        "PredictiveAlert", back_populates="user"
+    )
 
 
 class ChatProfile(TimestampMixin, Base):
