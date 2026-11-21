@@ -1,11 +1,10 @@
-import { Camera, ChatCircleDots, Notebook } from "@phosphor-icons/react/dist/ssr";
+import { Camera, Notebook } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 const actions = [
   { href: "/scan", icon: Camera, label: "scanAction" },
   { href: "/records", icon: Notebook, label: "recordsAction" },
-  { href: "/chats", icon: ChatCircleDots, label: "communityAction" },
 ] as const;
 
 export async function QuickActions() {

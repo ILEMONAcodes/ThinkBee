@@ -1,15 +1,25 @@
-import { ChatCircleDots } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, ChatCircleDots } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 export async function CommunityCard() {
   const t = await getTranslations("Home");
   return (
-    <section className="rounded-lg bg-brand-2 p-6 text-on-brand sm:p-7">
-      <ChatCircleDots aria-hidden className="text-mint" size={32} />
-      <h2 className="mt-6 font-display text-3xl">{t("communityEmpty")}</h2>
-      <p className="mt-3 leading-relaxed text-on-brand">{t("communityEmptyBody")}</p>
-      <Link className="mt-5 inline-flex min-h-12 items-center rounded-pill border border-mint px-5 font-semibold text-mint" href="/chats">{t("communityAction")}</Link>
+    <section className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-3 rounded-lg border border-comb-300 bg-comb-100 p-4 text-forest-900 dark:border-forest-600 dark:bg-brand-2 dark:text-on-brand sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-x-5 sm:p-6">
+      <span className="comb-cell flex size-12 items-center justify-center self-start bg-comb-400 text-forest-900 sm:size-14 sm:self-center">
+        <ChatCircleDots aria-hidden size={26} />
+      </span>
+      <div className="min-w-0">
+        <h2 className="font-display text-2xl leading-tight sm:text-3xl">{t("communityTitle")}</h2>
+        <p className="mt-1 text-forest-800 dark:text-on-brand/85">{t("communityBody")}</p>
+      </div>
+      <Link
+        className="col-start-2 inline-flex min-h-12 w-fit max-w-full items-center gap-2 rounded-pill bg-brand px-4 py-2 text-sm font-semibold text-on-brand transition-colors hover:bg-forest-700 dark:bg-comb-400 dark:text-on-accent dark:hover:bg-comb-300 sm:col-start-3"
+        href="/chats"
+      >
+        {t("communityAction")}
+        <ArrowRight aria-hidden className="shrink-0" size={18} weight="bold" />
+      </Link>
     </section>
   );
 }

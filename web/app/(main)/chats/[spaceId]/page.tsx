@@ -1,113 +1,48 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { getTranslations } from "next-intl/server";
-import { ChatSpaceDetail } from "@/components/chat/chat-space-detail";
+import { useState } from "react";
+import { redirect, useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
-interface Space {
-  id: string;
-  name: string;
-  description: string;
-  kind: "community" | "group";
-  visibility: "public" | "private";
-  memberCount: number;
-  isSystem: boolean;
-  isMember: boolean;
-  myRole?: "owner" | "admin" | "moderator" | "member";
-}
-
-interface Message {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  body: string;
-  createdAt: string;
-  isCurrentUser: boolean;
-}
+import { ChatSpaceDetail, type Message } from "@/components/chat/chat-space-detail";
+import { pilotCommunities } from "@/lib/chat/communities";
 
 export default function ChatSpacePage() {
-  const params = useParams();
-  const router = useRouter();
-  const spaceId = params.spaceId as string;
-  const [space, setSpace] = useState<Space | null>(null);
+  const { spaceId } = useParams<{ spaceId: string }>();
+  const community = pilotCommunities.find(({ id }) => id === spaceId);
+
+  if (!community) redirect("/chats");
+
+  return <PilotCommunityRoom key={community.id} community={community} />;
+}
+
+function PilotCommunityRoom({ community }: { community: (typeof pilotCommunities)[number] }) {
+  const t = useTranslations("Chat");
+  const [isMember, setIsMember] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState("current-user-id"); // Would come from auth
 
-  // Mock data for now
-  const mockSpaces: Record<string, Space> = {
-    beekeepers: {
-      id: "beekeepers",
-      name: "Beekeepers",
-      description: "A community for beekeepers to share knowledge, ask questions, and connect.",
-      kind: "community",
-      visibility: "public",
-      memberCount: 12543,
-      isSystem: true,
-      isMember: false,
-    },
-    "general-farmers": {
-      id: "general-farmers",
-      name: "General Farmers",
-      description: "A community for crop farmers to share knowledge, ask questions, and connect.",
-      kind: "community",
-      visibility: "public",
-      memberCount: 28912,
-      isSystem: true,
-      isMember: false,
-    },
-  };
-
-  useEffect(() => {
-    const foundSpace = mockSpaces[spaceId];
-    if (!foundSpace) {
-      router.push("/chats");
-      return;
-    }
-    setSpace(foundSpace);
-    setIsLoading(false);
-  }, [spaceId, router]);
-
-  const handleSendMessage = async (body: string) => {
-    // Would call API
-    const newMessage: Message = {
+  async function handleSendMessage(body: string) {
+    setMessages((previous) => [...previous, {
       id: crypto.randomUUID(),
-      userId: currentUserId,
-      userName: "You",
+      userName: t("you"),
       body,
       createdAt: new Date().toISOString(),
       isCurrentUser: true,
-    };
-    setMessages((prev) => [...prev, newMessage]);
-  };
-
-  const handleJoin = async () => {
-    if (space) {
-      setSpace({ ...space, isMember: true, myRole: "member" });
-    }
-  };
-
-  const handleLeave = async () => {
-    if (space) {
-      setSpace({ ...space, isMember: false, myRole: undefined });
-    }
-  };
-
-  if (!space) {
-    return null;
+    }]);
   }
 
   return (
     <ChatSpaceDetail
-      space={space}
+      space={{
+        ...community,
+        name: t(`communities.${community.copy}.name`),
+        description: t(`communities.${community.copy}.description`),
+        isMember,
+      }}
       messages={messages}
-      currentUserId={currentUserId}
       onSendMessage={handleSendMessage}
-      onJoin={handleJoin}
-      onLeave={handleLeave}
-      isLoading={isLoading}
+      onJoin={async () => setIsMember(true)}
+      onLeave={async () => setIsMember(false)}
     />
   );
 }

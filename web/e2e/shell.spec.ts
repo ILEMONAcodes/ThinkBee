@@ -9,6 +9,11 @@ test("navigation, target sizes and empty Home", async ({ page }, info) => {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("A little care, every day");
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 2 }).first()).toHaveText("Learn from each other");
+  const communityLink = main.getByRole("link", { name: "Open chats", exact: true });
+  await expect(communityLink).toHaveAttribute("href", "/chats");
+  await expect(communityLink).toBeInViewport();
   expect(await page.locator("h1").evaluate((heading) => getComputedStyle(heading).fontFamily)).toMatch(/fraunces/i);
   expect(await page.locator("body").evaluate((body) => getComputedStyle(body).fontFamily)).toMatch(/inter/i);
   const mobile = info.project.name.startsWith("mobile");

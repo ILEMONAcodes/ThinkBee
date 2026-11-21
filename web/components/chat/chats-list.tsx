@@ -9,8 +9,7 @@ interface ChatSpace {
   description: string;
   kind: "community" | "group";
   visibility: "public" | "private";
-  memberCount: number;
-  isSystem: boolean;
+  memberCount?: number;
 }
 
 interface ChatsListProps {
@@ -51,7 +50,7 @@ export async function ChatsList({ spaces, mySpaceIds, isLoading = false }: Chats
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-link">{t("yourSpaces")}</p>
           </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-4 grid max-w-3xl gap-4 sm:grid-cols-2">
             {mySpaces.map((space) => (
               <ChatSpaceCard key={space.id} {...space} />
             ))}
@@ -61,19 +60,19 @@ export async function ChatsList({ spaces, mySpaceIds, isLoading = false }: Chats
 
       <div>
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-link">{t("discoverSpaces")}</p>
+          <h2 className="font-semibold">{t("discoverSpaces")}</h2>
           <Link
             href="/chats/create"
-            className="inline-flex items-center gap-2 rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:bg-accent-press"
+            className="inline-flex min-h-12 items-center gap-2 rounded-pill border border-line bg-raised px-4 py-2 text-sm font-semibold text-link hover:bg-sunken"
           >
             <PlusCircle size={18} aria-hidden="true" />
             {t("createSpace")}
           </Link>
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-3 grid max-w-3xl gap-4 sm:grid-cols-2">
           {otherSpaces.length > 0 ? (
             otherSpaces.map((space) => (
-              <ChatSpaceCard key={space.id} {...space} />
+              <ChatSpaceCard key={space.id} {...space} memberCount={undefined} />
             ))
           ) : (
             <div className="col-span-full rounded-lg bg-raised p-8 text-center shadow-card">

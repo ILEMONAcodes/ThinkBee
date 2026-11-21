@@ -19,14 +19,16 @@ export async function HomeScreen() {
         </div>
         <div className="md:hidden"><ThemeToggle /></div>
       </header>
+      <div className="mt-6">
+        <CommunityCard />
+      </div>
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(260px,0.75fr)]">
         <HomeHero />
         <TodayCard />
       </div>
       <QuickActions />
-      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
+      <div className="mt-8">
         <RecentList />
-        <CommunityCard />
       </div>
     </div>
   );

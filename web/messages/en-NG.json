@@ -109,14 +109,13 @@
     "todayTitle": "Today",
     "recentTitle": "Recent",
     "viewAll": "View all",
-    "communityTitle": "From your communities",
+    "communityTitle": "Learn from each other",
+    "communityBody": "Talk with farmers and beekeepers.",
     "todayEmpty": "Make room for what matters",
     "todayEmptyBody": "Your inspections, planting and other reminders will appear here.",
     "recentEmpty": "A record of your work",
     "recentEmptyBody": "Saved scans and field notes will come together here.",
-    "communityEmpty": "Learn from each other",
-    "communityEmptyBody": "Your farmer conversations and groups will appear here.",
-    "communityAction": "Open Chats",
+    "communityAction": "Open chats",
     "recordsAction": "Open Records"
   },
   "Feature": {
@@ -388,18 +387,26 @@
     }
   },
   "Chat": {
-    "eyebrow": "Conversations",
     "title": "Chats",
-    "description": "Join communities, start groups, and message other farmers.",
     "yourSpaces": "Your spaces",
-    "discoverSpaces": "Discover spaces",
+    "discoverSpaces": "Explore spaces",
+    "communities": {
+      "beekeepers": {
+        "name": "Beekeepers",
+        "description": "Hives and honey"
+      },
+      "farmers": {
+        "name": "General Farmers",
+        "description": "Crops and fieldwork"
+      }
+    },
     "createSpace": "Create space",
     "noSpacesTitle": "No spaces yet",
     "noSpacesBody": "Communities and groups you join will appear here.",
     "createFirstSpace": "Create your first space",
-    "systemBadge": "Official",
-    "members": "members",
+    "memberCount": "{count, plural, one {# member} other {# members}}",
     "messages": "Messages",
+    "you": "You",
     "back": "Back",
     "join": "Join",
     "leave": "Leave",
