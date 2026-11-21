@@ -37,7 +37,7 @@
     "zustand": "^5.0.16"
   },
   "devDependencies": {
-    "@playwright/test": "^1.65.0",
+    "@playwright/test": "^1.48.0",
     "@serwist/next": "^9.5.13",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "^24.13.3",
@@ -48,7 +48,7 @@
     "jsdom": "29.1.1",
     "msw": "^2.15.0",
     "openapi-typescript": "^7.13.0",
-    "playwright": "^1.65.1",
+    "playwright": "^1.48.0",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "vitest": "^4.1.12"
