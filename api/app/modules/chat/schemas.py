@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 class ChatSpaceBase(BaseModel):
@@ -45,6 +45,7 @@ class ChatSpaceResponse(ChatSpaceBase):
     class Config:
         from_attributes = True
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def cover(self) -> str | None:
         """Alias for avatar_key to match frontend expectation."""

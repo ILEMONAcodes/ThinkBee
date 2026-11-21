@@ -74,11 +74,7 @@ class ChatService:
         )
         space = result.scalar_one_or_none()
         if space:
-            response = ChatSpaceResponse.model_validate(space)
-            # Ensure cover is populated from avatar_key
-            if space.avatar_key and not response.cover:
-                response.cover = space.avatar_key
-            return response
+            return ChatSpaceResponse.model_validate(space)
         return None
 
     async def update_space(
@@ -143,10 +139,6 @@ class ChatService:
             next_cursor = spaces[-1].id
 
         responses = [ChatSpaceResponse.model_validate(s) for s in spaces]
-        # Ensure cover is populated from avatar_key
-        for r in responses:
-            if r.avatar_key and not r.cover:
-                r.cover = r.avatar_key
         return responses, next_cursor
 
     async def list_public_communities(
