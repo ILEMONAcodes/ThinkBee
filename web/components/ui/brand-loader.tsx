@@ -10,7 +10,7 @@ interface BrandLoaderProps {
 
 /** Small Think Bee short mark with a circular loading ring around it. */
 export function BrandLoader({ size = 56, label }: BrandLoaderProps) {
-  const t = useTranslations("Common");
+  const t = useTranslations("Setup");
   return (
     <div className="brand-loader" role="status" aria-label={label || t("loading")}>
       <div className="brand-loader-ring" style={{ width: size, height: size }} aria-hidden="true">
