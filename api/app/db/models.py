@@ -47,6 +47,7 @@ class Scan(Base, TimestampMixin):
         PG_UUID(as_uuid=True), ForeignKey("farm_units.id", ondelete="SET NULL"), nullable=True
     )
     subject: Mapped[str] = mapped_column(String(16), nullable=False)
+    subject_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="queued")
     result: Mapped[dict[str, Any] | None] = mapped_column(JSONB(), nullable=True)
     prompt_version: Mapped[str] = mapped_column(String(32), nullable=False)

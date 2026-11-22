@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class ScanService:
-    """Service for handling photo scans."""
+    """Service for handling photo and video scans."""
 
     def __init__(self, ai_provider: AIProvider) -> None:
         self.ai_provider = ai_provider
@@ -33,6 +33,7 @@ class ScanService:
             farm_id=req.farm_id,
             unit_id=req.unit_id,
             subject=req.subject,
+            subject_type=req.subject_type,
             status="queued",
             client_id=req.client_id,
             prompt_version="1",
@@ -40,15 +41,14 @@ class ScanService:
         )
         db.add(scan)
 
-        # Add scan images
+        # Add scan images/frames
         for i, key in enumerate(req.image_keys):
             db.add(ScanImage(id=uuid4(), scan_id=scan.id, storage_key=key, order=i))
 
         await db.flush()
         await db.refresh(scan)
 
-        # Trigger async analysis (in real implementation, this would be a background job)
-        # For now, we'll process synchronously
+        # Process synchronously (in production, use background job queue)
         try:
             result = await self._analyze_scan(db, scan, req)
             scan.status = "done"
@@ -63,11 +63,6 @@ class ScanService:
 
     async def _analyze_scan(self, db: AsyncSession, scan: Scan, req: ScanRequest) -> ScanResult:
         """Analyze the scan using the AI provider."""
-        # In a full implementation, this would:
-        # 1. Build context from farm, weather, history
-        # 2. Call AI provider
-        # 3. Run post-checks
-        # 4. Return validated result
         return await self.ai_provider.analyze_scan(req)
 
     async def get_scan(self, db: AsyncSession, scan_id: UUID, user_id: UUID) -> Scan | None:

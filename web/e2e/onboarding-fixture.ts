@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import type { components } from "../lib/api/schema";
+import type { Components as components } from "@/lib/api/schema";
 
 try { process.loadEnvFile(".env.local"); } catch { /* CI supplies test configuration. */ }
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://thinkbee-test.supabase.co";

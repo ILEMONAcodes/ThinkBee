@@ -1,9 +1,9 @@
 import { AppError } from "@/lib/api/errors";
 import { accountTimeoutMs, requestTimeoutMs } from "@/lib/api/config";
-import type { components } from "@/lib/api/schema";
 import { getSupabase } from "@/lib/auth/client";
+import type { Components } from "./schema";
 
-export type ApiSchema = components["schemas"];
+export type ApiSchema = Components["schemas"];
 
 export async function apiRequest<T>(path: string, ownerId: string, method = "GET", body?: unknown, options: { accountStartup?: boolean } = {}): Promise<T> {
   const { data, error } = await getSupabase().auth.getSession();

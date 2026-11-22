@@ -80,7 +80,7 @@ export function AccountDetails() {
             {farms.data?.items.length === 0 ? <p className="text-subtle">{t("noFarms")}</p> : null}
             {farms.data?.items.length ? (
               <ul className="space-y-3">
-                {farms.data.items.map((farm) => (
+                {farms.data.items.map((farm: { id: string; name: string; kind: string; lga?: string | null; state?: string | null }) => (
                   <li key={farm.id} className="rounded-md border border-line p-4 wrap-break-word">
                     <strong>{farm.name}</strong>
                     <p className="mt-1 text-sm text-subtle">{[t(farm.kind), farm.lga, farm.state].filter(Boolean).join(" · ")}</p>

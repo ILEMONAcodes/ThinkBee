@@ -8,12 +8,13 @@ from pydantic import BaseModel, Field
 
 
 class ScanRequest(BaseModel):
-    """Request to analyze a crop or hive photo."""
+    """Request to analyze a crop or hive photo/video."""
 
     subject: Literal["hive", "crop"]
+    subject_type: str | None = None  # e.g., "cassava", "maize", "langstroth", "top-bar"
     farm_id: UUID | None = None
     unit_id: UUID | None = None
-    image_keys: list[str]
+    image_keys: list[str]  # S3 keys for uploaded images/frames
     note: str | None = None
     client_id: UUID
 
@@ -63,6 +64,7 @@ class ScanDetail(BaseModel):
     farm_id: UUID | None
     unit_id: UUID | None
     subject: Literal["hive", "crop"]
+    subject_type: str | None = None
     status: Literal["queued", "analysing", "done", "failed"]
     result: ScanResult | None
     prompt_version: str
