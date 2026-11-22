@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ChatSpaceAvatar } from "@/components/chat/chat-space-avatar";
 import { PhotoBackdrop } from "@/components/ui/photo-backdrop";
+import { BrandLoader } from "@/components/ui/brand-loader";
 
 export interface Message {
   id: string;
@@ -128,11 +129,8 @@ export function ChatSpaceDetail({
           aria-label={t("messages")}
         >
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="mx-auto size-8 rounded-full border-3 border-accent border-t-transparent animate-spin" />
-                <p className="mt-4 text-subtle">{t("loadingMessages")}</p>
-              </div>
+            <div className="flex flex-col items-center justify-center h-full">
+              <BrandLoader size={40} label={t("loadingMessages")} />
             </div>
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">

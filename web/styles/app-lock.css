@@ -4,6 +4,15 @@ html[data-app-lock] #app-content * { visibility: hidden !important; }
 html[data-app-lock] next-route-announcer { display: none; }
 html[data-app-lock] { overflow: hidden; }
 html[data-app-lock] #app-lock-cover { display: grid; position: fixed; inset: 0; z-index: 110; place-content: center; justify-items: center; gap: 24px; padding: 24px; background: var(--bg); text-align: center; }
+
+/* Lock cover loader - shown while lock runtime loads */
+.lock-cover-content { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.lock-cover-loader { display: flex; gap: 6px; }
+.lock-cover-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); opacity: 0.4; animation: lock-cover-pulse 1.4s ease-in-out infinite; }
+.lock-cover-dot:nth-child(2) { animation-delay: 0.2s; }
+.lock-cover-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes lock-cover-pulse { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+@media (prefers-reduced-motion: reduce) { .lock-cover-dot { animation: none; opacity: 1; } }
 .app-lock-dialog { width: 100%; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: max(32px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom)); border: 0; background: var(--bg); color: var(--text); overflow-y: auto; }
 .app-lock-dialog::backdrop { background: var(--bg); }
 .lock-dialog-content { display: grid; justify-items: center; align-content: center; min-height: 100%; gap: 32px; }

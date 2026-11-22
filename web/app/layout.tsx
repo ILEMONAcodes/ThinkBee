@@ -85,8 +85,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             </aside>
           </div>
           <div id="app-lock-cover">
-            <BrandMark width={152} />
-            <p role="status">{lock("loading")}</p>
+            <div className="lock-cover-content" role="status" aria-label={lock("loading")}>
+              <BrandMark kind="wordmark" width={152} />
+              <div className="brand-loader" aria-hidden="true">
+                <div className="brand-loader-ring" style={{ width: 48, height: 48 }}>
+                  <BrandMark kind="short" width={26} surface="auto" />
+                  <span className="brand-loader-spinner" />
+                </div>
+              </div>
+            </div>
             <a className="lock-secondary" href="">{lock("reload")}</a>
           </div>
           <AppLockBootstrap />
