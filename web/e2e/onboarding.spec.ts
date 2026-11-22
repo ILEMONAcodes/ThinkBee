@@ -197,7 +197,7 @@ test("profile and farm sync, including a lost unit response", async ({ page }, i
   await page.goto("/me");
   await expect(page.getByText("North farm", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Sign out on this device" }).click();
-  await expect(page.getByRole("link", { name: "Sign in", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
   await expect(page.getByText("Ada Okoro")).toHaveCount(0);
 });
 

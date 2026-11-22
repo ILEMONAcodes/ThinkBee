@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { AccountProvider, useIdentity } from "@/components/auth/account-provider";
 import { AppError, errorKey } from "@/lib/api/errors";
@@ -14,6 +14,7 @@ function ProtectedContent({ children }: Readonly<{ children: ReactNode }>) {
   const t = useTranslations("Setup");
   const router = useRouter();
   const pathname = usePathname();
+  const redirectingCallback = useRef(false);
   const { owner, ready, error: identityError } = useIdentity();
   const online = useOnline();
   const account = useQuery({
@@ -30,7 +31,10 @@ function ProtectedContent({ children }: Readonly<{ children: ReactNode }>) {
       const url = new URL(window.location.href);
       const code = url.searchParams.get("code");
       if (code || url.searchParams.has("error")) {
-        window.location.replace(code ? `/auth/callback?code=${encodeURIComponent(code)}` : "/auth/callback?error=access_denied");
+        if (!redirectingCallback.current) {
+          redirectingCallback.current = true;
+          window.location.replace(code ? `/auth/callback?code=${encodeURIComponent(code)}` : "/auth/callback?error=access_denied");
+        }
         return;
       }
     }

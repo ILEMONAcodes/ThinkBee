@@ -117,14 +117,18 @@ test("offline shell and blocked preferences remain usable", async ({ page, conte
   await mockOnboarding(page, true, true);
   await page.addInitScript(() => {
     const getItem = Storage.prototype.getItem;
-    Storage.prototype.setItem = () => { throw new Error("Storage unavailable"); };
-    // Lock storage has its own fail-closed tests; appearance failures stay local.
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "thinkbee-theme") throw new Error("Storage unavailable");
+      setItem.call(this, key, value);
+    };
     Storage.prototype.getItem = function (key) {
-      if (key === "thinkbee-app-lock") return getItem.call(this, key);
-      throw new Error("Storage unavailable");
+      if (key === "thinkbee-theme") throw new Error("Storage unavailable");
+      return getItem.call(this, key);
     };
   });
   await page.goto("/me");
+  await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeEnabled();
   await context.setOffline(true);
   await expect(page.getByText("You are offline. Some actions need a connection.")).toBeVisible();
   await page.getByRole("radio", { name: "Dark", exact: true }).check();
@@ -138,8 +142,10 @@ test("keyboard skip link, reduced motion and tablet rail", async ({ page }) => {
   await mockOnboarding(page, true, true);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
+  const skipLink = page.getByRole("link", { name: "Skip to content" });
+  await expect(skipLink).toBeAttached();
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
+  await expect(skipLink).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
   await page.setViewportSize({ width: 834, height: 1112 });

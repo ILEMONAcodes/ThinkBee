@@ -19,13 +19,14 @@ declare const self: ServiceWorkerGlobalScope & {
 
 const staticAsset = /\.(?:css|js|woff2?|ttf|otf)$/i;
 
+// Cross-origin account requests use the browser's network directly and keep the API client's deadline.
 const runtimeCaching: RuntimeCaching[] = [
   {
-    matcher: ({ request }) => request.headers.has("authorization"),
-    handler: new NetworkOnly({ networkTimeoutSeconds: 15 }),
+    matcher: ({ request, sameOrigin }) => sameOrigin && request.headers.has("authorization"),
+    handler: new NetworkOnly(),
   },
   {
-    matcher: ({ url }) => isPrivateUrl(url),
+    matcher: ({ url, sameOrigin }) => sameOrigin && isPrivateUrl(url),
     handler: new NetworkOnly({ networkTimeoutSeconds: 15 }),
   },
   {

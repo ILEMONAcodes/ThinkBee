@@ -75,7 +75,8 @@ test("a reconnect event cannot interrupt an in-flight offline fallback", async (
 
 test("keeps root callbacks and signed images out of worker caches", async ({ page, network }) => {
   await page.goto(`${network.origin}/?code=synthetic-test-code`);
-  await page.waitForURL("**/auth/callback?code=synthetic-test-code");
+  await expect(page).toHaveURL(/\/auth\/callback\?code=synthetic-test-code$/);
+  await expect(page.getByRole("heading", { name: "Test callback" })).toBeVisible();
   await page.evaluate(async () => {
     await fetch("/onboarding/hive.webp?X-Amz-Signature=synthetic");
     await fetch(`/_next/image?url=${encodeURIComponent("/onboarding/hive.webp?token=synthetic")}&w=640&q=75`);
