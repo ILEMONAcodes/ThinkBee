@@ -9,7 +9,13 @@ from app.db.ids import uuid7
 from app.db.models import Base, TimestampMixin
 
 if TYPE_CHECKING:
-    from app.db.models import AssistantThread, DailyBriefing, PredictiveAlert, Scan
+    from app.db.models import (
+        AssistantThread,
+        DailyBriefing,
+        PredictiveAlert,
+        Scan,
+    )
+    from app.modules.chat.models import ChatMessage, ChatSpace, ChatSpaceMember
     from app.modules.farms.models import Farm
 
 
@@ -39,6 +45,15 @@ class User(TimestampMixin, Base):
     )
     predictive_alerts: Mapped[list["PredictiveAlert"]] = relationship(
         "PredictiveAlert", back_populates="user"
+    )
+    chat_space_memberships: Mapped[list["ChatSpaceMember"]] = relationship(
+        "ChatSpaceMember", foreign_keys="ChatSpaceMember.user_id", back_populates="user"
+    )
+    chat_messages: Mapped[list["ChatMessage"]] = relationship(
+        "ChatMessage", back_populates="user"
+    )
+    created_chat_spaces: Mapped[list["ChatSpace"]] = relationship(
+        "ChatSpace", foreign_keys="ChatSpace.creator_id", back_populates="creator"
     )
 
 

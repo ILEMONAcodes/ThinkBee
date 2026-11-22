@@ -18,6 +18,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [x] FE: onboarding (splash, welcome, name/email/password registration, password sign-in/recovery, profile, add farm; email confirmation deferred during the pilot)
 - [x] FE: pilot registration returns to password sign-in with a success message and no email-verification step
 - [x] FE: increase mobile spacing between the auth wordmark and rounded form sheet to match the supplied reference
+- [x] FE: use the transparent wordmark and photo-led sign-in and registration layouts, and require a verified account before mounting the main app
 - [x] FE: PWA manifest, service worker, offline page, install prompt
 - [x] FE: prevent reconnect reloads from interrupting offline fallback navigation; recover through cached Home
 - [x] FE: app lock (PIN or biometrics where available)

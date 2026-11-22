@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 import { mockOnboarding } from "./onboarding-fixture";
 
+test.use({ serviceWorkers: "block" });
+
 const password = "Farm-test-password-2026!";
 async function fillRegistration(page: import("@playwright/test").Page) {
   await page.getByLabel("Your name", { exact: true }).fill("Ada Okoro");
@@ -11,19 +13,32 @@ async function fillRegistration(page: import("@playwright/test").Page) {
   await page.getByRole("checkbox").check();
 }
 
-test("registration returns to password sign-in without email or a persisted session", async ({ page }, info) => {
-  const state = await mockOnboarding(page, false);
+test("welcome shows all three photos and opens registration", async ({ page }, info) => {
+  await mockOnboarding(page, false);
   await page.goto("/welcome");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("A little help");
   await expect(page.locator(".welcome-splash")).toHaveCount(0);
-  await page.locator(".welcome-photo-main img").evaluate((image: HTMLImageElement) => image.decode());
-  await page.screenshot({ path: info.outputPath("welcome.png"), fullPage: true });
-  await page.getByRole("button", { name: "Show panel 2" }).click();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your work deserves a record.");
-  await page.getByRole("button", { name: "Show panel 3" }).click();
-  await expect(page.getByRole("link", { name: "Skip for now" })).toBeVisible();
+  const slides = [
+    ["Spot problems early", "welcome-beekeeper"],
+    ["Keep a simple record", "welcome-leaf"],
+    ["Grow together", "welcome-apiary"],
+  ];
+  for (const [index, [title, filename]] of slides.entries()) {
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+    const photo = page.locator(".welcome-photo img");
+    await expect(photo).toHaveAttribute("src", new RegExp(`${filename}\\.webp`));
+    await photo.evaluate((image: HTMLImageElement) => image.decode());
+    await expect(page.locator('.welcome-brand img[src$="thinkbee-wordmark-dark.svg"]')).toBeVisible();
+    await page.screenshot({ path: info.outputPath(`${filename}.png`), fullPage: true, animations: "disabled" });
+    if (index < slides.length - 1) await page.getByRole("button", { name: "Next" }).click();
+  }
+  await expect(page.getByRole("link", { name: "Skip" })).toBeVisible();
   await page.getByRole("link", { name: "Get started" }).click();
   await expect(page).toHaveURL(/\/register$/);
+});
+
+test("registration returns to password sign-in without email or a persisted session", async ({ page }, info) => {
+  const state = await mockOnboarding(page, false);
+  await page.goto("/register");
   await page.getByRole("button", { name: "Create account", exact: true }).click();
   await expect(page.getByText("Enter a valid email address.")).toBeVisible();
   expect(state.signupCount).toBe(0);
@@ -84,6 +99,7 @@ test("password sign-in handles invalid credentials, verification and successful 
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { name: "Your farm dashboard" })).toBeVisible();
   expect(state.passwordCount).toBe(3);
 });
 
@@ -181,7 +197,7 @@ test("profile and farm sync, including a lost unit response", async ({ page }, i
   await page.goto("/me");
   await expect(page.getByText("North farm", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Sign out on this device" }).click();
-  await expect(page.getByRole("link", { name: "Sign in", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
   await expect(page.getByText("Ada Okoro")).toHaveCount(0);
 });
 

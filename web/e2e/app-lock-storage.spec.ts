@@ -36,7 +36,7 @@ test("enabling a PIN covers another tab that was already open", async ({ page, c
   await page.goto("/me");
   const other = await context.newPage();
   await other.goto("/");
-  await expect(other.getByRole("heading", { name: "A little care, every day" })).toBeVisible();
+  await expect(other.getByRole("heading", { level: 1 })).toBeVisible();
   await page.bringToFront();
   await page.getByRole("button", { name: "Set up a PIN" }).click();
   await page.getByLabel("New PIN", { exact: true }).fill(testPin);

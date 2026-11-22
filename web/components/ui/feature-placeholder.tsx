@@ -7,13 +7,13 @@ export async function FeaturePlaceholder({ bodyKey, titleKey }: Readonly<{ bodyK
   const t = await getTranslations("Feature");
   return (
     <section className="grid min-h-[70dvh] place-items-center">
-      <div className="max-w-xl rounded-lg bg-raised p-8 text-center shadow-card sm:p-12">
-        <span className="mx-auto grid size-16 place-items-center rounded-md bg-honey-100 text-forest-900 dark:bg-forest-800 dark:text-mint">
+      <div className="max-w-xl rounded-lg bg-bark-700 p-8 text-center text-on-brand shadow-card dark:bg-bark-900 sm:p-12">
+        <span className="comb-cell mx-auto grid size-16 place-items-center bg-accent text-on-accent">
           <Hexagon aria-hidden size={32} />
         </span>
         <h1 className="mt-6 font-display text-4xl">{t(titleKey)}</h1>
-        <p className="mt-4 text-lg text-subtle">{t(bodyKey)}</p>
-        <p className="mt-8 text-sm font-medium text-muted">{t("emptyLabel")}</p>
+        <p className="mt-4 text-lg">{t(bodyKey)}</p>
+        <p className="mt-8 text-sm font-medium text-bark-100">{t("emptyLabel")}</p>
       </div>
     </section>
   );

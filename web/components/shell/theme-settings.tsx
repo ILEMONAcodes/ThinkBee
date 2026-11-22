@@ -12,7 +12,7 @@ export function ThemeSettings() {
   const setTheme = usePreferences((state) => state.setTheme);
   const storageAvailable = usePreferences((state) => state.storageAvailable);
   return (
-    <fieldset className="rounded-lg border border-line bg-raised p-6 sm:p-8">
+    <fieldset className="rounded-xl border border-line bg-raised p-6 sm:p-8">
       <legend className="sr-only">{t("title")}</legend>
       <h2 className="font-display text-2xl" aria-hidden>{t("title")}</h2>
       <p className="mt-2 text-subtle">{t("description")}</p>

@@ -12,6 +12,7 @@ from app.db.health import check_account_store
 from app.modules.assistant.router import router as assistant_router
 from app.modules.auth.router import router as auth_router
 from app.modules.briefings.router import router as briefings_router
+from app.modules.chat.router import router as chat_router
 from app.modules.farms.router import router as farms_router
 from app.modules.scans.router import router as scans_router
 from app.modules.users.router import router as users_router
@@ -50,6 +51,7 @@ def create_app() -> FastAPI:
     application.include_router(scans_router, prefix="/api/v1")
     application.include_router(assistant_router, prefix="/api/v1")
     application.include_router(briefings_router, prefix="/api/v1")
+    application.include_router(chat_router, prefix="/api/v1")
 
     @application.get(
         "/health/live",

@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
 
+import { mockOnboarding } from "./onboarding-fixture";
+
+test.beforeEach(async ({ page }) => { await mockOnboarding(page, true, true); });
+
 test("screen entrances stay within the viewport while navigation remains usable", async ({ page }, info) => {
   await page.addInitScript(() => {
     localStorage.setItem("thinkbee-welcome-seen", "1");

@@ -17,7 +17,12 @@ export function AppLockSettings() {
   useEffect(initializeAppLock, []);
   if (identity.ready && !identity.owner) return null;
   return <section className="lock-settings" aria-labelledby="lock-settings-title">
-    <div className="lock-settings-heading"><LockKey size={28} aria-hidden="true" /><h2 id="lock-settings-title" className="font-display text-3xl">{t("title")}</h2></div>
+    <div className="lock-settings-heading">
+      <span className="grid size-10 shrink-0 place-items-center rounded-md bg-forest-100 dark:bg-forest-800">
+        <LockKey size={22} aria-hidden="true" />
+      </span>
+      <h2 id="lock-settings-title" className="font-display text-3xl">{t("title")}</h2>
+    </div>
     <p className="mt-3 text-subtle">{t("description", { minutes: appLockConfig.idleMs / 60_000 })}</p>
     {!identity.ready || status === "checking" ? <p className="lock-notice" role="status">{t("loading")}</p>
       : !supportsAppLock() ? <p className="lock-notice" role="status">{t("unsupported")}</p>

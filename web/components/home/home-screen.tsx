@@ -1,32 +1,26 @@
-import { getTranslations } from "next-intl/server";
-
 import { CommunityCard } from "@/components/home/community-card";
+import { HomeCategories } from "@/components/home/home-categories";
+import { HomeHeader } from "@/components/home/home-header";
 import { HomeHero } from "@/components/home/home-hero";
 import { QuickActions } from "@/components/home/quick-actions";
 import { RecentList } from "@/components/home/recent-list";
 import { TodayCard } from "@/components/home/today-card";
-import { ThemeToggle } from "@/components/shell/theme-toggle";
 
-export async function HomeScreen() {
-  const t = await getTranslations("Home");
+export function HomeScreen() {
   return (
     <div>
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-link">{t("eyebrow")}</p>
-          <h1 className="mt-2 max-w-2xl font-display text-4xl sm:text-5xl">{t("greeting")}</h1>
-          <p className="mt-3 max-w-xl text-subtle">{t("summary")}</p>
-        </div>
-        <div className="md:hidden"><ThemeToggle /></div>
-      </header>
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(260px,0.75fr)]">
+      <HomeHeader />
+      <div className="mt-4 grid gap-4 sm:mt-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-6">
         <HomeHero />
-        <TodayCard />
+        <HomeCategories />
+      </div>
+      <div className="mt-8">
+        <CommunityCard />
       </div>
       <QuickActions />
-      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        <TodayCard />
         <RecentList />
-        <CommunityCard />
       </div>
     </div>
   );

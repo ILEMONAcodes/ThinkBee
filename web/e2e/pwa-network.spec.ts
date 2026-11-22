@@ -1,23 +1,39 @@
 import { expect } from "@playwright/test";
 
+import { mockOnboarding } from "./onboarding-fixture";
+
 import { test } from "./pwa-network-fixture";
 
 test.beforeEach(async ({ page, network }) => {
-  await page.addInitScript(() => localStorage.setItem("thinkbee-welcome-seen", "1"));
+  await mockOnboarding(page, true, true);
   await page.goto(network.origin);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
 });
 
-test("uses a cached page or offline fallback during a server outage", async ({ page, network }) => {
+test("uses a cached page or offline fallback during a server outage and recovers Home", async ({ page, network }) => {
+  await expect(page.getByRole("heading", { name: "Your farm dashboard" })).toBeVisible();
   await page.goto(`${network.origin}/records`);
   await page.waitForFunction(async () => Boolean(await (await caches.open("thinkbee-pages")).match("/records")));
+  // The proxy takes down the page route, while this reproduces the device’s offline signal.
+  await page.addInitScript(() => Object.defineProperty(navigator, "onLine", { get: () => false }));
   network.failures.set("/records", 503);
   await page.reload();
   await expect(page.getByRole("heading", { name: "Records and reminders" })).toBeVisible();
   network.failures.set("/uncached-outage", 502);
   await page.goto(`${network.origin}/uncached-outage`);
   await expect(page.getByRole("heading", { name: "No signal right now" })).toBeVisible();
+
+  network.failures.set("/", 503);
+  const recovery = page.getByRole("link", { name: "Open Think Bee" });
+  expect((await recovery.boundingBox())?.height).toBeGreaterThanOrEqual(48);
+  const [home] = await Promise.all([
+    page.waitForResponse((response) => response.request().isNavigationRequest() && new URL(response.url()).pathname === "/"),
+    recovery.click(),
+  ]);
+  expect(home.fromServiceWorker()).toBe(true);
+  await expect(page).toHaveURL(`${network.origin}/`);
+  await expect(page.getByRole("heading", { name: "Your farm dashboard" })).toBeVisible();
 });
 
 test("bounds stalled uncached navigation and RSC requests", async ({ page, network }) => {
@@ -59,7 +75,8 @@ test("a reconnect event cannot interrupt an in-flight offline fallback", async (
 
 test("keeps root callbacks and signed images out of worker caches", async ({ page, network }) => {
   await page.goto(`${network.origin}/?code=synthetic-test-code`);
-  await page.waitForURL("**/auth/callback?code=synthetic-test-code");
+  await expect(page).toHaveURL(/\/auth\/callback\?code=synthetic-test-code$/);
+  await expect(page.getByRole("heading", { name: "Test callback" })).toBeVisible();
   await page.evaluate(async () => {
     await fetch("/onboarding/hive.webp?X-Amz-Signature=synthetic");
     await fetch(`/_next/image?url=${encodeURIComponent("/onboarding/hive.webp?token=synthetic")}&w=640&q=75`);

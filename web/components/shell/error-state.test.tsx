@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, expect, it, vi } from "vitest";
 
 import ErrorPage from "@/app/(main)/error";
-import messages from "@/messages/en.json";
+import messages from "@/messages/en-NG.json";
 
 let root: Root | undefined;
 const environment = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean };

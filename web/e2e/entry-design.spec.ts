@@ -13,14 +13,20 @@ test("welcome supports keyboard, deliberate swipes, reduced motion and large tex
   await expect(page.getByRole("button", { name: "Show panel 2" })).toHaveAttribute("aria-current", "step");
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByRole("button", { name: "Show panel 1" })).toHaveAttribute("aria-current", "step");
-  await panel.dispatchEvent("touchstart", { touches: [{ identifier: 1, clientX: 250, clientY: 100 }] });
-  await panel.dispatchEvent("touchend", { changedTouches: [{ identifier: 1, clientX: 180, clientY: 350 }] });
+  const swipeTo = (clientX: number, clientY: number) => panel.evaluate((target, end) => {
+    const start = new Touch({ identifier: 1, target, clientX: 250, clientY: 100 });
+    const finish = new Touch({ identifier: 1, target, ...end });
+    target.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, touches: [start] }));
+    target.dispatchEvent(new TouchEvent("touchend", { bubbles: true, changedTouches: [finish] }));
+  }, { clientX, clientY });
+  await swipeTo(180, 350);
   await expect(page.getByRole("button", { name: "Show panel 1" })).toHaveAttribute("aria-current", "step");
-  await panel.dispatchEvent("touchstart", { touches: [{ identifier: 1, clientX: 250, clientY: 100 }] });
-  await panel.dispatchEvent("touchend", { changedTouches: [{ identifier: 1, clientX: 120, clientY: 110 }] });
+  await swipeTo(120, 110);
   await expect(page.getByRole("button", { name: "Show panel 2" })).toHaveAttribute("aria-current", "step");
   await page.addStyleTag({ content: "html { font-size: 200%; }" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole("button", { name: "Next" }).press("Enter");
+  await expect(page.getByRole("link", { name: "Get started" })).toBeFocused();
   await page.getByRole("link", { name: "Get started" }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
@@ -35,15 +41,14 @@ test("entry screens use the correct transparent logos and accessible controls", 
     if (path !== "/welcome" || info.project.name.startsWith("desktop")) {
       await expect(macaney).toHaveAttribute("href", "https://www.macaney.com/");
     }
+    await expect(page.locator(".theme-button")).toHaveCount(0);
     if (path !== "/welcome") {
-      if (info.project.name.startsWith("mobile")) {
-        await expect(page.locator(".auth-story")).toBeHidden();
-        await expect(page.locator('.auth-layout img[src*="thinkbee-short"]:visible')).toHaveCount(0);
-      } else {
-        await expect(page.locator(".auth-story")).toBeVisible();
-        await expect(page.locator(".auth-bee-desktop")).toBeVisible();
-      }
       await expect(page.locator(".auth-wordmark")).toBeVisible();
+      const photo = page.locator(".auth-hero > img");
+      await expect(photo).toHaveAttribute("src", path === "/register" ? /brood-comb/ : /welcome-beekeeper/);
+      await photo.evaluate((image: HTMLImageElement) => image.decode());
+    } else {
+      await expect(page.locator(".welcome-brand")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     }
     for (const logo of await page.locator(".brand-mark img:visible").all()) {
       const forcedDark = await logo.evaluate((img) => img.parentElement?.dataset.surface === "dark");
@@ -65,4 +70,37 @@ test("password recovery without a valid session offers a new link", async ({ pag
   await expect(page.locator(".setup-feedback[role=alert]")).toContainText("This link has expired");
   await page.getByRole("link", { name: "Send reset link" }).click();
   await expect(page).toHaveURL(/\/forgot-password$/);
+});
+
+test("signed-out visitors enter through Welcome or Sign in instead of the dashboard", async ({ page }) => {
+  await mockOnboarding(page, false, false, false);
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/welcome$/);
+  await page.getByRole("link", { name: "Skip", exact: true }).click();
+  await expect(page).toHaveURL(/\/sign-in$/);
+
+  for (const path of ["/", "/records", "/chats", "/me", "/scan?subject=hive"]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/sign-in$/);
+    await expect(page.locator(".app-shell")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Welcome back." })).toBeVisible();
+  }
+});
+
+test("an SDK session with a suspended account cannot open Home", async ({ page }) => {
+  const account = await mockOnboarding(page, true, true);
+  account.bootstrapStatus = 403;
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+  await expect(page.locator(".app-shell")).toHaveCount(0);
+});
+
+test("a server-rejected session returns to Sign in", async ({ page }) => {
+  const account = await mockOnboarding(page, true, true);
+  account.bootstrapStatus = 401;
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/sign-in$/);
+  await expect(page.getByRole("heading", { name: "Welcome back." })).toBeVisible();
+  await expect(page.locator(".app-shell")).toHaveCount(0);
+  expect(account.logoutCount).toBe(1);
 });

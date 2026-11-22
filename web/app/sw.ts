@@ -19,13 +19,14 @@ declare const self: ServiceWorkerGlobalScope & {
 
 const staticAsset = /\.(?:css|js|woff2?|ttf|otf)$/i;
 
+// Cross-origin account requests use the browser's network directly and keep the API client's deadline.
 const runtimeCaching: RuntimeCaching[] = [
   {
-    matcher: ({ request }) => request.headers.has("authorization"),
-    handler: new NetworkOnly({ networkTimeoutSeconds: 15 }),
+    matcher: ({ request, sameOrigin }) => sameOrigin && request.headers.has("authorization"),
+    handler: new NetworkOnly(),
   },
   {
-    matcher: ({ url }) => isPrivateUrl(url),
+    matcher: ({ url, sameOrigin }) => sameOrigin && isPrivateUrl(url),
     handler: new NetworkOnly({ networkTimeoutSeconds: 15 }),
   },
   {
@@ -65,10 +66,21 @@ const runtimeCaching: RuntimeCaching[] = [
   },
 ];
 
-const serwist = new Serwist({
+const serwist: Serwist = new Serwist({
   cacheId: "thinkbee",
   precacheEntries: self.__SW_MANIFEST,
-  precacheOptions: { cleanupOutdatedCaches: true },
+  precacheOptions: {
+    cleanupOutdatedCaches: true,
+    plugins: [{
+      async handlerWillRespond({ request, response }): Promise<Response> {
+        // Navigation preload can return a server error before Serwist checks the precache.
+        if (request.mode === "navigate" && request.url === `${self.location.origin}/` && response.status >= 500) {
+          return await serwist.matchPrecache("/") ?? response;
+        }
+        return response;
+      },
+    }],
+  },
   clientsClaim: true,
   navigationPreload: true,
   skipWaiting: false,

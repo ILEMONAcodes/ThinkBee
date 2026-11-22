@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
+import { mockOnboarding } from "./onboarding-fixture";
+
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("thinkbee-welcome-seen", "1"));
+  await mockOnboarding(page, true, true);
 });
 
 test("registers the service worker from Home without loading Me", async ({ page }) => {
@@ -14,6 +16,7 @@ test("registers the service worker from Home without loading Me", async ({ page 
 test("manifest, install prompt and supplied icons are wired", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("thinkbee-pwa-meaningful-use", "saved_scan"));
   await page.goto("/me");
+  await expect(page.getByRole("radio", { name: "Light", exact: true })).toBeEnabled();
   const manifest = await page.request.get("/manifest.webmanifest");
   expect(manifest.ok()).toBe(true);
   expect(await manifest.json()).toMatchObject({ name: "Think Bee", display: "standalone" });
@@ -37,30 +40,13 @@ test("cached Home reloads offline", async ({ page, context }) => {
   await page.goto("/");
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+  await expect(page.getByRole("heading", { name: "Your farm dashboard" })).toBeVisible();
+  // Chromium can reload a service-worker response with navigator.onLine still true.
+  await page.addInitScript(() => Object.defineProperty(navigator, "onLine", { get: () => false }));
   await context.setOffline(true);
   const response = await page.reload();
   expect(response?.fromServiceWorker()).toBe(true);
-  await expect(page.getByRole("heading", { name: "A little care, every day" })).toBeVisible();
-});
-
-test("uncached offline navigation shows the fallback and recovers Home", async ({ page, context }) => {
-  await page.goto("/");
-  await page.evaluate(async () => { await navigator.serviceWorker.ready; });
-  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
-  await context.setOffline(true);
-  const response = await page.goto("/not-cached-while-offline");
-  expect(response?.fromServiceWorker()).toBe(true);
-  await expect(page).toHaveURL(/\/not-cached-while-offline$/);
-  await expect(page.getByRole("heading", { name: "No signal right now" })).toBeVisible();
-  const recovery = page.getByRole("link", { name: "Open Think Bee" });
-  expect((await recovery.boundingBox())!.height).toBeGreaterThanOrEqual(48);
-  const [home] = await Promise.all([
-    page.waitForResponse((reply) => reply.request().isNavigationRequest() && new URL(reply.url()).pathname === "/"),
-    recovery.click(),
-  ]);
-  expect(home.fromServiceWorker()).toBe(true);
-  await expect(page).toHaveURL("/");
-  await expect(page.getByRole("heading", { name: "A little care, every day" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your farm dashboard" })).toBeVisible();
 });
 
 test("handles install rejection with feedback and a fresh-event retry", async ({ page }) => {
@@ -90,18 +76,25 @@ test("keeps optimized images offline without the browser HTTP cache", async ({ p
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
   await page.goto("/welcome");
-  const photos = page.locator(".welcome-photo img");
-  await expect(photos).toHaveCount(2);
-  await expect.poll(() => photos.evaluateAll((images: HTMLImageElement[]) => images.every((image) => image.naturalWidth > 0))).toBe(true);
-  await page.waitForFunction(async () => {
-    const images = [...document.querySelectorAll<HTMLImageElement>(".welcome-photo img")];
-    const cache = await caches.open("thinkbee-images");
-    return images.length === 2 && (await Promise.all(images.map((image) => cache.match(image.currentSrc)))).every(Boolean);
-  });
+  const photo = page.locator(".welcome-photo img");
+  const slides = ["welcome-beekeeper", "welcome-leaf", "welcome-apiary"];
+  for (const [index, filename] of slides.entries()) {
+    await page.getByRole("button", { name: `Show panel ${index + 1}` }).click();
+    await expect(photo).toHaveAttribute("src", new RegExp(`${filename}\\.webp`));
+    await photo.evaluate((image: HTMLImageElement) => image.decode());
+    await page.waitForFunction(async () => {
+      const image = document.querySelector<HTMLImageElement>(".welcome-photo img");
+      return Boolean(image?.currentSrc && await (await caches.open("thinkbee-images")).match(image.currentSrc));
+    });
+  }
   const cdp = await context.newCDPSession(page);
   await cdp.send("Network.enable");
   await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
   await context.setOffline(true);
   await page.reload();
-  await expect.poll(() => photos.evaluateAll((images: HTMLImageElement[]) => images.length === 2 && images.every((image) => image.naturalWidth > 0))).toBe(true);
+  for (const [index, filename] of slides.entries()) {
+    await page.getByRole("button", { name: `Show panel ${index + 1}` }).click();
+    await expect(photo).toHaveAttribute("src", new RegExp(`${filename}\\.webp`));
+    await expect.poll(() => photo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  }
 });

@@ -22,7 +22,7 @@ export function PasswordField({ field, confirmation = false, creating = false, e
     <label className="setup-label" htmlFor={id}>{t(label)}</label>
     <div className="auth-password-field">
       <LockSimple size={22} aria-hidden="true" />
-      <input {...field} id={id} type={visible ? "text" : "password"} autoComplete={creating ? "new-password" : "current-password"} autoCapitalize="none" spellCheck={false} className="setup-input" aria-invalid={!!error} aria-describedby={error ? `${id}-error` : creating && !confirmation ? `${id}-hint` : undefined} />
+      <input {...field} id={id} type={visible ? "text" : "password"} autoComplete={creating ? "new-password" : "current-password"} placeholder={t(confirmation ? "confirmPasswordPlaceholder" : creating ? "newPasswordPlaceholder" : "signInPasswordPlaceholder")} autoCapitalize="none" spellCheck={false} className="setup-input" aria-invalid={!!error} aria-describedby={error ? `${id}-error` : creating && !confirmation ? `${id}-hint` : undefined} />
       <button className="auth-password-toggle" type="button" aria-label={t(toggle)} aria-pressed={visible} onClick={() => setVisible(!visible)}>{visible ? <EyeSlash size={22} aria-hidden="true" /> : <Eye size={22} aria-hidden="true" />}</button>
     </div>
     {error ? <p className="setup-field-error" id={`${id}-error`}>{error}</p> : creating && !confirmation ? <p className="auth-password-hint" id={`${id}-hint`}>{t("passwordHint")}</p> : null}
