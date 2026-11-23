@@ -5,9 +5,6 @@ import { mockOnboarding, user } from "./onboarding-fixture";
 test.use({ serviceWorkers: "block" });
 
 test("sends an authenticated photo and reopens the persisted result", async ({ page }) => {
-  // Log all network requests to debug
-  page.on("request", (req) => console.log("REQUEST:", req.method(), req.url()));
-  page.on("response", (res) => console.log("RESPONSE:", res.status(), res.url()));
   const scanId = crypto.randomUUID();
   const key = `scans/${user.id}/${crypto.randomUUID().replaceAll("-", "")}.webp`;
   let scan: Record<string, unknown> | undefined;
@@ -19,7 +16,6 @@ test("sends an authenticated photo and reopens the persisted result", async ({ p
   await page.context().route(/\/api\/v1\/scans/, async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
-    console.log("SCANS MOCK", request.method(), path);
     const headers = {
       "access-control-allow-origin": "*",
       "access-control-allow-headers": "authorization,content-type",
@@ -47,47 +43,7 @@ test("sends an authenticated photo and reopens the persisted result", async ({ p
     return route.fulfill({ status: 404, headers });
   });
 
-  // First navigate to home page to clear app lock via head script.
-  // The head script in layout.tsx runs during HTML parse and checks localStorage.
-  // By navigating to "/" first, we ensure the head script runs with cleared localStorage
-  // (mockOnboarding's addInitScript removes the lock before any navigation).
-  // This prevents the "Checking app lock..." cover from appearing on the scan page.
-  const bootstrapPromise = page.waitForResponse(resp => resp.url().includes("/api/v1/auth/bootstrap"), { timeout: 15_000 });
-  await page.goto("/", { waitUntil: "networkidle" });
-  await bootstrapPromise;
-
-  // Now navigate to scan page - localStorage is already cleared, head script won't set data-app-lock
-  // Set up the wait BEFORE navigation to catch the bootstrap request
-  const bootstrapPromise2 = page.waitForResponse(resp => resp.url().includes("/api/v1/auth/bootstrap"), { timeout: 15_000 });
-  await page.goto("/scan?subject=crop", { waitUntil: "networkidle" });
-  await bootstrapPromise2;
-
-  // Reload so appLockBootScript runs with clean localStorage and React re-initializes lock
-  const bootstrapPromise3 = page.waitForResponse(resp => resp.url().includes("/api/v1/auth/bootstrap"), { timeout: 15_000 });
-  await page.reload({ waitUntil: "networkidle" });
-  await bootstrapPromise3;
-  // Force hide app lock cover and unlock app content (CSS may not apply in test environment)
-  await page.evaluate(() => {
-    document.documentElement.removeAttribute("data-app-lock");
-    const cover = document.getElementById("app-lock-cover");
-    if (cover) cover.style.display = "none";
-    const content = document.getElementById("app-content");
-    if (content) {
-      content.style.visibility = "visible";
-      content.style.pointerEvents = "auto";
-      content.inert = false;
-    }
-  });
-  // Debug: check localStorage and sessionStorage
-  const storage = await page.evaluate(() => ({
-    localStorage: { ...localStorage },
-    sessionStorage: { ...sessionStorage },
-  }));
-  console.log("Storage:", storage);
-  // Debug: dump page HTML
-  const pageHtml = await page.evaluate(() => document.documentElement.outerHTML.substring(0, 5000));
-  console.log("Page HTML:", pageHtml);
-  // Wait for the scan uploader to be visible (RequireAccount must resolve first)
+  await page.goto("/scan?subject=crop");
   await expect(page.locator('input[type="file"]:not([capture])')).toBeAttached({ timeout: 15_000 });
   await page.locator('input[type="file"]:not([capture])').setInputFiles("public/photos/glossy-leaves.webp");
   await page.locator("select").selectOption("tomato");
