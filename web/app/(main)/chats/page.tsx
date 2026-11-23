@@ -27,10 +27,7 @@ export default function ChatsPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!owner) {
-      setLoading(false);
-      return;
-    }
+    if (!owner) return;
     async function load() {
       try {
         const data = await apiRequest<ApiSchema["ChatSpaceListResponse"]>("/chat/spaces/public", owner as string);
@@ -48,7 +45,7 @@ export default function ChatsPage() {
     void load();
   }, [owner]);
 
-  if (loading) {
+  if (loading && owner) {
     return (
       <div className="max-w-6xl mx-auto">
         <header className="mb-5 sm:mb-7">

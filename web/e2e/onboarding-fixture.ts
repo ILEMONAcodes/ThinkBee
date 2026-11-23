@@ -63,6 +63,13 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
       if (state.bootstrapDelayMs) await new Promise((resolve) => setTimeout(resolve, state.bootstrapDelayMs));
       return route.fulfill({ status: state.bootstrapStatus, headers, json: state.bootstrapStatus === 200 ? { user, is_new: !state.profile } : { error: { code: state.bootstrapStatus === 403 ? "account_suspended" : "account_store_unavailable", message: "Internal details must not appear" } } });
     }
+    if (path === "/chat/spaces/public") {
+      const space = (id: string, name: string, description: string, cover: string) => ({ id, name, description, kind: "community", visibility: "public", avatar_key: cover, cover, is_system: true, member_count: 0, creator_id: null, created_at: timestamp, updated_at: timestamp });
+      return route.fulfill({ headers, json: { spaces: [
+        space("22222222-2222-4222-8222-222222222221", "Beekeepers", "Hives and honey", "/photos/brood-comb.webp"),
+        space("22222222-2222-4222-8222-222222222222", "General Farmers", "Crops and fieldwork", "/photos/olive-foliage.webp"),
+      ] } });
+    }
     if (path === "/me") return route.fulfill({ headers, json: user });
     if (path === "/me/chat-profile") {
       if (request.method() === "PATCH") { state.profileWrites++; state.profile = { ...profile, ...request.postDataJSON() }; }

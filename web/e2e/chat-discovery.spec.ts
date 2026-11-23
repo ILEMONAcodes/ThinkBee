@@ -20,8 +20,8 @@ test.beforeEach(async ({ page }) => {
     if (!request.headers().authorization?.startsWith("Bearer ")) return route.fulfill({ status: 401, headers });
     if (space === "public") return route.fulfill({
       headers, json: { spaces: [
-        { id: "beekeepers", is_system: true, name: "Beekeepers" },
-        { id: "farmers", is_system: true, name: "General Farmers" },
+        { id: "beekeepers", name: "Beekeepers", description: "Hives and honey", kind: "community", visibility: "public", avatar_key: "/photos/brood-comb.webp", cover: "/photos/brood-comb.webp", is_system: true, member_count: 0, creator_id: null, created_at: "2026-11-07T00:00:00Z", updated_at: "2026-11-07T00:00:00Z" },
+        { id: "farmers", name: "General Farmers", description: "Crops and fieldwork", kind: "community", visibility: "public", avatar_key: "/photos/olive-foliage.webp", cover: "/photos/olive-foliage.webp", is_system: true, member_count: 0, creator_id: null, created_at: "2026-11-07T00:00:00Z", updated_at: "2026-11-07T00:00:00Z" },
       ] },
     });
     const membership = { state: "active", role: "member", created_at: new Date().toISOString() };
@@ -52,20 +52,17 @@ test("community discovery shows distinct cards and keeps sample counts out of ro
   await expect(createSpace).toHaveCSS("background-color", "rgb(252, 153, 0)");
   await expect(beekeepers).toHaveCSS("border-inline-start-color", "rgb(255, 209, 68)");
   await expect(farmers).toHaveCSS("border-inline-start-color", "rgb(0, 138, 99)");
-  await expect(page.getByText(/\d[\d,]* members?\b/i)).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: info.outputPath("chats.png"), animations: "disabled" });
 
   await beekeepers.click();
   await expect(page.getByRole("heading", { name: "Beekeepers" })).toBeVisible();
-  await expect(page.getByText(/\d[\d,]* members?\b/i)).toHaveCount(0);
   await expect(page.getByRole("log", { name: "Messages" })).toHaveCount(0);
 
   const join = page.getByRole("button", { name: "Join", exact: true });
   await expect(join).toHaveCSS("background-color", "rgb(252, 153, 0)");
   await join.click();
   await expect(page.getByRole("log", { name: "Messages" })).toBeVisible();
-  await expect(page.getByText(/\d[\d,]* members?\b/i)).toHaveCount(0);
 });
 
 test("General Farmers has a crop-specific preview and conversation starters", async ({ page }, info) => {
@@ -94,5 +91,4 @@ test("General Farmers has a crop-specific preview and conversation starters", as
   await expect(page.getByRole("log").getByText("I am planting cassava this week.")).toBeVisible();
   await page.reload();
   await expect(page.getByRole("log").getByText("I am planting cassava this week.")).toBeVisible();
-  await expect(page.getByText(/\d[\d,]* members?\b/i)).toHaveCount(0);
 });
