@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 import { mockOnboarding, user } from "./onboarding-fixture";
 
+test.use({ serviceWorkers: "block" });
+
 test("sends an authenticated photo and reopens the persisted result", async ({ page }) => {
   // Log all network requests to debug
   page.on("request", (req) => console.log("REQUEST:", req.method(), req.url()));
@@ -14,9 +16,10 @@ test("sends an authenticated photo and reopens the persisted result", async ({ p
   await mockOnboarding(page, true, true);
 
   // Set up scans route handler AFTER so it takes priority over the onboarding catch-all
-  await page.context().route("**/api/v1/scans**", async (route) => {
+  await page.context().route(/\/api\/v1\/scans/, async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
+    console.log("SCANS MOCK", request.method(), path);
     const headers = {
       "access-control-allow-origin": "*",
       "access-control-allow-headers": "authorization,content-type",
