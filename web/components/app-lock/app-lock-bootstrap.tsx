@@ -3,7 +3,6 @@
 import { useEffect, useState, type ComponentType } from "react";
 
 import { appLockReadyEvent, appLockStorageKey } from "@/lib/app-lock/config";
-import { initializeAppLock } from "@/lib/app-lock/state";
 
 export function AppLockBootstrap() {
   const [Runtime, setRuntime] = useState<ComponentType | null>(null);
@@ -24,18 +23,10 @@ export function AppLockBootstrap() {
       }
     };
     // Another tab may have enabled the lock between the head script and hydration.
-    let hasLock = false;
     try {
-      hasLock = localStorage.getItem(appLockStorageKey) !== null;
-      if (hasLock) document.documentElement.setAttribute("data-app-lock", "");
-    } catch { document.documentElement.setAttribute("data-app-lock", ""); hasLock = true; }
-    if (hasLock) {
-      load();
-    } else {
-      // No lock configured - initialize app lock to set status to "disabled"
-      // and hide the "Checking app lock..." cover.
-      initializeAppLock();
-    }
+      if (localStorage.getItem(appLockStorageKey) !== null) document.documentElement.setAttribute("data-app-lock", "");
+    } catch { document.documentElement.setAttribute("data-app-lock", ""); }
+    if (document.documentElement.hasAttribute("data-app-lock")) load();
     addEventListener(appLockReadyEvent, load);
     addEventListener("storage", storage);
     return () => { active = false; removeEventListener(appLockReadyEvent, load); removeEventListener("storage", storage); };

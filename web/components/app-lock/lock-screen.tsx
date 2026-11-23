@@ -11,7 +11,6 @@ import { z } from "zod";
 import { LockRecovery } from "@/components/app-lock/lock-recovery";
 import { PinField } from "@/components/app-lock/pin-field";
 import { BrandMark } from "@/components/ui/brand-mark";
-import { BrandLoader } from "@/components/ui/brand-loader";
 import { unlockWithDevice, unlockWithPin } from "@/lib/app-lock/actions";
 import { appLockConfig } from "@/lib/app-lock/policy";
 import { pinInputSchema } from "@/lib/app-lock/pin";
@@ -82,7 +81,7 @@ export function LockScreen({ record, unavailable }: Readonly<{ record: LockRecor
             </form>
             {record.device ? <button className="lock-secondary mt-3 w-full" type="button" disabled={busy} onClick={() => void deviceUnlock()}><Fingerprint size={22} aria-hidden="true" />{t(deviceBusy ? "checking" : "useDevice")}</button> : null}
             {!online ? <p className="lock-notice" role="status">{t("offline")}</p> : null}
-          </> : <BrandLoader size={36} label={t("loading")} className="mt-4" />}
+          </> : <p className="lock-notice" role="status">{t("loading")}</p>}
           <button className="lock-text mt-5" type="button" disabled={busy} onClick={() => { reset(); setRecovery(true); }}>{t("forgotPin")}</button>
         </>}
       </div>
