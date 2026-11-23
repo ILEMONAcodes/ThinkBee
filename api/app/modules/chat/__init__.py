@@ -14,7 +14,7 @@ from app.modules.chat.schemas import (
     ChatSpaceUpdate,
     MyMembershipResponse,
 )
-from app.modules.chat.service import ChatService, ensure_system_spaces
+from app.modules.chat.service import ChatService
 
 __all__ = [
     "ChatMessage",
@@ -32,5 +32,4 @@ __all__ = [
     "ChatSpaceUpdate",
     "MyMembershipResponse",
     "ChatService",
-    "ensure_system_spaces",
 ]

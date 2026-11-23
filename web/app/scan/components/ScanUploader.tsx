@@ -1,18 +1,20 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Camera, Image, Video, X, CaretDown, CaretUp } from "@phosphor-icons/react/dist/ssr";
-import { useRouter } from "next/navigation";
+import { Camera, UploadSimple, X } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
 
+import { useIdentity } from "@/components/auth/account-provider";
+import { apiRequest, type ApiSchema } from "@/lib/api/client";
+import { markPwaMeaningfulUse } from "@/lib/pwa/meaningful-use";
+import { uploadScanPhoto } from "@/lib/scans/upload";
+
 import { BrandLoader } from "@/components/ui/brand-loader";
-import { PhotoBackdrop } from "@/components/ui/photo-backdrop";
 
 interface MediaFile {
   id: string;
   file: File;
   preview: string;
-  type: "image" | "video";
 }
 
 const SUBJECT_TYPES = {
@@ -38,55 +40,43 @@ const SUBJECT_TYPES = {
 } as const;
 
 interface ScanUploaderProps {
+  subject: "hive" | "crop";
   onScanComplete: (scanId: string) => void;
 }
 
-export function ScanUploader({ onScanComplete }: ScanUploaderProps) {
+export function ScanUploader({ onScanComplete, subject }: ScanUploaderProps) {
   const t = useTranslations("Scan");
-  const router = useRouter();
-  const [subject, setSubject] = useState<"hive" | "crop">("crop");
+  const { owner } = useIdentity();
+  const uploads = useRef(new Map<string, string>());
+  const submission = useRef<{ fingerprint: string; id: string } | null>(null);
   const [subjectType, setSubjectType] = useState("");
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [note, setNote] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showTypeSelect, setShowTypeSelect] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const previews = useRef(new Set<string>());
 
   const handleFileSelect = useCallback((files: FileList) => {
     const validFiles: MediaFile[] = [];
-    for (const file of Array.from(files)) {
-      if (file.type.startsWith("image/")) {
-        if (file.size > 10 * 1024 * 1024) {
-          setError(t("fileTooLarge", { name: file.name }));
-          continue;
-        }
-        validFiles.push({
-          id: crypto.randomUUID(),
-          file,
-          preview: URL.createObjectURL(file),
-          type: "image",
-        });
-      } else if (file.type.startsWith("video/")) {
-        if (file.size > 50 * 1024 * 1024) {
-          setError(t("fileTooLarge", { name: file.name }));
-          continue;
-        }
-        validFiles.push({
-          id: crypto.randomUUID(),
-          file,
-          preview: URL.createObjectURL(file),
-          type: "video",
-        });
-      } else {
+    setError(null);
+    for (const file of Array.from(files).slice(0, 5 - mediaFiles.length)) {
+      if (!file.type.startsWith("image/")) {
         setError(t("invalidFileType", { name: file.name }));
+        continue;
       }
+      if (file.size > 10 * 1024 * 1024) {
+        setError(t("fileTooLarge", { name: file.name }));
+        continue;
+      }
+      validFiles.push({ id: crypto.randomUUID(), file, preview: URL.createObjectURL(file) });
     }
     if (validFiles.length > 0) {
-      setMediaFiles((prev) => [...prev, ...validFiles].slice(0, 5));
-      setError(null);
+      for (const { preview } of validFiles) previews.current.add(preview);
+      setMediaFiles((prev) => [...prev, ...validFiles]);
     }
-  }, [t]);
+  }, [mediaFiles.length, t]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -101,15 +91,15 @@ export function ScanUploader({ onScanComplete }: ScanUploaderProps) {
     }
   }, [handleFileSelect]);
 
-  const removeFile = useCallback((id: string) => {
-    setMediaFiles((prev) => {
-      const file = prev.find((f) => f.id === id);
-      if (file) URL.revokeObjectURL(file.preview);
-      return prev.filter((f) => f.id !== id);
-    });
-  }, []);
+  const removeFile = (media: MediaFile) => {
+    URL.revokeObjectURL(media.preview);
+    previews.current.delete(media.preview);
+    uploads.current.delete(media.id);
+    setMediaFiles((previous) => previous.filter(({ id }) => id !== media.id));
+  };
 
   const handleAnalyze = async () => {
+    if (!owner || isAnalyzing) return;
     if (mediaFiles.length === 0) {
       setError(t("noMediaError"));
       return;
@@ -123,191 +113,106 @@ export function ScanUploader({ onScanComplete }: ScanUploaderProps) {
     setError(null);
 
     try {
-      // Upload files to S3 via presigned URLs
-      const uploadPromises = mediaFiles.map(async (media) => {
-        const res = await fetch("/api/scan/upload-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contentType: media.file.type }),
-        });
-        const { uploadUrl, key } = await res.json();
-        await fetch(uploadUrl, { method: "PUT", body: media.file, headers: { "Content-Type": media.file.type } });
+      const imageKeys = await Promise.all(mediaFiles.map(async ({ id, file }) => {
+        const existing = uploads.current.get(id);
+        if (existing) return existing;
+        const key = await uploadScanPhoto(file, owner);
+        uploads.current.set(id, key);
         return key;
-      });
-      const imageKeys = await Promise.all(uploadPromises);
+      }));
 
-      // Create scan
-      const res = await fetch("/api/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject,
-          subject_type: subjectType,
-          image_keys: imageKeys,
-          note: note || undefined,
-          client_id: crypto.randomUUID(),
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || t("analysisFailed"));
-
+      const fingerprint = JSON.stringify([subject, subjectType, imageKeys, note]);
+      if (submission.current?.fingerprint !== fingerprint) {
+        submission.current = { fingerprint, id: crypto.randomUUID() };
+      }
+      const data = await apiRequest<ApiSchema["ScanResponse"]>("/scans", owner, "POST", {
+        subject,
+        subject_type: subjectType,
+        image_keys: imageKeys,
+        note: note || undefined,
+        client_id: submission.current.id,
+      }, { timeoutMs: 60_000 });
+      if (data.status === "done") markPwaMeaningfulUse("saved_scan");
       onScanComplete(data.id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("analysisFailed"));
+    } catch {
+      setError(t("analysisFailed"));
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   useEffect(() => {
-    return () => {
-      mediaFiles.forEach((f) => URL.revokeObjectURL(f.preview));
-    };
-  }, [mediaFiles]);
+    const urls = previews.current;
+    return () => { for (const url of urls) URL.revokeObjectURL(url); };
+  }, []);
 
-  const currentTypes = SUBJECT_TYPES[subject];
+  const hive = subject === "hive";
+  const handlePicker = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) handleFileSelect(event.target.files);
+    event.target.value = "";
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Subject Selector */}
-      <div>
-        <label className="block text-sm font-medium mb-2">{t("whatToScan")}</label>
-        <div className="flex gap-3" role="radiogroup" aria-label={t("whatToScan")}>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={subject === "hive"}
-            onClick={() => { setSubject("hive"); setSubjectType(""); setShowTypeSelect(true); }}
-            className={`flex-1 flex items-center justify-center gap-2 min-h-14 rounded-xl border-2 transition-colors ${
-              subject === "hive"
-                ? "border-comb-400 bg-comb-50 dark:bg-comb-950 text-comb-700 dark:text-comb-300"
-                : "border-line text-subtle hover:border-link hover:text-text"
-            }`}
-          >
-            <Camera size={22} aria-hidden="true" />
-            <span>{t("hive")}</span>
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={subject === "crop"}
-            onClick={() => { setSubject("crop"); setSubjectType(""); setShowTypeSelect(true); }}
-            className={`flex-1 flex items-center justify-center gap-2 min-h-14 rounded-xl border-2 transition-colors ${
-              subject === "crop"
-                ? "border-forest-400 bg-forest-50 dark:bg-forest-950 text-forest-700 dark:text-forest-300"
-                : "border-line text-subtle hover:border-link hover:text-text"
-            }`}
-          >
-            <Image size={22} aria-hidden="true" />
-            <span>{t("crop")}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Subject Type Selector */}
-      {showTypeSelect && (
-        <div>
-          <label className="block text-sm font-medium mb-2">{t("whatKind")}</label>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowTypeSelect(!showTypeSelect)}
-              className="w-full min-h-12 px-4 py-3 rounded-xl border border-line bg-raised text-left text-text flex items-center justify-between hover:border-link transition-colors"
-            >
-              <span>{subjectType ? currentTypes.find((t) => t.value === subjectType)?.label || subjectType : t("selectType")}</span>
-              <span className="transition-transform" style={{ transform: showTypeSelect ? "rotate(180deg)" : "rotate(0deg)" }}>
-                <CaretDown size={20} aria-hidden="true" />
-              </span>
-            </button>
-            {showTypeSelect && (
-              <div className="absolute z-10 w-full mt-1 rounded-xl border border-line bg-raised shadow-card overflow-hidden max-h-60 overflow-y-auto">
-                {currentTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    type="button"
-                    onClick={() => { setSubjectType(type.value); setShowTypeSelect(false); }}
-                    className={`w-full px-4 py-3 text-left transition-colors ${
-                      subjectType === type.value
-                        ? "bg-accent text-on-accent"
-                        : "text-text hover:bg-sunken"
-                    }`}
-                  >
-                    {type.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
+    <div className="space-y-5">
+      <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handlePicker} hidden />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handlePicker} hidden />
       {/* Media Upload Zone */}
       <div
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-2xl p-6 transition-colors ${
-          mediaFiles.length > 0 ? "border-line" : "border-line hover:border-accent"
-        }`}
+        className={`rounded-xl border-2 border-dashed bg-raised p-5 sm:p-7 ${hive ? "border-comb-600 dark:border-comb-400" : "border-forest-500 dark:border-forest-300"}`}
       >
         {mediaFiles.length === 0 ? (
-          <div className="text-center space-y-4">
-            <div className="mx-auto size-16 rounded-full border border-line bg-sunken flex items-center justify-center">
-              <Camera size={32} className="text-subtle" aria-hidden="true" />
+          <div className="space-y-3 text-center">
+            <div className={`comb-cell mx-auto grid size-16 place-items-center text-forest-950 ${hive ? "bg-comb-400" : "bg-forest-300"}`}>
+              <Camera size={28} aria-hidden="true" />
             </div>
-            <p className="text-text">{t("dragDropOrClick")}</p>
+            <h2 className="font-display text-2xl sm:text-3xl">{t(hive ? "addHiveMedia" : "addCropMedia")}</h2>
             <p className="text-sm text-subtle">{t("mediaHint")}</p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              capture="environment"
-              onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
-              className="sr-only"
-              id="media-upload"
-            />
-            <label htmlFor="media-upload" className="inline-flex min-h-12 items-center gap-2 rounded-pill bg-accent px-5 py-2 text-sm font-semibold text-on-accent hover:bg-accent-press cursor-pointer">
-              <Camera size={18} aria-hidden="true" />
-              {t("chooseFiles")}
-            </label>
+            <div className="flex flex-wrap justify-center gap-2 pt-2">
+              <button type="button" onClick={() => cameraInputRef.current?.click()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-pill bg-accent px-4 font-semibold text-on-accent hover:bg-accent-press">
+                <Camera size={19} aria-hidden="true" />{t("takePhoto")}
+              </button>
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-pill border border-line px-4 font-semibold hover:bg-sunken">
+                <UploadSimple size={19} aria-hidden="true" />{t("uploadMedia")}
+              </button>
+            </div>
           </div>
         ) : (
           <>
             <div className="flex gap-3 overflow-x-auto pb-4">
               {mediaFiles.map((media) => (
                 <div key={media.id} className="relative flex-shrink-0 size-24 rounded-xl overflow-hidden border border-line">
-                  {media.type === "image" ? (
-                    <img src={media.preview} alt="" className="size-full object-cover" />
-                  ) : (
-                    <video src={media.preview} muted className="size-full object-cover" />
-                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- This preview uses a local blob URL. */}
+                  <img src={media.preview} alt="" className="size-full object-cover" />
                   <button
                     type="button"
-                    onClick={() => removeFile(media.id)}
-                    className="absolute top-1 right-1 size-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+                    onClick={() => removeFile(media)}
+                    className="absolute top-1 right-1 size-12 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
                     aria-label={t("remove")}
                   >
                     <X size={14} aria-hidden="true" />
                   </button>
-                  <span className="absolute bottom-1 left-1 px-1.5 py-0.5 text-xs rounded bg-black/60 text-white capitalize">
-                    {media.type}
-                  </span>
                 </div>
               ))}
               {mediaFiles.length < 5 && (
-                <label
-                  htmlFor="media-upload"
-                  className="flex-shrink-0 size-24 rounded-xl border-2 border-dashed border-line flex items-center justify-center hover:border-accent cursor-pointer transition-colors"
-                >
-                  <Camera size={28} className="text-subtle" aria-hidden="true" />
-                </label>
+                <button type="button" onClick={() => fileInputRef.current?.click()} aria-label={t("uploadMedia")} className="grid size-24 shrink-0 place-items-center rounded-xl border-2 border-dashed border-line hover:border-accent">
+                  <UploadSimple size={26} className="text-subtle" aria-hidden="true" />
+                </button>
               )}
             </div>
             <p className="text-sm text-subtle mt-2">{mediaFiles.length}/5 {t("filesSelected")}</p>
           </>
         )}
       </div>
+
+      <label className="block text-sm font-semibold">
+        {t(hive ? "hiveType" : "cropType")}
+        <select value={subjectType} onChange={(event) => setSubjectType(event.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border border-line bg-raised px-4 text-base font-normal">
+          <option value="">{t("selectType")}</option>
+          {SUBJECT_TYPES[subject].map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+        </select>
+      </label>
 
       {/* Note Input */}
       <div>
@@ -316,8 +221,9 @@ export function ScanUploader({ onScanComplete }: ScanUploaderProps) {
           id="note"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder={t("notePlaceholder")}
+          placeholder={t(hive ? "notePlaceholder" : "cropNotePlaceholder")}
           rows={3}
+          maxLength={4000}
           className="w-full min-h-[100px] px-4 py-3 rounded-xl border border-line bg-raised text-text placeholder:text-muted focus:border-link focus:outline-none resize-none"
         />
       </div>
@@ -329,25 +235,22 @@ export function ScanUploader({ onScanComplete }: ScanUploaderProps) {
         </div>
       )}
 
-      {/* Analyze Button */}
+      {/* Analysis action */}
       <button
         type="button"
         onClick={handleAnalyze}
         disabled={isAnalyzing || mediaFiles.length === 0 || !subjectType}
-        className="w-full min-h-14 rounded-xl bg-accent text-on-accent font-semibold text-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent-press"
+        className="w-full min-h-14 rounded-pill bg-accent text-on-accent font-semibold text-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent-press"
       >
         {isAnalyzing ? (
           <>
             <BrandLoader size={24} />
             <span>{t("analyzing")}</span>
           </>
-        ) : (
-          <>
-            <Camera size={22} aria-hidden="true" />
-            <span>{t("analyze")}</span>
-          </>
-        )}
+        ) : t("analyze")}
       </button>
+
+      {mediaFiles.length === 0 ? <p className="text-center text-sm text-subtle">{t("addPhotoToStart")}</p> : null}
 
       {/* Disclaimer */}
       <p className="text-xs text-muted text-center max-w-xl mx-auto">

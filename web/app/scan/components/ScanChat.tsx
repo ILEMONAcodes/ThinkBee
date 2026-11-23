@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { PaperPlane, ArrowLeft, Image as ImageIcon, Video as VideoIcon, X } from "@phosphor-icons/react/dist/ssr";
+import { PaperPlane, ArrowLeft, Image as ImageIcon, X } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+import { useIdentity } from "@/components/auth/account-provider";
+import { apiRequest, type ApiSchema } from "@/lib/api/client";
+import { uploadScanPhoto } from "@/lib/scans/upload";
+
 import { BrandLoader } from "@/components/ui/brand-loader";
-import { PhotoBackdrop } from "@/components/ui/photo-backdrop";
+import { BrandMark } from "@/components/ui/brand-mark";
 
 interface Message {
   id: string;
@@ -18,13 +22,13 @@ interface Message {
 
 interface ScanChatProps {
   scanId: string;
-  subject: "hive" | "crop";
-  subjectType: string | null;
 }
 
-export function ScanChat({ scanId, subject, subjectType }: ScanChatProps) {
+export function ScanChat({ scanId }: ScanChatProps) {
   const t = useTranslations("Scan");
   const router = useRouter();
+  const { owner } = useIdentity();
+  const [sendError, setSendError] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -43,66 +47,35 @@ export function ScanChat({ scanId, subject, subjectType }: ScanChatProps) {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!newMessage.trim() && attachedImages.length === 0) || isSending) return;
+    if (!owner || (!newMessage.trim() && attachedImages.length === 0) || isSending) return;
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
       body: newMessage.trim(),
       createdAt: new Date().toISOString(),
-      imageKeys: attachedImages.length > 0 ? attachedImages.map(() => "pending") : undefined,
+      imageKeys: attachedImages.length ? attachedImages.map(() => "pending") : undefined,
     };
-
-    setMessages((prev) => [...prev, userMessage]);
-    const messageText = newMessage.trim();
-    setNewMessage("");
-    const imagesToUpload = [...attachedImages];
-    setAttachedImages([]);
     setIsSending(true);
+    setSendError(false);
 
     try {
-      // Upload images if any
-      let imageKeys: string[] = [];
-      if (imagesToUpload.length > 0) {
-        const uploadPromises = imagesToUpload.map(async (file) => {
-          const res = await fetch("/api/scan/upload-url", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contentType: file.type }),
-          });
-          const { uploadUrl, key } = await res.json();
-          await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
-          return key;
-        });
-        imageKeys = await Promise.all(uploadPromises);
-      }
-
-      // Send to AI
-      const res = await fetch(`/api/scan/${scanId}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: messageText,
-          image_keys: imageKeys.length > 0 ? imageKeys : undefined,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Failed to get response");
-
-      setMessages((prev) => [...prev, {
+      const imageKeys = await Promise.all(attachedImages.map((file) => uploadScanPhoto(file, owner)));
+      const data = await apiRequest<ApiSchema["AnswerResult"]>(
+        `/scans/${encodeURIComponent(scanId)}/chat`, owner, "POST",
+        { text: userMessage.body, image_keys: imageKeys }, { timeoutMs: 60_000 },
+      );
+      if (data.status === "unavailable") throw new Error("Unavailable");
+      setMessages((prev) => [...prev, userMessage, {
         id: crypto.randomUUID(),
         role: "assistant",
-        body: data.answer,
+        body: [data.answer, ...data.next_steps, ...data.warnings].join("\n\n"),
         createdAt: new Date().toISOString(),
       }]);
-    } catch (err) {
-      setMessages((prev) => [...prev, {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        body: t("chatError"),
-        createdAt: new Date().toISOString(),
-      }]);
+      setNewMessage("");
+      setAttachedImages([]);
+    } catch {
+      setSendError(true);
     } finally {
       setIsSending(false);
     }
@@ -122,21 +95,20 @@ export function ScanChat({ scanId, subject, subjectType }: ScanChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-120px)] min-h-125">
+    <div className="flex min-h-96 flex-col h-[calc(100dvh-60px)]">
       {/* Header */}
       <header className="flex items-center gap-4 border-b border-line bg-raised/80 px-4 py-3 sticky top-0 z-10 backdrop-blur-sm">
         <button
-          onClick={() => router.push(`/scan/${scanId}`)}
-          className="flex size-12 shrink-0 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-sunken hover:text-app-text"
+          onClick={() => router.push(`/scan?scanId=${encodeURIComponent(scanId)}`)}
+          className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line text-subtle transition-colors hover:bg-sunken hover:text-app-text"
           aria-label={t("backToResult")}
         >
           <ArrowLeft size={24} />
         </button>
+        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-forest-700"><BrandMark kind="short" surface="dark" width={30} /></span>
         <div className="min-w-0 flex-1">
-          <h1 className="font-semibold truncate">
-            {subjectType ? t(subjectType) : t(subject)}
-          </h1>
-          <p className="text-xs text-muted">{t("chatWithAi")}</p>
+          <h1 className="font-semibold">{t("assistantName")}</h1>
+          <p className="text-sm text-subtle">{t("assistantSubtitle")}</p>
         </div>
       </header>
 
@@ -181,14 +153,14 @@ export function ScanChat({ scanId, subject, subjectType }: ScanChatProps) {
               >
                 {message.role !== "user" && (
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-bark-100 text-bark-900 dark:bg-bark-900 dark:text-bark-100">
-                    <ImageIcon size={18} aria-hidden="true" />
+                    <BrandMark kind="short" width={22} />
                   </div>
                 )}
                 <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2 ${
+                  className={`max-w-[85%] min-w-0 break-words rounded-2xl border border-line px-4 py-3 ${
                     message.role === "user"
-                      ? "bg-accent text-on-accent rounded-tr-sm"
-                      : "bg-raised text-text rounded-tl-sm"
+                      ? "bg-accent text-on-accent rounded-br-sm"
+                      : "bg-raised text-text rounded-bl-sm"
                   }`}
                 >
                   {message.imageKeys && message.imageKeys.length > 0 && (
@@ -222,6 +194,7 @@ export function ScanChat({ scanId, subject, subjectType }: ScanChatProps) {
       </div>
 
       {/* Message Input */}
+      {sendError ? <p role="alert" className="px-4 text-sm text-subtle">{t("chatError")}</p> : null}
       <form onSubmit={handleSend} className="border-t border-line bg-raised/80 p-4 backdrop-blur-sm">
         {/* Attached Images Preview */}
         {attachedImages.length > 0 && (
@@ -275,7 +248,7 @@ export function ScanChat({ scanId, subject, subjectType }: ScanChatProps) {
         {showAttachMenu && (
           <div className="mt-3 flex gap-2">
             <label className="inline-flex min-h-10 items-center gap-2 rounded-pill border border-line bg-raised px-3 py-1 text-sm text-text hover:bg-sunken cursor-pointer">
-              <ImageIcon size={18} aria-hidden="true" />
+              <BrandMark kind="short" width={22} />
               {t("attachPhoto")}
               <input
                 type="file"

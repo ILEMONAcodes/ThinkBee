@@ -16,6 +16,12 @@ arq==0.28.0
     # via thinkbee-api (pyproject.toml)
 asyncpg==0.32.0
     # via thinkbee-api (pyproject.toml)
+boto3==1.44.9
+    # via thinkbee-api (pyproject.toml)
+botocore==1.44.9
+    # via
+    #   boto3
+    #   s3transfer
 certifi==2026.10.23
     # via
     #   httpcore
@@ -52,6 +58,10 @@ idna==3.20
     #   httpx
 iniconfig==2.3.1
     # via pytest
+jmespath==1.1.0
+    # via
+    #   boto3
+    #   botocore
 librt==0.16.0 ; platform_python_implementation != 'PyPy'
     # via mypy
 mako==1.4.3
@@ -68,6 +78,8 @@ packaging==26.3
     # via pytest
 pathspec==1.1.1
     # via mypy
+pillow==12.3.0
+    # via thinkbee-api (pyproject.toml)
 pluggy==1.7.0
     # via pytest
 pycparser==3.12 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
@@ -93,6 +105,8 @@ pytest==9.2.0
     #   pytest-asyncio
 pytest-asyncio==1.4.1.post1
     # via thinkbee-api (pyproject.toml)
+python-dateutil==2.9.0.post0
+    # via botocore
 python-dotenv==1.2.4
     # via
     #   pydantic-settings
@@ -105,6 +119,10 @@ redis==5.3.1
     #   arq
 ruff==0.17.4
     # via thinkbee-api (pyproject.toml)
+s3transfer==0.19.3
+    # via boto3
+six==1.17.0
+    # via python-dateutil
 sqlalchemy==2.1.8
     # via
     #   thinkbee-api (pyproject.toml)
@@ -130,6 +148,8 @@ typing-inspection==0.4.5
     #   fastapi
     #   pydantic
     #   pydantic-settings
+urllib3==2.8.0
+    # via botocore
 uvicorn==0.54.0
     # via thinkbee-api (pyproject.toml)
 uvloop==0.23.0 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'

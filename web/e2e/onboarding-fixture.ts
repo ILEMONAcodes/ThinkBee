@@ -15,8 +15,12 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
   const jwt = `${Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")}.${Buffer.from(JSON.stringify({ sub: owner, role: "authenticated", exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.test-signature`;
   const session = { access_token: jwt, refresh_token: "fake-refresh-for-browser-tests", token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: fakeUser };
   const storageKey = `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`;
-  await page.addInitScript(({ storageKey, session, signedIn, welcomeSeen }) => {
+  // Use context.addInitScript to run BEFORE the head script executes during HTML parse.
+  // This ensures the app lock is cleared before the head script checks localStorage.
+  await page.context().addInitScript(({ storageKey, session, signedIn, welcomeSeen }) => {
     if (welcomeSeen) localStorage.setItem("thinkbee-welcome-seen", "1");
+    // Ensure app lock doesn't block (no lock set = no data-app-lock attribute)
+    localStorage.removeItem("thinkbee-app-lock");
     // Synthetic SDK-owned session fixture; production never copies auth tokens.
     if (signedIn && !sessionStorage.getItem("seeded")) {
       localStorage.setItem(storageKey, JSON.stringify(session));
@@ -63,6 +67,7 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
       if (state.bootstrapDelayMs) await new Promise((resolve) => setTimeout(resolve, state.bootstrapDelayMs));
       return route.fulfill({ status: state.bootstrapStatus, headers, json: state.bootstrapStatus === 200 ? { user, is_new: !state.profile } : { error: { code: state.bootstrapStatus === 403 ? "account_suspended" : "account_store_unavailable", message: "Internal details must not appear" } } });
     }
+    if (path === "/me") return route.fulfill({ headers, json: user });
     if (path === "/me/chat-profile") {
       if (request.method() === "PATCH") { state.profileWrites++; state.profile = { ...profile, ...request.postDataJSON() }; }
       return route.fulfill({ status: state.profile ? 200 : 404, headers, json: state.profile ?? { error: { code: "profile_not_found", message: "Add profile" } } });

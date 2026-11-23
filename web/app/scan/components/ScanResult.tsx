@@ -1,48 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { CaretDown, CaretUp, WarningCircle, CheckCircle, Warning, Shield, Users, BookOpen, ArrowSquareOut, WarningOctagon } from "@phosphor-icons/react/dist/ssr";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+import { useIdentity } from "@/components/auth/account-provider";
+import { apiRequest, type ApiSchema } from "@/lib/api/client";
+import { CaretDown, WarningCircle, CheckCircle, Warning, Shield, Users, BookOpen, ArrowSquareOut, WarningOctagon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { BrandLoader } from "@/components/ui/brand-loader";
-import { PhotoBackdrop } from "@/components/ui/photo-backdrop";
 
 interface ScanResultProps {
   scanId: string;
-}
-
-interface LikelyCause {
-  name: string;
-  confidence: "low" | "medium" | "high";
-  reasoning: string;
-}
-
-interface ScanData {
-  id: string;
-  status: "queued" | "analysing" | "done" | "failed";
-  subject: "hive" | "crop";
-  subject_type: string | null;
-  result?: {
-    task: string;
-    status: "completed" | "needs_clarification" | "refused" | "unavailable";
-    likely_causes: LikelyCause[];
-    overall_confidence: "low" | "medium" | "high";
-    observations: string[];
-    weather_relevance: string | null;
-    needs_better_photo: boolean;
-    better_photo_hint: string | null;
-    follow_up_questions: string[];
-    next_steps: string[];
-    protective_gear_warning: string | null;
-    pollinator_warning: string | null;
-    label_notice: string;
-    expert_referral: string | null;
-    suggested_record: { title: string; type: string } | null;
-    refusal: { reason: string; detail?: string } | null;
-    disclaimer_version: string;
-  } | null;
-  created_at: string;
 }
 
 const CONFIDENCE_COLORS = {
@@ -60,46 +30,31 @@ const CONFIDENCE_ICONS = {
 export function ScanResult({ scanId }: ScanResultProps) {
   const t = useTranslations("Scan");
   const router = useRouter();
-  const [scan, setScan] = useState<ScanData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { owner } = useIdentity();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    const fetchScan = async () => {
-      try {
-        const res = await fetch(`/api/scan/${scanId}`);
-        if (!res.ok) throw new Error("Failed to load scan");
-        const data = await res.json();
-        setScan(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load scan");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchScan();
-  }, [scanId]);
+  const query = useQuery({
+    queryKey: ["scan", owner, scanId],
+    enabled: !!owner,
+    queryFn: () => apiRequest<ApiSchema["ScanDetail"]>(`/scans/${encodeURIComponent(scanId)}`, owner!),
+    refetchInterval: ({ state: { data } }) =>
+      data?.status === "analysing" || data?.status === "queued" ? 2000 : false,
+  });
+  const { data: scan } = query;
 
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <BrandLoader size={48} />
-        <p className="text-subtle">{t("analyzing")}</p>
-      </div>
-    );
+  if (query.isPending) {
+    return <BrandLoader size={48} className="min-h-96" label={t("loading")} />;
   }
 
-  if (error) {
+  if (query.isError || scan?.status === "failed" || scan?.result?.status === "unavailable") {
     return (
       <div className="text-center space-y-4 p-6 rounded-2xl border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/30">
         <WarningCircle size={48} className="mx-auto text-red-500" aria-hidden="true" />
         <h3 className="font-display text-xl text-red-700 dark:text-red-300">{t("loadError")}</h3>
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-sm text-red-600 dark:text-red-400">{t("analysisFailed")}</p>
         <button
           onClick={() => router.push("/scan")}
           className="inline-flex min-h-12 items-center gap-2 rounded-pill bg-red-600 text-white px-5 font-semibold hover:bg-red-700"
@@ -117,12 +72,7 @@ export function ScanResult({ scanId }: ScanResultProps) {
   const result = scan.result;
 
   if (!result) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <BrandLoader size={48} />
-        <p className="text-subtle">{scan.status === "analysing" ? t("analyzing") : t("preparing")}</p>
-      </div>
-    );
+    return <BrandLoader size={48} className="min-h-96" label={t(scan.status === "analysing" ? "analyzing" : "preparing")} />;
   }
 
   if (result.status === "refused") {
@@ -349,7 +299,7 @@ export function ScanResult({ scanId }: ScanResultProps) {
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
         <button
-          onClick={() => router.push(`/scan/${scanId}/chat`)}
+          onClick={() => router.push(`/scan?scanId=${encodeURIComponent(scanId)}&chat=true`)}
           className="flex-1 min-h-12 rounded-xl bg-accent text-on-accent font-semibold hover:bg-accent-press"
         >
           {t("chatAboutThis")}

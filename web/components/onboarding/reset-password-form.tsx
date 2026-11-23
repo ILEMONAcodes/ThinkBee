@@ -10,6 +10,7 @@ import type { z } from "zod";
 import { useIdentity } from "@/components/auth/account-provider";
 import { AuthError } from "@/components/onboarding/auth-error";
 import { PasswordField } from "@/components/onboarding/password-field";
+import { BrandLoader } from "@/components/ui/brand-loader";
 import { updatePassword } from "@/lib/auth/actions";
 import { resetPasswordSchema } from "@/lib/auth/forms";
 import { useOnline } from "@/lib/hooks/use-online";
@@ -27,7 +28,7 @@ export function ResetPasswordForm() {
     try { await updatePassword(password); reset(); setSaved(true); }
     catch (failure) { setError(failure); }
   };
-  if (!identity.ready) return <p className="auth-form" role="status">{t("loading")}</p>;
+  if (!identity.ready) return <BrandLoader className="auth-form min-h-48" />;
   if (!identity.owner) return <section className="auth-form"><h1 className="auth-title">{t("resetTitle")}</h1><p className="setup-feedback" role="alert">{t("errors.expired")}</p><Link href="/forgot-password" className="setup-primary mt-6">{t("resetLinkAction")}</Link></section>;
   if (saved) return <section className="auth-form"><h1 className="auth-title">{t("resetSuccess")}</h1><p className="auth-description">{t("resetSuccessBody")}</p><Link href="/auth/callback" className="setup-primary mt-8">{t("home")}</Link></section>;
   return <section className="auth-form">

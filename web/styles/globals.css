@@ -95,4 +95,4 @@ select:focus-visible {
   animation: brand-spin 1s linear infinite;
 }
 @keyframes brand-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .brand-loader-spinner { animation: none; border-top-color: var(--line); } }
+@media (prefers-reduced-motion: reduce) { .brand-loader-spinner { animation: none; border-top-color: var(--accent); } }

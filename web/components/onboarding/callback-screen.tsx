@@ -13,14 +13,6 @@ import { useOnline } from "@/lib/hooks/use-online";
 import { loadAccount } from "@/lib/onboarding/account";
 import { BrandLoader } from "@/components/ui/brand-loader";
 
-function CallbackLoading({ message }: { message: string }) {
-  return (
-    <div className="text-center space-y-4" role="status" aria-label={message}>
-      <BrandLoader size={48} label={message} />
-    </div>
-  );
-}
-
 export function CallbackScreen() {
   const t = useTranslations("Setup");
   const router = useRouter();
@@ -53,8 +45,8 @@ export function CallbackScreen() {
     void finish().catch((failure: unknown) => { if (active) setError(failure); }).finally(() => clearTimeout(slowTimer));
     return () => { active = false; clearTimeout(slowTimer); unsubscribe(); };
   }, [attempt, queryClient, router]);
-  return <section className="setup-narrow"><h1 className="setup-title">{t("returning")}</h1>
+  return <section className="setup-narrow"><h1 className="sr-only">{t("signIn")}</h1>
     {!online ? <p className="mt-5" role="status">{t("connectionRequired")}</p> : null}
-    {error ? <SetupError error={error} retry={() => { setError(undefined); setTakingLonger(false); setAttempt((value) => value + 1); }} /> : <CallbackLoading message={t(takingLonger ? "accountConnecting" : "loading")} />}
+    {error ? <SetupError error={error} retry={() => { setError(undefined); setTakingLonger(false); setAttempt((value) => value + 1); }} /> : <BrandLoader className="min-h-[50dvh]" label={takingLonger ? t("accountConnecting") : undefined} />}
   </section>;
 }

@@ -10,8 +10,11 @@ Python 3.12 is required. Copy `../env/api.env.example` to `.env`, then install t
 python3.12 -m venv .venv
 . .venv/bin/activate
 pip install -c requirements.lock -e '.[dev]'
+alembic upgrade head
 uvicorn app.main:app --reload
 ```
+
+Apply migrations to the target database before starting a new release. The migration for official chat communities provisions Beekeepers and General Farmers, including their cover images.
 
 Quality checks: `ruff check .`, `mypy app tests`, and `pytest`.
 
@@ -58,3 +61,5 @@ arq app.worker.WorkerSettings
 The worker needs the same database settings as the API, Redis, and the backend-only Supabase service-role key. It checks pending jobs each minute and retries failures with bounded backoff. Jobs survive Redis/worker restarts; no browser session is required. Tests mock the Supabase Admin endpoint and never delete a live account. Do not start the worker against a live environment merely to run tests.
 
 An already-deleted Supabase user completes the job; arbitrary provider errors remain pending. Monitor overdue rows in `account_deletions` and fix configuration/provider issues if requests remain pending. Log only status/error codes, never profile data, keys or provider response bodies. The frontend must clear local data and its Supabase session after deletion is accepted. As later features add private data, extend `users/deletion_service.py` and its tests before enabling them.
+
+For photo checks, configure the API's private S3 bucket and credentials using `env/api.env.example`. Configure `GEMINI_API_KEY` and an available `GEMINI_MODEL` for analysis. The browser uploads to the API with its Supabase bearer session. The API re-encodes each photo before storage and keeps the scan record even if analysis is unavailable. The account deletion worker needs list and delete permission for scan photos.

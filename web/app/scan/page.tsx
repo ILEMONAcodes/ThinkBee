@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense } from "react";
 import { ArrowLeft, Hexagon, Leaf } from "@phosphor-icons/react/dist/ssr";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -9,9 +10,11 @@ import { useTranslations } from "next-intl";
 import { RequireAccount } from "@/components/auth/require-account";
 import { PhotoBackdrop } from "@/components/ui/photo-backdrop";
 import { BrandLoader } from "@/components/ui/brand-loader";
+import { getPlaceholder } from "@/lib/images/placeholders";
 import { ScanUploader } from "./components/ScanUploader";
 import { ScanResult } from "./components/ScanResult";
 import { ScanChat } from "./components/ScanChat";
+import "./scan-upload.css";
 
 const topics = [
   {
@@ -38,69 +41,23 @@ function ScanPageContent() {
   const t = useTranslations("Scan");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [view, setView] = useState<"topics" | "upload" | "result" | "chat">("topics");
-  const [scanId, setScanId] = useState<string | null>(null);
-  const [subject, setSubject] = useState<"hive" | "crop" | null>(null);
-  const [subjectType, setSubjectType] = useState<string | null>(null);
-
-  // Handle URL params on mount
-  useEffect(() => {
-    const subjectParam = searchParams.get("subject");
-    const scanIdParam = searchParams.get("scanId");
-    const chatParam = searchParams.get("chat");
-
-    if (scanIdParam) {
-      setScanId(scanIdParam);
-      if (chatParam === "true") {
-        setView("chat");
-      } else {
-        setView("result");
-      }
-    } else if (subjectParam && (subjectParam === "hive" || subjectParam === "crop")) {
-      setSubject(subjectParam);
-      setView("upload");
-    }
-  }, [searchParams]);
+  const scanId = searchParams.get("scanId");
+  const selectedTopic = topics.find(({ key }) => key === searchParams.get("subject"));
+  const view = scanId ? (searchParams.get("chat") === "true" ? "chat" : "result") : selectedTopic ? "upload" : "topics";
 
   const handleScanComplete = (newScanId: string) => {
-    setScanId(newScanId);
-    setView("result");
-    router.push(`/scan?scanId=${newScanId}`);
+    router.push(`/scan?scanId=${encodeURIComponent(newScanId)}`);
   };
 
-  const handleBackToTopics = () => {
-    setView("topics");
-    setScanId(null);
-    setSubject(null);
-    setSubjectType(null);
-    router.push("/scan");
-  };
-
-  const handleNewScan = () => {
-    setView("topics");
-    setScanId(null);
-    setSubject(null);
-    setSubjectType(null);
-    router.push("/scan");
-  };
-
-  const handleChat = (type: "hive" | "crop", typeValue: string | null) => {
-    setSubject(type);
-    setSubjectType(typeValue);
-    setView("chat");
-    if (scanId) {
-      router.push(`/scan?scanId=${scanId}&chat=true`);
-    }
-  };
+  const handleBackToTopics = () => router.push("/scan");
 
   // Topics view
   if (view === "topics") {
     const q = searchParams.get("q")?.trim().slice(0, 80) || "";
-    const selected = topics.find(({ key }) => key === subject);
     const matches = topics.filter(({ terms }) => terms.test(q));
     const visibleTopics = q
       ? matches.length === 0 && generalTopics.test(q) ? topics : matches
-      : selected ? [selected] : topics;
+      : topics;
 
     return (
       <RequireAccount>
@@ -130,7 +87,7 @@ function ScanPageContent() {
                 </Link>
               ))}
             </div>
-            {q || selected ? (
+            {q ? (
               <div className="mt-4">
                 <Link href="/scan" className="inline-flex min-h-12 items-center rounded-pill border border-line px-5 font-semibold text-link hover:bg-sunken">
                   {t("showAll")}
@@ -146,26 +103,44 @@ function ScanPageContent() {
     );
   }
 
-  // Upload view
-  if (view === "upload") {
+  if (view === "upload" && selectedTopic) {
+    const { Icon, key: subject, hint, photo } = selectedTopic;
+    const cover = subject === "hive" ? "/photos/brood-comb.webp" : photo;
     return (
       <RequireAccount>
-        <main className="min-h-dvh bg-app px-5 pb-10 pt-[max(20px,env(safe-area-inset-top))] text-app-text md:px-10">
-          <div className="mx-auto max-w-3xl">
-            <button
-              onClick={handleBackToTopics}
-              className="inline-flex min-h-12 items-center gap-2 rounded-pill pr-4 font-semibold text-link hover:underline"
-            >
-              <ArrowLeft aria-hidden size={20} />
-              {t("back")}
-            </button>
-            <header className="mt-4 max-w-2xl">
-              <h1 className="font-display text-4xl leading-tight text-balance md:text-5xl">
-                {subject ? t(subject) : t("title")}
-              </h1>
-              <p className="mt-3 text-base text-subtle sm:text-lg">{subject ? t(`${subject}Hint`) : t("body")}</p>
+        <main className="min-h-dvh bg-app pb-10 text-app-text">
+          <div className="mx-auto max-w-6xl lg:grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)] lg:items-start lg:gap-10 lg:px-10 lg:pt-[max(32px,env(safe-area-inset-top))]">
+            <header className="scan-upload-hero text-forest-50" data-subject={subject}>
+              <div className="scan-upload-art" aria-hidden="true">
+                <Image
+                  src={cover}
+                  alt=""
+                  fill
+                  preload
+                  sizes="(min-width: 1152px) 500px, (min-width: 1024px) 45vw, 100vw"
+                  placeholder="blur"
+                  blurDataURL={getPlaceholder(cover)}
+                />
+              </div>
+              <button type="button" onClick={handleBackToTopics} aria-label={t("back")} className="grid size-12 place-items-center rounded-full border border-white/30 bg-forest-950/55 hover:bg-forest-950/80">
+                <ArrowLeft aria-hidden size={22} />
+              </button>
+              <div className="max-w-md">
+                <span className={`comb-cell grid size-12 place-items-center text-forest-950 ${subject === "hive" ? "bg-comb-400" : "bg-forest-300"}`}>
+                  <Icon aria-hidden size={24} />
+                </span>
+                <h1 className="mt-3 font-display text-4xl leading-tight sm:text-5xl">{t(subject)}</h1>
+                <p className="mt-2 text-base leading-relaxed text-forest-100 sm:text-lg">{t(hint)}</p>
+              </div>
             </header>
-            <ScanUploader onScanComplete={handleScanComplete} />
+            <div className="mx-auto w-full max-w-3xl px-6 pt-4 sm:px-10 lg:px-0 lg:pt-0">
+              <ul className="mb-5 flex flex-wrap gap-2">
+                {(["first", "second", "third"] as const).map((tip) => (
+                  <li key={tip} className="rounded-pill border border-line bg-raised px-3 py-2 text-sm text-subtle">{t(`photoTips.${subject}.${tip}`)}</li>
+                ))}
+              </ul>
+              <ScanUploader key={subject} subject={subject} onScanComplete={handleScanComplete} />
+            </div>
           </div>
         </main>
       </RequireAccount>
@@ -193,12 +168,12 @@ function ScanPageContent() {
   }
 
   // Chat view
-  if (view === "chat" && scanId && subject) {
+  if (view === "chat" && scanId) {
     return (
       <RequireAccount>
         <main className="min-h-dvh bg-app px-5 pb-10 pt-[max(20px,env(safe-area-inset-top))] text-app-text md:px-10">
           <div className="mx-auto max-w-3xl">
-            <ScanChat scanId={scanId} subject={subject} subjectType={subjectType} />
+            <ScanChat scanId={scanId} />
           </div>
         </main>
       </RequireAccount>
@@ -210,8 +185,7 @@ function ScanPageContent() {
     <RequireAccount>
       <main className="min-h-dvh bg-app px-5 pb-10 pt-[max(20px,env(safe-area-inset-top))] text-app-text md:px-10">
         <div className="mx-auto max-w-5xl text-center py-20">
-          <BrandLoader size={48} />
-          <p className="mt-4 text-subtle">{t("loading")}</p>
+          <BrandLoader size={48} label={t("loading")} />
         </div>
       </main>
     </RequireAccount>
@@ -225,8 +199,7 @@ export default function ScanPage() {
       <RequireAccount>
         <main className="min-h-dvh bg-app px-5 pb-10 pt-[max(20px,env(safe-area-inset-top))] text-app-text md:px-10">
           <div className="mx-auto max-w-5xl text-center py-20">
-            <BrandLoader size={48} />
-            <p className="mt-4 text-subtle">{t("loading")}</p>
+            <BrandLoader size={48} label={t("loading")} />
           </div>
         </main>
       </RequireAccount>

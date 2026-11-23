@@ -6,6 +6,7 @@ import { useEffect } from "react";
 
 import { LockSettingsContent } from "@/components/app-lock/lock-settings-content";
 import { useIdentity } from "@/components/auth/account-provider";
+import { BrandLoader } from "@/components/ui/brand-loader";
 import { appLockConfig } from "@/lib/app-lock/policy";
 import { initializeAppLock, useAppLock } from "@/lib/app-lock/state";
 import { supportsAppLock } from "@/lib/app-lock/storage";
@@ -24,7 +25,7 @@ export function AppLockSettings() {
       <h2 id="lock-settings-title" className="font-display text-3xl">{t("title")}</h2>
     </div>
     <p className="mt-3 text-subtle">{t("description", { minutes: appLockConfig.idleMs / 60_000 })}</p>
-    {!identity.ready || status === "checking" ? <p className="lock-notice" role="status">{t("loading")}</p>
+    {!identity.ready || status === "checking" ? <BrandLoader size={36} label={t("loading")} className="mt-4" />
       : !supportsAppLock() ? <p className="lock-notice" role="status">{t("unsupported")}</p>
       : identity.owner ? <LockSettingsContent key={`${identity.owner}:${epoch}`} owner={identity.owner} record={record} /> : null}
     <p className="lock-footnote">{t("deviceOnly")}</p>

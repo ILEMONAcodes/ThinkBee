@@ -9,6 +9,7 @@ import { useState } from "react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { SetupError } from "@/components/onboarding/feedback";
 import { SetupProgress } from "@/components/onboarding/setup-progress";
+import { BrandLoader } from "@/components/ui/brand-loader";
 import { PhotoBackdrop } from "@/components/ui/photo-backdrop";
 import { accountApi } from "@/lib/api/client";
 import { useAccount } from "@/lib/hooks/use-account";
@@ -25,7 +26,7 @@ export function AccountDetails() {
     enabled: !!owner && !!account.data?.user && !draft?.farmJob,
   });
 
-  if (!ready) return <p className={profileCard} role="status">{t("loading")}</p>;
+  if (!ready) return <BrandLoader size={40} className={profileCard} />;
 
   if (!owner) {
     return (
@@ -46,7 +47,7 @@ export function AccountDetails() {
   return (
     <>
       <section className={profileCard}>
-        {account.isPending ? <p role="status">{t("loading")}</p> : null}
+        {account.isPending ? <BrandLoader size={36} /> : null}
         {account.error || error ? <SetupError error={account.error || error} retry={() => { void account.refetch(); }} /> : null}
         {farmer ? (
           <>
@@ -75,7 +76,7 @@ export function AccountDetails() {
             <h2 id="my-farms-title" className="font-display text-2xl sm:text-3xl">{t("yourFarms")}</h2>
           </header>
           <div className="p-5 sm:p-7">
-            {farms.isLoading ? <p role="status">{t("loading")}</p> : null}
+            {farms.isLoading ? <BrandLoader size={36} /> : null}
             {farms.error ? <SetupError error={farms.error} retry={() => { void farms.refetch(); }} /> : null}
             {farms.data?.items.length === 0 ? <p className="text-subtle">{t("noFarms")}</p> : null}
             {farms.data?.items.length ? (
