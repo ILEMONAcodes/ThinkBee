@@ -15,14 +15,62 @@ concurrency:
 jobs:
   web:
     name: web
-    # Keep the runner on a release supported by the pinned Playwright version.
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: thinkbee_test
+          POSTGRES_USER: thinkbee
+          POSTGRES_PASSWORD: thinkbee
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U thinkbee -d thinkbee_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      minio:
+        image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+        command: server /data --console-address ":9001"
+        env:
+          MINIO_ROOT_USER: thinkbee
+          MINIO_ROOT_PASSWORD: thinkbee-local-only
+        ports:
+          - 9000:9000
+          - 9001:9001
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
       NEXT_PUBLIC_SUPABASE_URL: https://thinkbee-test.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_browser_test_only
       NEXT_PUBLIC_AUTH_REQUIRE_EMAIL_CONFIRMATION: "false"
+      DATABASE_URL: postgresql+asyncpg://thinkbee:thinkbee@localhost:5432/thinkbee_test
+      REDIS_URL: redis://localhost:6379/0
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: thinkbee
+      S3_ACCESS_KEY: thinkbee
+      S3_SECRET_KEY: thinkbee-local-only
+      S3_REGION: auto
+      GEMINI_API_KEY: ""
+      SUPABASE_JWT_ISSUER: https://thinkbee-test.supabase.co/auth/v1
+      SUPABASE_JWT_AUDIENCE: authenticated
+      SUPABASE_JWT_ALGORITHMS: ES256,RS256,EdDSA
+      SUPABASE_REQUIRED_ROLE: authenticated
     defaults:
       run:
         working-directory: web
@@ -77,11 +125,40 @@ jobs:
       - name: Check Home JavaScript budget
         run: npm run check:bundle
 
+      - name: Set up Python for API server
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: api/requirements.lock
+
+      - name: Install API dependencies
+        working-directory: api
+        run: pip install -c requirements.lock -e '.[dev]'
+
+      - name: Run database migrations
+        working-directory: api
+        run: alembic upgrade head
+
+      - name: Start API server
+        working-directory: api
+        run: |
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > api.log 2>&1 &
+          echo $! > api.pid
+          sleep 5
+          curl -f http://localhost:8000/health/live
+
       - name: Install browser
         run: npx playwright install --with-deps chromium
 
       - name: Browser tests
         run: npm run test:e2e
+
+      - name: Stop API server
+        if: always()
+        working-directory: api
+        run: |
+          if [ -f api.pid ]; then kill $(cat api.pid); fi
 
       - name: Upload browser screenshots and failure traces
         if: always()
