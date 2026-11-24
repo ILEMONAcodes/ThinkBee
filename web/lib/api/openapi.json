@@ -290,6 +290,18 @@
             "minLength": 1,
             "title": "Body",
             "type": "string"
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
           }
         },
         "required": [
@@ -610,9 +622,16 @@
             "type": "string"
           },
           "creator_id": {
-            "format": "uuid",
-            "title": "Creator Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creator Id"
           },
           "description": {
             "default": "",
@@ -1577,6 +1596,70 @@
         "title": "ProfileResponse",
         "type": "object"
       },
+      "QuestionRequest": {
+        "description": "Request to answer a farming or beekeeping question.",
+        "properties": {
+          "farm_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Farm Id"
+          },
+          "image_keys": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Keys"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "thread_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thread Id"
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "QuestionRequest",
+        "type": "object"
+      },
       "ScanDetail": {
         "description": "Full scan detail including result when done.",
         "properties": {
@@ -1638,6 +1721,17 @@
             "title": "Subject",
             "type": "string"
           },
+          "subject_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Type"
+          },
           "unit_id": {
             "anyOf": [
               {
@@ -1671,8 +1765,21 @@
         "title": "ScanDetail",
         "type": "object"
       },
+      "ScanPhotoResponse": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "title": "ScanPhotoResponse",
+        "type": "object"
+      },
       "ScanRequest": {
-        "description": "Request to analyze a crop or hive photo.",
+        "description": "Request to analyze a crop or hive photo/video.",
         "properties": {
           "client_id": {
             "format": "uuid",
@@ -1695,12 +1802,15 @@
             "items": {
               "type": "string"
             },
+            "maxItems": 5,
+            "minItems": 1,
             "title": "Image Keys",
             "type": "array"
           },
           "note": {
             "anyOf": [
               {
+                "maxLength": 4000,
                 "type": "string"
               },
               {
@@ -1716,6 +1826,18 @@
             ],
             "title": "Subject",
             "type": "string"
+          },
+          "subject_type": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Type"
           },
           "unit_id": {
             "anyOf": [
@@ -4877,6 +4999,8 @@
             "required": false,
             "schema": {
               "default": 50,
+              "maximum": 100,
+              "minimum": 1,
               "title": "Limit",
               "type": "integer"
             }
@@ -4964,6 +5088,43 @@
         ]
       }
     },
+    "/api/v1/scans/photos": {
+      "post": {
+        "operationId": "upload_scan_photo_api_v1_scans_photos_post",
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanPhotoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "Upload Scan Photo",
+        "tags": [
+          "scans"
+        ]
+      }
+    },
     "/api/v1/scans/{scan_id}": {
       "get": {
         "description": "Get a scan by ID.",
@@ -5008,6 +5169,65 @@
           }
         ],
         "summary": "Get Scan",
+        "tags": [
+          "scans"
+        ]
+      }
+    },
+    "/api/v1/scans/{scan_id}/chat": {
+      "post": {
+        "description": "Chat with AI about a specific scan result.",
+        "operationId": "chat_about_scan_api_v1_scans__scan_id__chat_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SupabaseJWT": []
+          }
+        ],
+        "summary": "Chat About Scan",
         "tags": [
           "scans"
         ]

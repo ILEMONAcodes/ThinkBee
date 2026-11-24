@@ -25,7 +25,8 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 
 ## Phase 2: AI core
 - [ ] BE: `AIProvider` interface and Gemini implementation, structured scan output, prompt versioning
-- [ ] BE: scan endpoint with image handling (EXIF strip, resize), assistant thread endpoint with streaming
+- [x] BE: authenticated photo uploads, server-side EXIF stripping and resize, saved scan results and scan follow-ups
+- [ ] BE: assistant thread endpoint with streaming
 - [ ] BE: safety post-checks (required warning fields, confidence present)
 - [ ] BE: WeatherProvider interface, OpenMeteo implementation, Redis geohash caching
 - [ ] BE: Location-aware context builder for Gemini prompts (GPS + Farm location + Weather)
@@ -42,6 +43,7 @@ Tick tasks as they are finished. One task at a time. Frontend (FE) and backend (
 - [ ] FE: reminders list, swipe actions, create sheet, local notifications and push
 
 ## Phase 4: Community chat
+- [x] Save and reload membership and text-message history for both official communities, with queued sends and retry deduplication
 - [ ] BE: chat profiles, blocks, direct chats
 - [ ] BE: spaces (groups, communities, topic rooms), roles, permissions module, system messages
 - [ ] BE: messages, receipts, WebSocket gateway, Redis fan-out, presence and typing

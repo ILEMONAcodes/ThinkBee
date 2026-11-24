@@ -1,6 +1,8 @@
+"use client";
+
 import { Users, PlusCircle } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { ChatSpaceCard } from "@/components/chat/chat-space-card";
 
 interface ChatSpace {
@@ -10,7 +12,10 @@ interface ChatSpace {
   kind: "community" | "group";
   visibility: "public" | "private";
   memberCount?: number;
-  cover?: string;
+  cover?: string | null;
+  is_system?: boolean;
+  member_count?: number;
+  avatar_key?: string | null;
 }
 
 interface ChatsListProps {
@@ -19,8 +24,8 @@ interface ChatsListProps {
   isLoading?: boolean;
 }
 
-export async function ChatsList({ spaces, mySpaceIds, isLoading = false }: ChatsListProps) {
-  const t = await getTranslations("Chat");
+export function ChatsList({ spaces, mySpaceIds, isLoading = false }: ChatsListProps) {
+  const t = useTranslations("Chat");
   const mySpaces = spaces.filter((s) => mySpaceIds.includes(s.id));
   const otherSpaces = spaces.filter((s) => !mySpaceIds.includes(s.id));
 
@@ -53,7 +58,7 @@ export async function ChatsList({ spaces, mySpaceIds, isLoading = false }: Chats
           </div>
           <div className="mt-4 grid max-w-5xl gap-4 sm:grid-cols-2">
             {mySpaces.map((space) => (
-              <ChatSpaceCard key={space.id} {...space} />
+              <ChatSpaceCard key={space.id} {...space} memberCount={space.member_count ?? space.memberCount} cover={space.cover ?? space.avatar_key} />
             ))}
           </div>
         </div>
@@ -73,7 +78,12 @@ export async function ChatsList({ spaces, mySpaceIds, isLoading = false }: Chats
         <div className="mt-4 grid max-w-5xl gap-4 sm:grid-cols-2 sm:gap-5">
           {otherSpaces.length > 0 ? (
             otherSpaces.map((space) => (
-              <ChatSpaceCard key={space.id} {...space} memberCount={undefined} />
+              <ChatSpaceCard
+                key={space.id}
+                {...space}
+                memberCount={space.member_count ?? space.memberCount}
+                cover={space.cover ?? space.avatar_key}
+              />
             ))
           ) : (
             <div className="col-span-full rounded-lg bg-raised p-8 text-center shadow-card">

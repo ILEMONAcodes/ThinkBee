@@ -35,11 +35,12 @@ class Settings(BaseSettings):
     deletion_max_retry_seconds: int = Field(default=3600, ge=1, le=86400)
     deletion_job_timeout_seconds: int = Field(default=3600, ge=60, le=86400)
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-1.5-flash"
+    gemini_model: str = "gemini-3.6-flash"
     s3_endpoint: str = "http://localhost:9000"
     s3_bucket: str = "thinkbee"
     s3_access_key: str = ""
     s3_secret_key: str = ""
+    scan_photo_limit_bytes: int = Field(default=4_000_000, ge=1, le=10_000_000)
     s3_region: str = "auto"
 
     @property

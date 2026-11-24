@@ -81,3 +81,18 @@ select:focus-visible {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Brand Loader - small short mark with circular loading ring */
+.brand-loader { display: flex; align-items: center; justify-content: center; }
+.brand-loader-ring { position: relative; display: flex; align-items: center; justify-content: center; }
+.brand-loader-ring .brand-mark { z-index: 1; }
+.brand-loader-spinner {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  border-top-color: var(--accent);
+  animation: brand-spin 1s linear infinite;
+}
+@keyframes brand-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .brand-loader-spinner { animation: none; border-top-color: var(--accent); } }

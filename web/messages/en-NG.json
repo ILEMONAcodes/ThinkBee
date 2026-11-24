@@ -152,16 +152,96 @@
     "step": "Step 1 of 4",
     "title": "Scan for Early Signs",
     "body": "Use AI photo guidance to spot possible problems with your bees and crops.",
+    "loading": "Loading scan…",
     "hive": "Inspect a Hive",
     "hiveHint": "Look for signs of disease or stress in frames, brood, and comb.",
     "crop": "Check a Crop",
     "cropHint": "Look for signs of pests, nutrient problems, or disease on leaves, stems, and fruit.",
     "notice": "A scan gives likely causes, not a confirmed diagnosis.",
-    "availableLater": "Photo checks are coming soon.",
     "searchTitle": "Photo-check topics",
     "searchMatches": "Browse photo-check topics for “{query}”.",
     "searchEmpty": "No photo-check topic matched “{query}”. Try hive, crop, or pests.",
-    "showAll": "See all photo checks"
+    "showAll": "See all photo checks",
+    "hiveType": "Hive type",
+    "cropType": "Crop type",
+    "uploadFailed": "Photo upload failed. Try again.",
+    "selectType": "Select a type…",
+    "photoTips": {
+      "hive": { "first": "One frame at a time", "second": "Use good daylight", "third": "Get close to the comb" },
+      "crop": { "first": "Show the damage", "second": "Include the whole plant", "third": "Use good daylight" }
+    },
+    "addHiveMedia": "Add hive photos",
+    "addCropMedia": "Add crop photos",
+    "takePhoto": "Take photo",
+    "uploadMedia": "Upload",
+    "addPhotoToStart": "Add a photo to get started.",
+    "cropNotePlaceholder": "e.g. Yellow spots appeared on the lower leaves after rain…",
+    "assistantName": "Think Bee AI",
+    "assistantSubtitle": "Ask about your hive or crop",
+    "mediaHint": "Up to 5 photos · 10 MB each",
+    "filesSelected": "files selected",
+    "addNote": "Add a note (optional)",
+    "notePlaceholder": "e.g., noticed this yesterday after rain, bees seem agitated…",
+    "noMediaError": "Please add at least one photo.",
+    "selectTypeError": "Please select what kind of crop or hive.",
+    "analyze": "Analyse",
+    "analyzing": "Analysing…",
+    "disclaimer": "AI analysis provides guidance, not a diagnosis. Always verify with local experts.",
+    "completedAt": "Completed {date}",
+    "confidence": { "high": "High", "medium": "Medium", "low": "Low" },
+    "likelyCauses": "Likely Causes",
+    "observations": "What I See",
+    "weatherRelevance": "Weather Context",
+    "nextSteps": "What to Do Next",
+    "warnings": "Important Warnings",
+    "followUpQuestions": "Questions to Narrow It Down",
+    "expertReferral": "When to Call an Expert",
+    "findExpert": "Find an extension agent",
+    "disclaimerFull": "This analysis is AI-generated guidance for educational purposes. It is not a professional diagnosis. Always follow product labels and consult local agricultural extension services or veterinarians for confirmed treatment.",
+    "chatWithAi": "Chat with AI about this scan",
+    "chatWelcomeTitle": "Ask a follow-up",
+    "chatWelcomeBody": "Ask about the scan findings or what to check next.",
+    "chatSuggestion1": "What treatment do you recommend?",
+    "chatSuggestion2": "When should I act?",
+    "chatSuggestion3": "How can I prevent this?",
+    "messagePlaceholder": "Ask a follow-up…",
+    "messages": "Assistant conversation",
+    "send": "Send",
+    "cancel": "Cancel",
+    "aiThinking": "Preparing a response…",
+    "chatError": "We couldn’t get a response. Please try again.",
+    "attachImage": "Attach photo",
+    "attachPhoto": "Photo",
+    "remove": "Remove",
+    "backToResult": "Back to result",
+    "backToScan": "Back to scan",
+    "preparing": "Preparing your scan…",
+    "tryAnotherScan": "Try another scan",
+    "newScan": "New Scan",
+    "chatAboutThis": "Chat About This",
+    "scanRefused": "Scan Not Analyzed",
+    "unknownRefusal": "The AI couldn't analyze this image.",
+    "needsClarificationTitle": "Need a Bit More Info",
+    "needsClarificationBody": "The photo doesn't show enough detail for a confident analysis.",
+    "questionsForYou": "Quick questions to help me:",
+    "loadError": "Couldn't load scan",
+    "analysisFailed": "Analysis failed. Please try again.",
+    "fileTooLarge": "“{name}” is too large. Use a photo up to 10 MB.",
+    "invalidFileType": "“{name}” isn’t a supported image format.",
+    "langstroth": "Langstroth",
+    "top-bar": "Top-bar / Kenyan",
+    "warre": "Warré",
+    "flow": "Flow Hive",
+    "cassava": "Cassava",
+    "maize": "Maize / Corn",
+    "rice": "Rice",
+    "cocoa": "Cocoa",
+    "tomato": "Tomato",
+    "pepper": "Pepper",
+    "yam": "Yam",
+    "plantain": "Plantain / Banana",
+    "vegetables": "Leafy Vegetables",
+    "other": "Other"
   },
   "Onboarding": {
     "title": "Clear guidance for farms and hives",
@@ -229,7 +309,7 @@
     "brand": "Think Bee",
     "retry": "Try again",
     "signIn": "Sign in",
-    "loading": "Getting your account ready…",
+    "loading": "Loading",
     "accountConnecting": "Still connecting to your account. This can take a little longer the first time. Please keep this page open.",
     "sessionTitle": "Sign in to continue",
     "back": "Back",
@@ -252,7 +332,6 @@
     "resend": "Send another verification link",
     "differentEmail": "Change my details",
     "spamHint": "Check your spam folder, too. If you already have an account, sign in with your password.",
-    "returning": "Finishing your sign-in",
     "profileStep": "Step 1 of 2 · Your profile",
     "profileTitle": "What should we call you?",
     "profileBody": "Choose the name and short introduction other farmers will see.",
@@ -406,17 +485,68 @@
     }
   },
   "Chat": {
+    "communityMember": "Community member",
+    "communityLoadError": "This community could not load. Check your connection and try again.",
+    "communityNotFound": "This community does not exist.",
+    "communityActionError": "Your membership could not be updated. Try again.",
+    "messageQueued": "Queued",
+    "messageQueueError": "Your message could not be saved on this device. Try again.",
+    "messageSyncError": "Message saved on this device. We’ll retry sending it shortly.",
+    "olderMessages": "Load earlier messages",
+    "retry": "Try again",
     "title": "Chats",
     "yourSpaces": "Your spaces",
     "discoverSpaces": "Explore spaces",
     "communities": {
       "beekeepers": {
         "name": "Beekeepers",
-        "description": "Hives and honey"
+        "description": "Hives and honey",
+        "intro": "Swap hive tips, share what you’re seeing and learn from other beekeepers.",
+        "benefits": {
+          "questions": {
+            "title": "Ask hive questions",
+            "body": "Talk through what you’re seeing in your hives."
+          },
+          "photos": {
+            "title": "Share photos",
+            "body": "Show your frames, hives and honey harvest."
+          },
+          "learning": {
+            "title": "Learn together",
+            "body": "Trade lessons from each beekeeping season."
+          }
+        },
+        "starters": {
+          "hello": "I’m new here. Hello, everyone!",
+          "tip": "Here’s a hive tip that helped me: ",
+          "question": "I have a question about my hive: ",
+          "update": "Here’s how my honey harvest went: "
+        }
       },
       "farmers": {
         "name": "General Farmers",
-        "description": "Crops and fieldwork"
+        "description": "Crops and fieldwork",
+        "intro": "Swap crop advice and share what’s happening in your fields.",
+        "benefits": {
+          "questions": {
+            "title": "Ask crop questions",
+            "body": "Talk with growers about planting and crop care."
+          },
+          "photos": {
+            "title": "Share photos",
+            "body": "Show your crops, field progress and harvest."
+          },
+          "learning": {
+            "title": "Trade practical tips",
+            "body": "Compare what worked this growing season."
+          }
+        },
+        "starters": {
+          "hello": "I’m new here. What are you growing this season?",
+          "tip": "Here’s a growing tip that helped me: ",
+          "question": "I have a question about my crop: ",
+          "update": "Here’s what I harvested this week: "
+        }
       }
     },
     "createSpace": "Create space",
@@ -429,6 +559,15 @@
     "back": "Back",
     "join": "Join",
     "leave": "Leave",
+    "joinSpace": "Join this space",
+    "communityGuideline": "Be kind and keep it helpful.",
+    "starters": {
+      "hello": "Say hello",
+      "hiveTip": "Share a hive tip",
+      "growingTip": "Share a growing tip",
+      "question": "Ask a question",
+      "update": "Share a harvest update"
+    },
     "confirmLeave": "Leave this space? You can rejoin later if it's public.",
     "loadingMessages": "Loading messages…",
     "noMessagesTitle": "No messages yet",

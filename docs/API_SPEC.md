@@ -69,9 +69,10 @@ Implemented farm operations are owner-only, including for admins. Missing and ot
 
 ## Scans and assistant
 - `POST /uploads/presign` {purpose: scan|chat_image|chat_audio|avatar, content_type, bytes} -> {upload_url, key}
-- `POST /scans` {subject, farm_id?, unit_id?, image_keys[], note?, client_id} -> 202 {id, status}
+- `POST /scans/photos` accepts one authenticated binary photo and returns a private, owner-scoped key. The API validates and normalizes the photo before storage.
+- `POST /scans` {subject, subject_type?, farm_id?, unit_id?, image_keys[], note?, client_id} -> 202 {id, status}. Retry using the same client ID.
 - `GET /scans/{id}` -> result when done. `GET /scans` paginated.
-- `POST /scans/{id}/followup` {answers or extra_image_keys}
+- `POST /scans/{id}/chat` {text, image_keys?} asks a follow-up about the signed-in owner’s scan.
 - `POST /assistant/threads`, `GET /assistant/threads`
 - `POST /assistant/threads/{id}/messages` {text, image_keys?} -> SSE stream
 - `POST /assistant/messages/{id}/feedback` {value: up|down}

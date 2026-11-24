@@ -1,23 +1,24 @@
 import { AppError } from "@/lib/api/errors";
 import { accountTimeoutMs, requestTimeoutMs } from "@/lib/api/config";
-import type { components } from "@/lib/api/schema";
 import { getSupabase } from "@/lib/auth/client";
+import type { Components } from "./schema";
 
-export type ApiSchema = components["schemas"];
+export type ApiSchema = Components["schemas"];
 
-export async function apiRequest<T>(path: string, ownerId: string, method = "GET", body?: unknown, options: { accountStartup?: boolean } = {}): Promise<T> {
+export async function apiRequest<T>(path: string, ownerId: string, method = "GET", body?: unknown, options: { accountStartup?: boolean; timeoutMs?: number } = {}): Promise<T> {
   const { data, error } = await getSupabase().auth.getSession();
   if (error || !data.session) throw new AppError("auth_required", 401);
   if (data.session.user.id !== ownerId) throw new AppError("account_changed", 401);
   const base = process.env.NEXT_PUBLIC_API_URL;
   if (!base) throw new AppError("auth_configuration");
   let response: Response;
-  const deadline = AbortSignal.timeout(options.accountStartup ? accountTimeoutMs : requestTimeoutMs);
+  const deadline = AbortSignal.timeout(options.timeoutMs ?? (options.accountStartup ? accountTimeoutMs : requestTimeoutMs));
+  const binary = body instanceof Blob;
   try {
     response = await fetch(`${base.replace(/\/$/, "")}${path}`, {
       method, cache: "no-store", signal: deadline,
-      headers: { Authorization: `Bearer ${data.session.access_token}`, ...(body ? { "Content-Type": "application/json" } : {}) },
-      body: body ? JSON.stringify(body) : undefined,
+      headers: { Authorization: `Bearer ${data.session.access_token}`, ...(body ? { "Content-Type": binary ? "application/octet-stream" : "application/json" } : {}) },
+      body: binary ? body : body ? JSON.stringify(body) : undefined,
     });
   } catch {
     if (deadline.aborted && options.accountStartup) throw new AppError("account_startup_timeout");
@@ -32,6 +33,7 @@ export async function apiRequest<T>(path: string, ownerId: string, method = "GET
   }
   const current = await getSupabase().auth.getSession();
   if (current.data.session?.user.id !== ownerId) throw new AppError("account_changed", 401);
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 

@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from asyncpg import InvalidPasswordError
+from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
@@ -84,13 +85,14 @@ async def test_readiness_deadline_bounds_a_stalled_query(monkeypatch: pytest.Mon
     assert response.json()["error"]["code"] == "account_store_unavailable"
 
 
-async def test_liveness_does_not_require_the_database(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_liveness_does_not_require_the_database(monkeypatch: pytest.MonkeyPatch) -> None:
     engine = MagicMock()
     engine.connect.return_value.__aenter__ = AsyncMock(side_effect=OSError("unavailable"))
     monkeypatch.setattr(database, "engine", engine)
-    async with AsyncClient(
-        transport=ASGITransport(app=create_app()), base_url="http://test"
-    ) as client:
-        response = await client.get("/health/live")
+    session_factory = MagicMock(side_effect=OSError("unavailable"))
+    monkeypatch.setattr(database, "async_session_factory", session_factory)
+    with TestClient(create_app()) as client:
+        response = client.get("/health/live")
     assert response.status_code == 200
     engine.connect.assert_not_called()
+    session_factory.assert_not_called()

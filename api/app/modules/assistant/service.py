@@ -79,20 +79,31 @@ class AssistantService:
     async def send_message(
         self,
         db: AsyncSession,
-        thread_id: UUID,
+        thread_id: UUID | None,
         user_id: UUID,
         req: QuestionRequest,
     ) -> AnswerResult:
         """Send a message and get an answer."""
-        # Verify thread ownership
-        thread = await self.get_thread(db, thread_id, user_id)
-        if not thread:
-            raise ValueError("Thread not found")
+        # If thread_id provided, verify ownership
+        if thread_id is not None:
+            thread = await self.get_thread(db, thread_id, user_id)
+            if not thread:
+                raise ValueError("Thread not found")
+        else:
+            # Create a temporary thread for this conversation
+            thread = AssistantThread(
+                id=uuid4(),
+                user_id=user_id,
+                farm_id=req.farm_id,
+                unit_id=req.unit_id,
+            )
+            db.add(thread)
+            await db.flush()
 
         # Save user message
         user_msg = AssistantMessage(
             id=uuid4(),
-            thread_id=thread_id,
+            thread_id=thread.id,
             role="user",
             body=req.text,
             attachments=req.image_keys,
@@ -105,7 +116,7 @@ class AssistantService:
         # Save assistant message
         asst_msg = AssistantMessage(
             id=uuid4(),
-            thread_id=thread_id,
+            thread_id=thread.id,
             role="assistant",
             body=result.answer,
             attachments=req.image_keys,
@@ -123,20 +134,31 @@ class AssistantService:
     async def stream_message(
         self,
         db: AsyncSession,
-        thread_id: UUID,
+        thread_id: UUID | None,
         user_id: UUID,
         req: QuestionRequest,
     ) -> AsyncIterator[str]:
         """Stream an answer for a message."""
-        # Verify thread ownership
-        thread = await self.get_thread(db, thread_id, user_id)
-        if not thread:
-            raise ValueError("Thread not found")
+        # If thread_id provided, verify ownership
+        if thread_id is not None:
+            thread = await self.get_thread(db, thread_id, user_id)
+            if not thread:
+                raise ValueError("Thread not found")
+        else:
+            # Create a temporary thread for this conversation
+            thread = AssistantThread(
+                id=uuid4(),
+                user_id=user_id,
+                farm_id=req.farm_id,
+                unit_id=req.unit_id,
+            )
+            db.add(thread)
+            await db.flush()
 
         # Save user message
         user_msg = AssistantMessage(
             id=uuid4(),
-            thread_id=thread_id,
+            thread_id=thread.id,
             role="user",
             body=req.text,
             attachments=req.image_keys,

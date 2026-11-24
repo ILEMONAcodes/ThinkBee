@@ -1,7 +1,9 @@
 .app-shell { min-height: 100dvh; background: var(--bg); color: var(--text); }
 /* Contain horizontal screen entrances without changing vertical scrolling. */
 .shell-main { min-width: 0; min-height: 100dvh; overflow-x: clip; padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+.app-shell[data-immersive="true"] .shell-main { padding-bottom: 0; }
 .shell-content { max-width: 1200px; margin-inline: auto; padding: max(24px, env(safe-area-inset-top)) 20px 40px; }
+.app-shell[data-immersive="true"] .shell-content:has(> .community-screen) { max-width: none; padding: 0; }
 .skip-link { position: fixed; top: 12px; left: 12px; z-index: 100; padding: 12px 20px; border-radius: var(--radius-pill); background: var(--accent); color: var(--text-on-honey); transform: translateY(-200%); }
 .skip-link:focus { transform: translateY(0); }
 .connection-band { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: var(--bg-brand-2); color: var(--text-on-brand); font-size: 14px; }

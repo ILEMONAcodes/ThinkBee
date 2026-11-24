@@ -17,11 +17,21 @@ export type SetupDraft = {
   completed?: boolean;
   syncError?: ReturnType<typeof errorKey>;
 };
+type QueuedChatMessage = {
+  id: string;
+  owner: string;
+  spaceId: string;
+  body: string;
+  createdAt: string;
+};
+
 export class SetupDatabase extends Dexie {
   setup!: EntityTable<SetupDraft, "ownerId">;
+  chatOutbox!: EntityTable<QueuedChatMessage, "id">;
   constructor() {
     super("thinkbee-onboarding");
     this.version(1).stores({ setup: "ownerId" });
+    this.version(2).stores({ chatOutbox: "id, [owner+spaceId]" });
   }
 }
 export const setupDb = new SetupDatabase();
@@ -42,7 +52,10 @@ export async function changeDraft(ownerId: string, update: (draft: SetupDraft) =
 
 export async function clearSetup(): Promise<void> {
   generation++;
-  await setupDb.setup.clear();
+  await setupDb.transaction("rw", setupDb.setup, setupDb.chatOutbox, async () => {
+    await setupDb.setup.clear();
+    await setupDb.chatOutbox.clear();
+  });
   try { localStorage.removeItem("thinkbee-setup-pending"); } catch { /* Storage can be blocked. */ }
 }
 

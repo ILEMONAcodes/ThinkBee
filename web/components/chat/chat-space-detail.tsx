@@ -1,71 +1,98 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { PaperPlane, ArrowLeft, Hash } from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
+import { ChatCircle, PaperPlane } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { CommunityBackLink, CommunityPreview } from "@/components/chat/community-preview";
 import { ChatSpaceAvatar } from "@/components/chat/chat-space-avatar";
 import { PhotoBackdrop } from "@/components/ui/photo-backdrop";
+import { BrandLoader } from "@/components/ui/brand-loader";
+
+const starters = ["hello", "tip", "question", "update"] as const;
 
 export interface Message {
   id: string;
   userName: string;
-  userAvatar?: string;
   body: string;
   createdAt: string;
   isCurrentUser: boolean;
+  pending?: boolean;
+}
+
+interface CommunityData {
+  id: string;
+  copy: string;
+  kind: "community" | "group";
+  visibility: "public" | "private";
+  cover: string;
+}
+
+interface SpaceData {
+  id: string;
+  name: string;
+  description: string;
+  kind: "community" | "group";
+  memberCount?: number;
+  isMember: boolean;
+  myRole?: "owner" | "admin" | "moderator" | "member";
 }
 
 interface ChatSpaceDetailProps {
-  space: {
-    id: string;
-    name: string;
-    description: string;
-    kind: "community" | "group";
-    visibility: "public" | "private";
-    memberCount?: number;
-    cover?: string;
-    isMember: boolean;
-    myRole?: "owner" | "admin" | "moderator" | "member";
-  };
+  community: CommunityData;
+  space: SpaceData;
   messages: Message[];
   onSendMessage: (body: string) => Promise<void>;
-  onJoin: () => Promise<void>;
-  onLeave: () => Promise<void>;
+  onJoin: () => void;
+  onLeave: () => void;
+  updating?: boolean;
+  historyError?: string;
+  actionError?: string;
+  loadMore?: () => void;
   isLoading?: boolean;
 }
 
 export function ChatSpaceDetail({
+  community,
   space,
   messages,
   onSendMessage,
   onJoin,
   onLeave,
   isLoading = false,
+  updating = false,
+  historyError,
+  actionError,
+  loadMore,
 }: ChatSpaceDetailProps) {
   const t = useTranslations("Chat");
-  const router = useRouter();
+  // Use the community copy for translation namespace, fallback to generic
+  const copyNamespace = community.copy === "beekeepers" ? "beekeepers" : community.copy === "general-farmers" ? "farmers" : "beekeepers";
+  const copy = useTranslations(`Chat.communities.${copyNamespace}`);
   const [newMessage, setNewMessage] = useState("");
+  const [sendError, setSendError] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const composer = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   }, []);
 
+  const latestMessageId = messages.at(-1)?.id;
   useEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom]);
+  }, [latestMessageId, scrollToBottom]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || isSending) return;
     setIsSending(true);
+    setSendError(false);
     try {
       await onSendMessage(newMessage.trim());
       setNewMessage("");
+    } catch {
+      setSendError(true);
     } finally {
       setIsSending(false);
     }
@@ -73,77 +100,62 @@ export function ChatSpaceDetail({
 
   const handleLeave = async () => {
     if (confirm(t("confirmLeave"))) {
-      await onLeave();
-      router.push("/chats");
+      onLeave();
     }
   };
 
-  return (
-    <div className="flex flex-col h-[calc(100dvh-120px)] min-h-125">
-      {/* Space Header */}
-      <header className="flex items-center gap-4 border-b border-line bg-raised/80 px-4 py-3 sticky top-0 z-10 backdrop-blur-sm">
-        <Link
-          href="/chats"
-          className="flex size-12 shrink-0 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-sunken hover:text-app-text"
-          aria-label={t("back")}
-        >
-          <ArrowLeft size={24} />
-        </Link>
-        <ChatSpaceAvatar id={space.id} kind={space.kind} />
-        <div className="min-w-0 flex-1">
-          <h1 className="font-semibold truncate">{space.name}</h1>
-          {space.isMember && space.memberCount !== undefined && (
-            <p className="text-xs text-muted">{t("memberCount", { count: space.memberCount })}</p>
-          )}
-        </div>
-        {!space.isMember && space.visibility === "public" && (
-          <button
-            onClick={onJoin}
-            className="min-h-12 shrink-0 rounded-pill bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:bg-accent-press"
-          >
-            {t("join")}
-          </button>
-        )}
-        {space.isMember && space.myRole !== "owner" && (
-          <button
-            onClick={handleLeave}
-            className="min-h-12 shrink-0 rounded-pill border border-line px-4 py-2 text-sm font-medium text-text hover:bg-sunken"
-          >
-            {t("leave")}
-          </button>
-        )}
-      </header>
+  if (!space.isMember) return <CommunityPreview community={community} onJoin={onJoin} updating={updating} error={actionError} />;
 
-      {!space.isMember ? (
-        <section className={space.cover ? "relative isolate mt-4 flex min-h-56 items-end overflow-hidden rounded-xl bg-brand p-5 text-on-brand sm:min-h-70 sm:p-7" : "p-4"}>
-          {space.cover ? <PhotoBackdrop src={space.cover} sizes="(min-width: 1280px) 1120px, calc(100vw - 40px)" /> : null}
-          <p className={space.cover ? "font-display text-2xl sm:text-3xl" : "text-subtle"}>{space.description}</p>
-        </section>
-      ) : (
-        <div
-          ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto p-4 space-y-4"
-          role="log"
-          aria-live="polite"
-          aria-label={t("messages")}
-        >
+  return (
+    <div className="community-screen bg-app">
+      <div className="mx-auto flex h-dvh min-h-96 max-w-6xl flex-col">
+        <header className="relative isolate flex shrink-0 flex-wrap items-center gap-3 bg-forest-900 px-4 pt-[max(20px,env(safe-area-inset-top))] pb-8 text-forest-50 sm:px-8">
+          <PhotoBackdrop src={community.cover} sizes="(min-width: 1152px) 1152px, 100vw" fadeTo="forest" />
+          <CommunityBackLink />
+          <ChatSpaceAvatar id={space.id} kind={space.kind} prominent />
+          <div className="min-w-0 flex-1">
+            <h1 className="break-words font-semibold sm:text-xl">{space.name}</h1>
+            <p className="text-sm text-forest-100">{space.description}</p>
+            {space.memberCount !== undefined ? <p className="text-xs text-forest-100">{t("memberCount", { count: space.memberCount })}</p> : null}
+          </div>
+          {space.myRole !== "owner" ? (
+            <button type="button" onClick={handleLeave} disabled={updating} className="min-h-12 shrink-0 rounded-pill border border-white/30 bg-forest-950/55 px-4 text-sm font-semibold hover:bg-forest-950/80">
+              {t("leave")}
+            </button>
+          ) : null}
+        </header>
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-8" role="log" aria-live="polite" aria-label={t("messages")}>
+          {historyError ? <p role="alert">{historyError}</p> : null}
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="mx-auto size-8 rounded-full border-3 border-accent border-t-transparent animate-spin" />
-                <p className="mt-4 text-subtle">{t("loadingMessages")}</p>
-              </div>
+            <div className="flex flex-col items-center justify-center h-full">
+              <BrandLoader size={40} label={t("loadingMessages")} />
             </div>
-          ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-accent text-on-accent">
-                <Hash size={32} />
+          ) : messages.length === 0 && !historyError ? (
+            <div className="flex min-h-full flex-col items-center justify-center py-6 text-center">
+              <div className="grid size-20 place-items-center rounded-full border-8 border-forest-900/20 bg-accent text-on-accent">
+                <ChatCircle size={29} aria-hidden="true" />
               </div>
-              <h2 className="mt-4 font-display text-xl">{t("noMessagesTitle")}</h2>
-              <p className="mt-2 max-w-xs text-subtle">{t("noMessagesBody")}</p>
+              <h2 className="mt-4 font-display text-3xl">{t("noMessagesTitle")}</h2>
+              <p className="mt-2 text-subtle">{t("noMessagesBody")}</p>
+              <div className="mt-5 flex max-w-sm flex-wrap justify-center gap-2">
+                {starters.map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      setNewMessage(copy(`starters.${key}`));
+                      composer.current?.focus();
+                    }}
+                    className="min-h-12 rounded-pill border border-line bg-raised px-4 text-sm font-medium hover:bg-sunken"
+                  >
+                    {t(`starters.${key === "tip" ? copyNamespace === "beekeepers" ? "hiveTip" : "growingTip" : key}`)}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <>
+              {loadMore ? <button type="button" className="min-h-12 text-link" onClick={loadMore}>{t("olderMessages")}</button> : null}
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -151,17 +163,11 @@ export function ChatSpaceDetail({
                 >
                   {!message.isCurrentUser && (
                     <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-bark-100 text-bark-900 dark:bg-bark-900 dark:text-bark-100">
-                      {message.userAvatar ? (
-                        <img src={message.userAvatar} alt="" className="size-full rounded-full" />
-                      ) : (
-                        <span className="text-sm font-medium">
-                          {message.userName.charAt(0).toUpperCase()}
-                        </span>
-                      )}
+                      <span className="text-sm font-medium">{message.userName.charAt(0).toUpperCase()}</span>
                     </div>
                   )}
                   <div
-                    className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                    className={`max-w-[78%] min-w-0 break-words rounded-2xl px-4 py-2 ${
                       message.isCurrentUser
                         ? "bg-accent text-on-accent rounded-tr-sm"
                         : "bg-raised text-text rounded-tl-sm"
@@ -177,6 +183,7 @@ export function ChatSpaceDetail({
                         minute: "2-digit",
                       })}
                     </time>
+                    {message.pending ? <p className="text-xs">{t("messageQueued")}</p> : null}
                   </div>
                   {message.isCurrentUser && (
                     <div className="shrink-0 size-8 rounded-full bg-accent flex items-center justify-center text-on-accent">
@@ -191,20 +198,20 @@ export function ChatSpaceDetail({
             </>
           )}
         </div>
-      )}
-
-      {/* Message Input */}
-      {space.isMember && (
-        <form onSubmit={handleSend} className="border-t border-line bg-raised/80 p-4 backdrop-blur-sm">
+        <form onSubmit={handleSend} className="shrink-0 border-t border-line bg-raised px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] sm:px-8">
+          {actionError || sendError ? <p role="alert" className="mb-2 text-sm">{sendError ? t("messageQueueError") : actionError}</p> : null}
           <div className="flex gap-2">
             <input
+              ref={composer}
               type="text"
+              aria-label={t("messagePlaceholder")}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder={t("messagePlaceholder")}
-              className="flex-1 min-h-12 rounded-pill border border-line bg-sunken px-4 py-2 text-text placeholder:text-muted focus:border-link focus:outline-none"
+              className="min-w-0 flex-1 min-h-12 rounded-pill border border-line bg-sunken px-4 py-2 text-text placeholder:text-muted focus:border-link focus:outline-none"
               disabled={isSending}
               autoComplete="off"
+              maxLength={4000}
             />
             <button
               type="submit"
@@ -216,7 +223,7 @@ export function ChatSpaceDetail({
             </button>
           </div>
         </form>
-      )}
+      </div>
     </div>
   );
 }

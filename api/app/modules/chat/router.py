@@ -19,19 +19,10 @@ from app.modules.chat.schemas import (
     ChatSpaceUpdate,
     MyMembershipResponse,
 )
-from app.modules.chat.service import ChatService, ensure_system_spaces
+from app.modules.chat.service import ChatService, MessageIdConflict
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 service = ChatService()
-
-
-@router.on_event("startup")
-async def startup() -> None:
-    """Ensure system spaces exist on startup."""
-    from app.db.session import async_session_factory
-
-    async with async_session_factory() as db:
-        await ensure_system_spaces(db)
 
 
 @router.post("/spaces", response_model=ChatSpaceResponse, status_code=status.HTTP_201_CREATED)
@@ -54,7 +45,9 @@ async def list_spaces(
     user_id: UUID = Depends(get_current_user_id),
 ) -> ChatSpaceListResponse:
     """List chat spaces with optional filters."""
-    spaces, next_cursor = await service.list_spaces(db, cursor, limit, kind, visibility)
+    spaces, next_cursor = await service.list_spaces(
+        db, cursor, limit, kind, visibility, user_id=user_id
+    )
     return ChatSpaceListResponse(spaces=spaces, next_cursor=next_cursor)
 
 
@@ -77,7 +70,7 @@ async def get_space(
     user_id: UUID = Depends(get_current_user_id),
 ) -> ChatSpaceResponse:
     """Get a chat space by ID."""
-    space = await service.get_space(db, space_id)
+    space = await service.get_space(db, space_id, user_id)
     if not space:
         raise HTTPException(status_code=404, detail="Space not found")
     return space
@@ -117,6 +110,7 @@ async def join_space(
     membership = await service.join_space(db, space_id, user_id)
     if not membership:
         raise HTTPException(status_code=404, detail="Space not found or not public")
+    await db.commit()
     return membership
 
 
@@ -130,6 +124,7 @@ async def leave_space(
     success = await service.leave_space(db, space_id, user_id)
     if not success:
         raise HTTPException(status_code=400, detail="Cannot leave (not a member or owner)")
+    await db.commit()
 
 
 @router.post("/spaces/{space_id}/members", response_model=ChatSpaceMemberResponse)
@@ -188,9 +183,13 @@ async def send_message(
     user_id: UUID = Depends(get_current_user_id),
 ) -> ChatMessageResponse:
     """Send a message to a space."""
-    message = await service.send_message(db, space_id, user_id, data)
+    try:
+        message = await service.send_message(db, space_id, user_id, data)
+    except MessageIdConflict as exc:
+        raise HTTPException(status_code=409, detail="Message ID already used") from exc
     if not message:
         raise HTTPException(status_code=403, detail="Not a member of this space")
+    await db.commit()
     return message
 
 

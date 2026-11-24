@@ -45,6 +45,18 @@ test("navigation, target sizes and empty Home", async ({ page }, info) => {
   await crops.click();
   await expect(page.getByRole("heading", { name: "Check a Crop" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Inspect a Hive" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Add crop photos" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Crop type" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Analyse", exact: true })).toBeDisabled();
+  await page.screenshot({ path: info.outputPath("scan-crop-upload.png"), fullPage: true, animations: "disabled" });
+  const [picker] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    page.getByRole("button", { name: "Upload", exact: true }).click(),
+  ]);
+  await picker.setFiles("public/photos/glossy-leaves.webp");
+  await page.getByRole("combobox", { name: "Crop type" }).selectOption("cassava");
+  await expect(page.getByRole("button", { name: "Analyse", exact: true })).toBeEnabled();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
   await page.getByRole("link", { name: "Back", exact: true }).click();
   const search = main.getByRole("searchbox", { name: "Search photo-check topics" });
   await search.fill("brood");
@@ -67,7 +79,7 @@ test("navigation, target sizes and empty Home", async ({ page }, info) => {
   await expect(page.getByRole("heading", { level: 1, name: "Scan for Early Signs" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Inspect a Hive" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Check a Crop" })).toBeVisible();
-  await expect(page.getByText("Photo checks are coming soon.")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Inspect a Hive/ })).toHaveAttribute("href", "/scan?subject=hive");
   await page.screenshot({ path: info.outputPath("scan.png"), fullPage: true, animations: "disabled" });
   await page.getByRole("link", { name: "Back", exact: true }).click();
   await expect(nav.getByRole("link", { name: "Home", exact: true })).toHaveAttribute("aria-current", "page");
@@ -177,4 +189,39 @@ test("shell stays usable on a slow connection", async ({ page, context }) => {
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.addStyleTag({ content: "html { font-size: 200%; }" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("scan follow-ups open the branded assistant and return to the result", async ({ page }, info) => {
+  await mockOnboarding(page, true, true);
+  await page.goto("/scan?scanId=example&chat=true");
+  await expect(page.getByRole("heading", { name: "Think Bee AI" })).toBeVisible();
+  await expect(page.getByRole("log", { name: "Assistant conversation" })).toBeVisible();
+  await expect(page.getByPlaceholder("Ask a follow-up…")).toBeVisible();
+  await page.screenshot({ path: info.outputPath("scan-assistant.png"), animations: "disabled" });
+  await page.getByRole("button", { name: "Back to result" }).click();
+  await expect(page).toHaveURL(/\/scan\?scanId=example$/);
+});
+
+test("hive and crop upload covers use a soft crop and fit the viewport", async ({ page }, info) => {
+  await mockOnboarding(page, true, true);
+  for (const subject of ["hive", "crop"] as const) {
+    await page.goto(`/scan?subject=${subject}`);
+    const hero = page.locator(".scan-upload-hero");
+    const photo = hero.locator("img");
+    const picker = page.getByRole("heading", { name: `Add ${subject} photos` });
+    await expect(photo).toHaveCSS("filter", "blur(2.5px)");
+    await photo.evaluate((element: HTMLImageElement) => element.decode());
+    const heroBox = await hero.boundingBox();
+    const pickerBox = await picker.boundingBox();
+    expect(heroBox).not.toBeNull();
+    expect(pickerBox).not.toBeNull();
+    if (info.project.name.startsWith("desktop")) {
+      expect(pickerBox!.x).toBeGreaterThan(heroBox!.x + heroBox!.width);
+    } else {
+      expect(pickerBox!.y).toBeGreaterThan(heroBox!.y + heroBox!.height);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(await page.evaluate(() => innerWidth));
+    await expect(page.getByRole("button", { name: "Analyse", exact: true })).toBeDisabled();
+    await page.screenshot({ path: info.outputPath(`scan-${subject}.png`), fullPage: true, animations: "disabled" });
+  }
 });

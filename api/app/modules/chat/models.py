@@ -22,17 +22,14 @@ class ChatSpace(TimestampMixin, Base):
     __tablename__ = "chat_spaces"
     __table_args__ = (
         CheckConstraint("kind IN ('community', 'group')", name="ck_chat_spaces_kind"),
-        CheckConstraint(
-            "visibility IN ('public', 'private')", name="ck_chat_spaces_visibility"
-        ),
+        CheckConstraint("visibility IN ('public', 'private')", name="ck_chat_spaces_visibility"),
         Index("ix_chat_spaces_kind_visibility", "kind", "visibility"),
     )
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid7)
-    creator_id: Mapped[UUID] = mapped_column(
+    creator_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=False,
     )
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     description: Mapped[str] = mapped_column(String(500), server_default="", nullable=False)
@@ -43,7 +40,7 @@ class ChatSpace(TimestampMixin, Base):
     is_system: Mapped[bool] = mapped_column(server_default="false", nullable=False)
 
     # Relationships
-    creator: Mapped[User] = relationship(
+    creator: Mapped[User | None] = relationship(
         foreign_keys=[creator_id], back_populates="created_chat_spaces"
     )
     memberships: Mapped[list[ChatSpaceMember]] = relationship(

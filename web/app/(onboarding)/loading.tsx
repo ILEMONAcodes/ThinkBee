@@ -1,6 +1,5 @@
-import { getTranslations } from "next-intl/server";
+import { BrandLoader } from "@/components/ui/brand-loader";
 
-export default async function Loading() {
-  const t = await getTranslations("Setup");
-  return <main className="setup-page grid place-items-center"><p role="status">{t("loading")}</p></main>;
+export default function Loading() {
+  return <BrandLoader className="min-h-dvh" />;
 }

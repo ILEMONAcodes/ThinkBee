@@ -3,16 +3,22 @@ import { Hash, Hexagon, Plant, Users } from "@phosphor-icons/react/dist/ssr";
 interface ChatSpaceAvatarProps {
   id: string;
   kind: "community" | "group";
+  name?: string;
+  is_system?: boolean;
+  prominent?: boolean;
 }
 
-export function ChatSpaceAvatar({ id, kind }: ChatSpaceAvatarProps) {
+export function ChatSpaceAvatar({ id, kind, name, is_system, prominent = false }: ChatSpaceAvatarProps) {
+  const isBeekeepers = is_system && name === "Beekeepers";
+  const isGeneralFarmers = is_system && name === "General Farmers";
+
   const Icon =
-    id === "beekeepers" ? Hexagon :
-    id === "general-farmers" ? Plant :
+    isBeekeepers ? Hexagon :
+    isGeneralFarmers ? Plant :
     kind === "community" ? Users : Hash;
   const color =
-    id === "beekeepers" ? "bg-comb-400 text-on-accent" :
-    id === "general-farmers" ? "bg-forest-600 text-on-brand" :
+    isBeekeepers ? "bg-comb-400 text-on-accent" :
+    isGeneralFarmers ? (prominent ? "bg-forest-300 text-forest-950" : "bg-forest-600 text-on-brand") :
     "bg-sunken text-link";
 
   return (

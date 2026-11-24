@@ -1,15 +1,18 @@
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import Settings
 from app.core.errors import AppError
+from app.db.models import AssistantThread, Scan
 from app.modules.auth.admin import AuthDeletionUnavailable, delete_supabase_user
+from app.modules.chat.models import ChatMessage, ChatSpace, ChatSpaceMember
 from app.modules.farms.service import delete_owned_farms
 from app.modules.users.models import AccountDeletion, ChatProfile, User
 from app.modules.users.schemas import DeletionResponse
+from app.providers.storage.scan_images import ScanPhotoStorage
 
 
 async def request_deletion(
@@ -28,6 +31,18 @@ async def request_deletion(
             )
         job = await session.get(AccountDeletion, user.id)
         if job is None:
+            member_spaces = select(ChatSpaceMember.space_id).where(
+                ChatSpaceMember.user_id == user.id, ChatSpaceMember.state == "active"
+            )
+            await session.execute(
+                update(ChatSpace)
+                .where(ChatSpace.id.in_(member_spaces))
+                .values(member_count=func.greatest(0, ChatSpace.member_count - 1))
+            )
+            await session.execute(delete(ChatMessage).where(ChatMessage.user_id == user.id))
+            await session.execute(delete(ChatSpaceMember).where(ChatSpaceMember.user_id == user.id))
+            await session.execute(delete(AssistantThread).where(AssistantThread.user_id == user.id))
+            await session.execute(delete(Scan).where(Scan.user_id == user.id))
             await delete_owned_farms(session, user.id)
             await session.execute(delete(ChatProfile).where(ChatProfile.user_id == user.id))
             user.status = "deleted"
@@ -62,9 +77,14 @@ async def process_pending_deletions(
             assert user is not None and user.status == "deleted"
             job.attempts += 1
             try:
+                await ScanPhotoStorage().purge_account(user.id, settings)
                 await delete_supabase_user(settings, user.supabase_user_id)
-            except AuthDeletionUnavailable as exc:
-                job.last_error_code = str(exc)
+            except Exception as exc:
+                job.last_error_code = (
+                    str(exc)
+                    if isinstance(exc, AuthDeletionUnavailable)
+                    else "scan_storage_unavailable"
+                )
                 delay = min(
                     settings.deletion_retry_seconds * 2 ** min(job.attempts - 1, 20),
                     settings.deletion_max_retry_seconds,

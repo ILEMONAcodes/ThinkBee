@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { AccountProvider, useIdentity } from "@/components/auth/account-provider";
+import { BrandLoader } from "@/components/ui/brand-loader";
 import { AppError, errorKey } from "@/lib/api/errors";
 import { useOnline } from "@/lib/hooks/use-online";
 import { loadAccount } from "@/lib/onboarding/account";
@@ -60,16 +61,15 @@ function ProtectedContent({ children }: Readonly<{ children: ReactNode }>) {
 
   const failure = identityError || account.error;
   if (ready && owner && account.isSuccess && !failure) return <div key={owner} className="contents">{children}</div>;
-  return (
-    <main className="mx-auto max-w-md p-8 text-app-text">
-      {ready && (!online || failure) ? (
-        <>
-          <p role="status">{t(!online ? "connectionRequired" : `errors.${errorKey(failure)}`)}</p>
-          {online && owner && !rejected ? <button className="mt-4 min-h-12 font-semibold text-link" onClick={() => void account.refetch()}>{t("retry")}</button> : null}
-        </>
-      ) : <p role="status">{t("loading")}</p>}
-    </main>
-  );
+  if (ready && (!online || failure)) {
+    return (
+      <main className="mx-auto max-w-md p-8 text-app-text">
+        <p role="status">{t(!online ? "connectionRequired" : `errors.${errorKey(failure)}`)}</p>
+        {online && owner && !rejected ? <button className="mt-4 min-h-12 font-semibold text-link" onClick={() => void account.refetch()}>{t("retry")}</button> : null}
+      </main>
+    );
+  }
+  return <BrandLoader className="min-h-dvh" />;
 }
 
 export function AccountGate({ children }: Readonly<{ children: ReactNode }>) {

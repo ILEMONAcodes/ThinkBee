@@ -7,13 +7,28 @@ test("waits through a slow account startup instead of failing after fifteen seco
   const state = await mockOnboarding(page, true);
   state.bootstrapDelayMs = 20_000;
   await page.goto("/auth/callback");
-  await expect(page.getByRole("heading", { name: "Finishing your sign-in" })).toBeVisible();
-  await expect(page.getByText(/Still connecting to your account/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("status", { name: "Loading", exact: true }).locator(".brand-loader-spinner")).toBeVisible();
+  await expect(page.getByRole("status", { name: /Still connecting to your account/ })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Finishing your sign-in|Getting your account ready|Still connecting to your account/)).toHaveCount(0);
   await expect(page.locator(".setup-feedback[role=alert]")).toHaveCount(0);
   await expect(page).toHaveURL(/\/setup\/profile$/, { timeout: 30_000 });
   // Check after the destination's account query resolves, not just its navigation.
   await expect(page.getByText("TB-12345678", { exact: true })).toBeVisible({ timeout: 30_000 });
   expect(state.bootstrapCount).toBe(1);
+});
+
+test("protected Home shows the Think Bee loader while the account is checked", async ({ page }, info) => {
+  const state = await mockOnboarding(page, true, true);
+  state.bootstrapDelayMs = 3500;
+  await page.goto("/");
+  const loading = page.getByRole("status", { name: "Loading", exact: true });
+  await expect(loading.locator(".brand-loader-spinner")).toBeVisible();
+  await expect(loading.locator("img:visible")).toHaveAttribute("src", /thinkbee-short(?:-dark)?\.svg/);
+  await expect(page.getByText(/Getting your account ready/)).toHaveCount(0);
+  await expect(page.locator(".app-shell")).toHaveCount(0);
+  await page.screenshot({ path: info.outputPath("account-loading.png") });
+  await expect(page.getByRole("heading", { name: "Your farm dashboard" })).toBeVisible({ timeout: 15_000 });
+  await expect(loading).toHaveCount(0);
 });
 
 test("reports an unavailable account service and retries without another sign-in", async ({ page }, info) => {

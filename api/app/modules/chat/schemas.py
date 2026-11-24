@@ -35,7 +35,7 @@ class ChatSpaceResponse(ChatSpaceBase):
     """Chat space response."""
 
     id: UUID
-    creator_id: UUID
+    creator_id: UUID | None
     avatar_key: str | None
     member_count: int
     is_system: bool
@@ -84,6 +84,8 @@ class ChatMessageBase(BaseModel):
 
 class ChatMessageCreate(ChatMessageBase):
     """Request to send a message."""
+
+    client_id: UUID | None = None
 
 
 class ChatMessageResponse(ChatMessageBase):
