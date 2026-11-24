@@ -40,20 +40,6 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
-      minio:
-        image: quay.io/minio/minio:RELEASE.2025-01-23T19-56-24Z
-        command: server /data --console-address ":9001"
-        env:
-          MINIO_ROOT_USER: thinkbee
-          MINIO_ROOT_PASSWORD: thinkbee-local-only
-        ports:
-          - 9000:9000
-          - 9001:9001
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     env:
       NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
       NEXT_PUBLIC_SUPABASE_URL: https://thinkbee-test.supabase.co
