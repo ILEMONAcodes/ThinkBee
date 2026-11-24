@@ -2,7 +2,7 @@
 #    uv pip compile pyproject.toml --extra dev --universal --python-version 3.12 -o requirements.lock
 alembic==1.20.1
     # via thinkbee-api (pyproject.toml)
-annotated-doc==0.0.6
+annotated-doc==0.0.7
     # via fastapi
 annotated-types==0.8.0
     # via pydantic
@@ -22,7 +22,7 @@ botocore==1.44.9
     # via
     #   boto3
     #   s3transfer
-certifi==2026.10.23
+certifi==2026.11.20
     # via
     #   httpcore
     #   httpx
@@ -34,9 +34,9 @@ click==8.5.1
     #   uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
     # via pytest
-cryptography==50.0.2
+cryptography==48.0.1
     # via pyjwt
-fastapi==0.162.5
+fastapi==0.165.0
     # via thinkbee-api (pyproject.toml)
 greenlet==3.5.6
     # via sqlalchemy
@@ -62,7 +62,7 @@ jmespath==1.1.0
     # via
     #   boto3
     #   botocore
-librt==0.16.0 ; platform_python_implementation != 'PyPy'
+librt==0.17.0 ; platform_python_implementation != 'PyPy'
     # via mypy
 mako==1.4.3
     # via alembic
@@ -71,27 +71,29 @@ markupsafe==3.0.4
 mypy==1.20.2
     # via thinkbee-api (pyproject.toml)
 mypy-extensions==1.2.0
-    # via mypy
+    # via
+    #   librt
+    #   mypy
 opentelemetry-api==1.45.2
     # via fastapi
 packaging==26.3
     # via pytest
 pathspec==1.1.1
     # via mypy
-pillow==12.3.0
+pillow==13.0.0
     # via thinkbee-api (pyproject.toml)
 pluggy==1.7.0
     # via pytest
 pycparser==3.12 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
-pydantic==2.14.3
+pydantic==2.14.4
     # via
     #   thinkbee-api (pyproject.toml)
     #   fastapi
     #   pydantic-settings
-pydantic-core==2.50.4
+pydantic-core==2.50.5
     # via pydantic
-pydantic-settings==2.16.2
+pydantic-settings==2.16.3
     # via thinkbee-api (pyproject.toml)
 pygments==2.21.0
     # via pytest
@@ -103,7 +105,7 @@ pytest==9.2.0
     # via
     #   thinkbee-api (pyproject.toml)
     #   pytest-asyncio
-pytest-asyncio==1.4.1.post1
+pytest-asyncio==1.5.0
     # via thinkbee-api (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via botocore
@@ -111,19 +113,19 @@ python-dotenv==1.2.4
     # via
     #   pydantic-settings
     #   uvicorn
-pyyaml==6.0.3
+pyyaml==6.0.4
     # via uvicorn
 redis==5.3.1
     # via
     #   thinkbee-api (pyproject.toml)
     #   arq
-ruff==0.17.4
+ruff==0.17.6
     # via thinkbee-api (pyproject.toml)
 s3transfer==0.19.3
     # via boto3
 six==1.17.0
     # via python-dateutil
-sqlalchemy==2.1.8
+sqlalchemy==2.1.9
     # via
     #   thinkbee-api (pyproject.toml)
     #   alembic
