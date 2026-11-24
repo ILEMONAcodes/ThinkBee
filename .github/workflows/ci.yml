@@ -41,7 +41,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
       minio:
-        image: minio/minio:latest
+        image: quay.io/minio/minio:RELEASE.2025-01-23T19-56-24Z
         command: server /data --console-address ":9001"
         env:
           MINIO_ROOT_USER: thinkbee
