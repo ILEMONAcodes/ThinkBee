@@ -15,8 +15,10 @@ export async function mockOnboarding(page: Page, signedIn = true, withProfile = 
   const jwt = `${Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")}.${Buffer.from(JSON.stringify({ sub: owner, role: "authenticated", exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.test-signature`;
   const session = { access_token: jwt, refresh_token: "fake-refresh-for-browser-tests", token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: fakeUser };
   const storageKey = `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`;
-  await page.addInitScript(({ storageKey, session, signedIn, welcomeSeen }) => {
+  await page.context().addInitScript(({ storageKey, session, signedIn, welcomeSeen }) => {
     if (welcomeSeen) localStorage.setItem("thinkbee-welcome-seen", "1");
+    // Ensure app lock doesn't block (no lock set = no data-app-lock attribute)
+    localStorage.removeItem("thinkbee-app-lock");
     // Synthetic SDK-owned session fixture; production never copies auth tokens.
     if (signedIn && !sessionStorage.getItem("seeded")) {
       localStorage.setItem(storageKey, JSON.stringify(session));

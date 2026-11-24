@@ -209,6 +209,7 @@ class ChatService:
         existing = await self._get_membership(db, space_id, user_id)
         if existing:
             if existing.state == "active":
+                await db.refresh(existing)
                 return ChatSpaceMemberResponse.model_validate(existing)
             if existing.state == "removed":
                 return None
@@ -217,6 +218,7 @@ class ChatService:
             existing.role = "member"
             space.member_count += 1
             await db.flush()
+            await db.refresh(existing)
             return ChatSpaceMemberResponse.model_validate(existing)
 
         # Create new membership
@@ -229,6 +231,7 @@ class ChatService:
         db.add(membership)
         space.member_count += 1
         await db.flush()
+        await db.refresh(membership)
         return ChatSpaceMemberResponse.model_validate(membership)
 
     async def leave_space(
@@ -288,6 +291,7 @@ class ChatService:
         existing = await self._get_membership(db, space_id, data.user_id)
         if existing:
             if existing.state == "active":
+                await db.refresh(existing)
                 return ChatSpaceMemberResponse.model_validate(existing)
             existing.state = "active"
             existing.role = data.role
@@ -297,6 +301,7 @@ class ChatService:
             if space:
                 space.member_count += 1
             await db.flush()
+            await db.refresh(existing)
             return ChatSpaceMemberResponse.model_validate(existing)
 
         membership = ChatSpaceMember(
@@ -312,6 +317,7 @@ class ChatService:
         if space:
             space.member_count += 1
         await db.flush()
+        await db.refresh(membership)
         return ChatSpaceMemberResponse.model_validate(membership)
 
     async def remove_member(

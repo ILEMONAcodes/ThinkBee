@@ -2,10 +2,12 @@ import { expect, test } from "@playwright/test";
 
 import { mockOnboarding, user } from "./onboarding-fixture";
 
+test.use({ serviceWorkers: "block" });
+
 test.beforeEach(async ({ page }) => {
-  await mockOnboarding(page, true, true);
   const members = new Set<string>();
   const messages = new Map<string, Array<{ id: string; body: string; user_id: string; created_at: string }>>();
+  // Register chat routes BEFORE onboarding fixture so they take priority over the catch-all
   await page.context().route("**/api/v1/chat/spaces/**", async (route) => {
     const request = route.request();
     const parts = new URL(request.url()).pathname.split("/");
@@ -41,6 +43,7 @@ test.beforeEach(async ({ page }) => {
     }
     return route.fulfill({ status: 404, headers });
   });
+  await mockOnboarding(page, true, true);
 });
 
 test("community discovery shows distinct cards and keeps sample counts out of rooms", async ({ page }, info) => {
