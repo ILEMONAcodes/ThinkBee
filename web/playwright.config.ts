@@ -3,13 +3,16 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
-  workers: process.env.CI ? 4 : 1,
+  workers: process.env.CI ? 1 : 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "list" : undefined,
+  globalSetup: "./e2e/global-setup.ts",
   use: {
     baseURL: "http://127.0.0.1:3100",
     channel: process.env.PLAYWRIGHT_CHANNEL || undefined,
     trace: "retain-on-failure",
+    actionTimeout: 15_000,
+    navigationTimeout: 30_000,
   },
   projects: [
     { name: "mobile-light", use: { viewport: { width: 390, height: 844 }, colorScheme: "light" } },
