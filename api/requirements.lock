@@ -34,8 +34,10 @@ click==8.5.1
     #   uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
     # via pytest
-cryptography==48.0.1
-    # via pyjwt
+cryptography==50.0.2
+    # via
+    #   thinkbee-api (pyproject.toml)
+    #   pyjwt
 fastapi==0.165.0
     # via thinkbee-api (pyproject.toml)
 greenlet==3.5.6
