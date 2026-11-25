@@ -10,11 +10,30 @@ const verifier = { salt: salt.toString("base64url"), hash: pbkdf2Sync(testPin, s
 
 export async function seedAppLock(page: Page) {
   const record: LockRecord = { format: 1, id: crypto.randomUUID(), ownerId: "11111111-1111-4111-8111-111111111111", pin: verifier, failures: 0, retryAt: 0 };
+  // Use page.addInitScript since the page already exists (context.addInitScript only runs for NEW pages)
+  // The initScript runs on every navigation (including reloads). We only want to seed the lock
+  // on the FIRST navigation of the test. If the user turns off the lock and reloads, we must NOT
+  // re-seed it. Track this with a sessionStorage flag.
   await page.addInitScript(({ key, record }) => {
-    if (!sessionStorage.getItem("lock-seeded")) {
-      localStorage.setItem(key, JSON.stringify(record));
-      sessionStorage.setItem("lock-seeded", "1");
+    console.log("[seedAppLock initScript] START, key:", key);
+    // Only seed once per test session (survives reloads via sessionStorage)
+    if (sessionStorage.getItem("thinkbee-test-lock-seeded") === "1") {
+      console.log("[seedAppLock initScript] already seeded this session, skipping");
+      console.log("[seedAppLock initScript] END");
+      return;
     }
+    // Check if the app's lock already exists in localStorage
+    const existingLock = localStorage.getItem(key);
+    if (existingLock !== null) {
+      console.log("[seedAppLock initScript] app lock already present in localStorage, keeping existing");
+    } else {
+      // No lock in localStorage - seed it for the first time
+      localStorage.setItem(key, JSON.stringify(record));
+      console.log("[seedAppLock initScript] lock seeded:", localStorage.getItem(key)?.substring(0, 50));
+    }
+    // Mark as seeded for this test session
+    sessionStorage.setItem("thinkbee-test-lock-seeded", "1");
+    console.log("[seedAppLock initScript] END");
   }, { key: lockKey, record });
   return record;
 }
