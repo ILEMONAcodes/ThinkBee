@@ -163,16 +163,16 @@ jobs:
       - name: Start web server for smoke test
         working-directory: web
         run: |
-          nohup PORT=3100 node .next/standalone/server.js --hostname 127.0.0.1 --port 3100 > web.log 2>&1 &
+          export PORT=3100
+          nohup node .next/standalone/server.js --hostname 127.0.0.1 --port 3100 > web.log 2>&1 &
           echo $! > web.pid
-          for i in {1..30}; do
-            if curl -sf http://127.0.0.1:3100 > /dev/null; then
-              echo "Web server ready"
-              break
-            fi
-            echo "Attempt $i: waiting for web server..."
-            sleep 2
-          done
+          if ! curl --retry 30 --retry-delay 2 --retry-connrefused -sf http://127.0.0.1:3100 > /dev/null; then
+            echo "Web server failed to start"
+            echo "=== Full web server log ==="
+            cat web.log
+            exit 1
+          fi
+          echo "Web server ready"
           echo "=== Web server log (first 50 lines) ==="
           head -50 web.log
           # Verify web server serves the app (not 404 or error page)
