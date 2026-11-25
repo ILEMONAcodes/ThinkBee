@@ -13,6 +13,7 @@ export default defineConfig({
     trace: "retain-on-failure",
     actionTimeout: 15_000,
     navigationTimeout: 30_000,
+    serviceWorkers: "block",
   },
   projects: [
     { name: "mobile-light", use: { viewport: { width: 390, height: 844 }, colorScheme: "light" } },

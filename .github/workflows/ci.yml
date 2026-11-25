@@ -175,6 +175,16 @@ jobs:
           done
           echo "=== Web server log (first 50 lines) ==="
           head -50 web.log
+          # Verify web server serves the app (not 404 or error page)
+          echo "=== Web server root response ==="
+          curl -s http://127.0.0.1:3100 | head -c 500
+          echo ""
+
+      - name: Verify API reachable from web server context
+        run: |
+          echo "Testing API from web context..."
+          curl -sf "http://localhost:8000/health/ready" && echo "API ready OK"
+          curl -sf -H "Authorization: Bearer test" "http://localhost:8000/api/v1/me" 2>&1 | head -c 200 && echo ""
 
       - name: Smoke test - single desktop test
         env:
@@ -197,12 +207,6 @@ jobs:
         working-directory: api
         run: |
           if [ -f api.pid ]; then kill $(cat api.pid); fi
-
-      - name: Stop web server
-        if: always()
-        working-directory: web
-        run: |
-          if [ -f web.pid ]; then kill $(cat web.pid); fi
 
       - name: Upload browser screenshots and failure traces
         if: always()
