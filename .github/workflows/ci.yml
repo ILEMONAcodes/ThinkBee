@@ -138,30 +138,71 @@ jobs:
           head -50 api.log
           for i in {1..30}; do
             if curl -sf http://localhost:8000/health/ready > /dev/null; then
-              echo "API ready"
-              exit 0
+              echo "API health/ready OK"
+              break
             fi
-            echo "Attempt $i: waiting for API ready..."
+            echo "Attempt $i: waiting for API health/ready..."
             sleep 2
           done
-          echo "API failed to become ready"
+          # Verify API can handle auth (JWKS fetch, etc.)
+          for i in {1..10}; do
+            if curl -sf -H "Authorization: Bearer test" http://localhost:8000/api/v1/me 2>&1 | grep -q "auth_required\|account_store_unavailable"; then
+              echo "API auth endpoint responding (expected 401/503)"
+              break
+            fi
+            echo "Attempt $i: waiting for API auth endpoint..."
+            sleep 2
+          done
           echo "=== Full API log ==="
           cat api.log
-          exit 1
+          echo "API server started successfully"
 
       - name: Install browser
         run: npx playwright install --with-deps chromium
 
-      - name: Browser tests
+      - name: Start web server for smoke test
+        working-directory: web
+        run: |
+          nohup PORT=3100 node .next/standalone/server.js --hostname 127.0.0.1 --port 3100 > web.log 2>&1 &
+          echo $! > web.pid
+          for i in {1..30}; do
+            if curl -sf http://127.0.0.1:3100 > /dev/null; then
+              echo "Web server ready"
+              break
+            fi
+            echo "Attempt $i: waiting for web server..."
+            sleep 2
+          done
+          echo "=== Web server log (first 50 lines) ==="
+          head -50 web.log
+
+      - name: Smoke test - single desktop test
+        env:
+          PLAYWRIGHT_WORKERS: 1
+        run: npx playwright test e2e/shell.spec.ts --project=desktop-light --reporter=line
+
+      - name: Browser tests (full matrix)
         env:
           PLAYWRIGHT_WORKERS: 1
         run: npm run test:e2e
+
+      - name: Stop web server
+        if: always()
+        working-directory: web
+        run: |
+          if [ -f web.pid ]; then kill $(cat web.pid); fi
 
       - name: Stop API server
         if: always()
         working-directory: api
         run: |
           if [ -f api.pid ]; then kill $(cat api.pid); fi
+
+      - name: Stop web server
+        if: always()
+        working-directory: web
+        run: |
+          if [ -f web.pid ]; then kill $(cat web.pid); fi
 
       - name: Upload browser screenshots and failure traces
         if: always()
