@@ -124,21 +124,28 @@ jobs:
 
       - name: Run database migrations
         working-directory: api
-        run: alembic upgrade head
+        run: |
+          alembic upgrade head
+          echo "Migrations completed successfully"
 
       - name: Start API server
         working-directory: api
         run: |
           nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > api.log 2>&1 &
           echo $! > api.pid
+          sleep 3
+          echo "=== API startup log (first 50 lines) ==="
+          head -50 api.log
           for i in {1..30}; do
             if curl -sf http://localhost:8000/health/ready > /dev/null; then
               echo "API ready"
               exit 0
             fi
+            echo "Attempt $i: waiting for API ready..."
             sleep 2
           done
           echo "API failed to become ready"
+          echo "=== Full API log ==="
           cat api.log
           exit 1
 
@@ -152,9 +159,14 @@ jobs:
               echo "Web server ready"
               exit 0
             fi
+            echo "Attempt $i: waiting for web server..."
             sleep 2
           done
           echo "Web server not responding"
+          echo "=== Web server process check ==="
+          ps aux | grep node || true
+          echo "=== Port 3100 check ==="
+          netstat -tlnp 2>/dev/null | grep 3100 || ss -tlnp 2>/dev/null | grep 3100 || true
           exit 1
 
       - name: Browser tests
