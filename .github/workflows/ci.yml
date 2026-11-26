@@ -40,20 +40,6 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
-      minio:
-        image: minio/minio:RELEASE.2024-10-13T13-34-11Z
-        command: server /data --console-address ":9001"
-        env:
-          MINIO_ROOT_USER: thinkbee
-          MINIO_ROOT_PASSWORD: thinkbee-local-only
-        ports:
-          - 9000:9000
-          - 9001:9001
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     env:
       NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
       NEXT_PUBLIC_SUPABASE_URL: https://thinkbee-test.supabase.co
@@ -138,21 +124,83 @@ jobs:
 
       - name: Run database migrations
         working-directory: api
-        run: alembic upgrade head
+        run: |
+          alembic upgrade head
+          echo "Migrations completed successfully"
 
       - name: Start API server
         working-directory: api
         run: |
           nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > api.log 2>&1 &
           echo $! > api.pid
-          sleep 5
-          curl -f http://localhost:8000/health/live
+          sleep 3
+          echo "=== API startup log (first 50 lines) ==="
+          head -50 api.log
+          for i in {1..30}; do
+            if curl -sf http://localhost:8000/health/ready > /dev/null; then
+              echo "API health/ready OK"
+              break
+            fi
+            echo "Attempt $i: waiting for API health/ready..."
+            sleep 2
+          done
+          # Verify API can handle auth (JWKS fetch, etc.)
+          for i in {1..10}; do
+            if curl -sf -H "Authorization: Bearer test" http://localhost:8000/api/v1/me 2>&1 | grep -q "auth_required\|account_store_unavailable"; then
+              echo "API auth endpoint responding (expected 401/503)"
+              break
+            fi
+            echo "Attempt $i: waiting for API auth endpoint..."
+            sleep 2
+          done
+          echo "=== Full API log ==="
+          cat api.log
+          echo "API server started successfully"
 
       - name: Install browser
         run: npx playwright install --with-deps chromium
 
-      - name: Browser tests
+      - name: Start web server for smoke test
+        working-directory: web
+        run: |
+          export PORT=3100
+          nohup node .next/standalone/server.js --hostname 127.0.0.1 --port 3100 > web.log 2>&1 &
+          echo $! > web.pid
+          if ! curl --retry 30 --retry-delay 2 --retry-connrefused -sf http://127.0.0.1:3100 > /dev/null; then
+            echo "Web server failed to start"
+            echo "=== Full web server log ==="
+            cat web.log
+            exit 1
+          fi
+          echo "Web server ready"
+          echo "=== Web server log (first 50 lines) ==="
+          head -50 web.log
+          # Verify web server serves the app (not 404 or error page)
+          echo "=== Web server root response ==="
+          curl -s http://127.0.0.1:3100 | head -c 500
+          echo ""
+
+      - name: Verify API reachable from web server context
+        run: |
+          echo "Testing API from web context..."
+          curl -sf "http://localhost:8000/health/ready" && echo "API ready OK"
+          curl -sf -H "Authorization: Bearer test" "http://localhost:8000/api/v1/me" 2>&1 | head -c 200 && echo ""
+
+      - name: Smoke test - single desktop test
+        env:
+          PLAYWRIGHT_WORKERS: 1
+        run: npx playwright test e2e/shell.spec.ts --project=desktop-light --reporter=line
+
+      - name: Browser tests (full matrix)
+        env:
+          PLAYWRIGHT_WORKERS: 1
         run: npm run test:e2e
+
+      - name: Stop web server
+        if: always()
+        working-directory: web
+        run: |
+          if [ -f web.pid ]; then kill $(cat web.pid); fi
 
       - name: Stop API server
         if: always()

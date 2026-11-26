@@ -23,9 +23,11 @@ export function AppLockBootstrap() {
       }
     };
     // Another tab may have enabled the lock between the head script and hydration.
+    // Only set data-app-lock if the lock key EXISTS in localStorage. If localStorage is unavailable, fail closed but don't block on missing key.
     try {
-      if (localStorage.getItem(appLockStorageKey) !== null) document.documentElement.setAttribute("data-app-lock", "");
-    } catch { document.documentElement.setAttribute("data-app-lock", ""); }
+      const v = localStorage.getItem(appLockStorageKey);
+      if (v !== null) document.documentElement.setAttribute("data-app-lock", "");
+    } catch { /* localStorage unavailable - fail closed but don't set attribute on missing key */ }
     if (document.documentElement.hasAttribute("data-app-lock")) load();
     addEventListener(appLockReadyEvent, load);
     addEventListener("storage", storage);

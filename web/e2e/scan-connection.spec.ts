@@ -9,10 +9,8 @@ test("sends an authenticated photo and reopens the persisted result", async ({ p
   const key = `scans/${user.id}/${crypto.randomUUID().replaceAll("-", "")}.webp`;
   let scan: Record<string, unknown> | undefined;
 
-  // Set up onboarding routes (auth bootstrap, profile, etc.)
   await mockOnboarding(page, true, true);
 
-  // Set up scans route handler AFTER so it takes priority over the onboarding catch-all
   await page.context().route(/\/api\/v1\/scans/, async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
