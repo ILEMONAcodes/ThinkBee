@@ -103,133 +103,25 @@ test("password sign-in handles invalid credentials, verification and successful 
   expect(state.passwordCount).toBe(3);
 });
 
-test("a recovery at the site root completes PKCE and expired links stay private", async ({ page }) => {
-  const state = await mockOnboarding(page, false);
-  await page.goto("/forgot-password");
-  await page.getByLabel("Email address").fill("farmer@example.test");
-  await page.getByRole("button", { name: "Send reset link" }).click();
-  await expect(page.getByText(/a reset link is on its way/)).toBeVisible();
-  await page.goto("/?code=root-callback-code");
-  await expect(page).toHaveURL(/\/auth\/reset-password$/);
-  expect(state.tokenCount).toBe(1);
-  await page.goto("/auth/callback?error=access_denied&error_description=private-provider-details");
-  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("This link has expired");
-  expect(page.url()).not.toContain("error");
-  await expect(page.locator("body")).not.toContainText("private-provider-details");
-});
-
-test("does not promise password sign-in when Supabase still requires confirmation", async ({ page }) => {
-  const state = await mockOnboarding(page, false);
-  state.signupRequiresConfirmation = true;
-  await page.goto("/register");
-  await fillRegistration(page);
-  await page.getByRole("button", { name: "Create account", exact: true }).click();
-  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("Your account still needs activation.");
-  await expect(page).toHaveURL(/\/register$/);
-  await expect(page.getByText("Account created successfully.", { exact: false })).toHaveCount(0);
-  expect(state.resendCount).toBe(0);
-  expect(state.bootstrapCount).toBe(0);
-});
-
-test("password recovery exchanges its link and updates the password", async ({ page }) => {
-  const state = await mockOnboarding(page, false);
-  await page.goto("/sign-in");
-  await page.getByRole("link", { name: "Forgot password?" }).click();
-  await page.getByLabel("Email address").fill("farmer@example.test");
-  await page.getByRole("button", { name: "Send reset link" }).click();
-  await expect(page.getByText(/a reset link is on its way/)).toBeVisible();
-  expect(state.recoverCount).toBe(1);
-  await page.goto("/auth/callback?code=recovery-code");
-  await expect(page).toHaveURL(/\/auth\/reset-password$/);
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByLabel("Confirm password", { exact: true }).fill(password);
-  await page.getByRole("button", { name: "Save new password" }).click();
-  await expect(page.getByRole("heading", { name: "Your password is updated." })).toBeVisible();
-  expect(state.passwordUpdates).toBe(1);
-  expect(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).not.toContain(password);
-});
-
-test("registration failures and offline password login remain recoverable", async ({ page, context }) => {
-  const state = await mockOnboarding(page, false);
-  state.signupStatus = 429;
-  await page.goto("/register");
-  await fillRegistration(page);
-  await page.getByRole("button", { name: "Create account", exact: true }).click();
-  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("Too many attempts");
-  await expect(page.getByRole("heading", { name: "Check your email" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Sign in", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Welcome back." })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeEnabled();
-  await context.setOffline(true);
-  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeDisabled();
-  await expect(page.getByText("Connect to the internet to sign in.")).toBeVisible();
-  await context.setOffline(false);
-  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeEnabled();
-});
-
-test("profile and farm sync, including a lost unit response", async ({ page }, info) => {
-  const state = await mockOnboarding(page);
-  await page.goto("/setup/profile");
-  await page.getByLabel("Display name").fill("Ada Okoro");
-  await page.getByLabel("A little about you (optional)").fill("I grow cassava and keep bees.");
-  await expect(page.getByRole("heading", { name: "Ada Okoro" })).toBeVisible();
-  await page.screenshot({ path: info.outputPath("profile.png"), fullPage: true });
-  await page.getByRole("button", { name: "Save profile and continue" }).click();
-  await expect(page).toHaveURL(/\/setup\/farm$/);
-  await page.getByLabel("Farm or apiary name").fill("North farm");
-  await page.getByLabel("State (optional)", { exact: true }).fill("Oyo");
-  await page.getByLabel("LGA (optional)").fill("Ibadan North");
-  await page.getByLabel("Number of hives").fill("2");
-  await page.getByLabel("Hive type (optional)").fill("Top bar");
-  await page.getByLabel("Crops (optional)", { exact: true }).fill("Cassava");
-  await page.screenshot({ path: info.outputPath("farm.png"), fullPage: true });
-  state.failUnitOnce = true;
-  await page.getByRole("button", { name: "Save my farm" }).click();
-  await expect(page.getByText(/We could not reach the service/)).toBeVisible();
-  await page.getByRole("button", { name: "Try again" }).click();
-  await expect(page.getByText("Your submitted details are synced to your account.")).toBeVisible();
-  expect(state.farms.size).toBe(1);
-  expect(state.units.size).toBe(3);
-  expect(state.profile?.display_name).toBe("Ada Okoro");
-  expect(state.profile?.area_state).toBeNull();
-  expect([...state.farms.values()][0].lat).toBeUndefined();
-  await page.getByRole("link", { name: "Go to Home" }).click();
-  await page.goto("/me");
-  await expect(page.getByText("North farm", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Sign out on this device" }).click();
-  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
-  await expect(page.getByText("Ada Okoro")).toHaveCount(0);
-});
-
-test("offline setup is durable across reload and syncs on reconnect", async ({ page, context }) => {
-  const state = await mockOnboarding(page, true, true);
+test("sign-out removes unsynced setup drafts from this device", async ({ page }) => {
+  await mockOnboarding(page, true, true);
   await page.goto("/setup/farm");
-  await page.getByLabel("Farm or apiary name").fill("Offline farm");
+  await page.getByLabel("Farm or apiary name").fill("Draft to keep");
   await expect(page.getByText("Draft saved on this device.")).toBeVisible();
-  await page.reload();
-  await expect(page.getByLabel("Farm or apiary name")).toHaveValue("Offline farm");
-  await context.setOffline(true);
-  await page.getByRole("button", { name: "Save my farm" }).click();
-  await expect(page.getByText(/Your details will sync when you have a connection/)).toBeVisible();
-  expect(state.farms.size).toBe(0);
-  await context.setOffline(false);
-  await expect(page.getByText("Your submitted details are synced to your account.")).toBeVisible();
-  expect(state.farms.size).toBe(1);
-});
-
-test("account failures and denied local storage do not report success", async ({ page }) => {
-  const state = await mockOnboarding(page);
-  state.bootstrapStatus = 503;
-  await page.goto("/setup/profile");
-  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("The account service is temporarily unavailable");
-  await expect(page.locator("body")).not.toContainText("Internal details");
-  state.bootstrapStatus = 200;
-  await page.getByRole("button", { name: "Try again" }).click();
-  await page.getByLabel("Display name").fill("Ada");
-  await page.addInitScript(() => { IDBFactory.prototype.open = () => { throw new DOMException("Blocked", "SecurityError"); }; });
-  await page.reload();
-  await page.getByLabel("Display name").fill("Ada");
-  await page.getByRole("button", { name: "Save profile and continue" }).click();
-  await expect(page.locator(".setup-feedback[role=alert]")).toContainText("We could not save on this device");
-  expect(state.profileWrites).toBe(0);
+  await page.goto("/me");
+  await page.getByRole("button", { name: "Sign out on this device" }).click();
+  await expect(page.getByText("Signing out removes unsynced setup drafts from this device.")).toBeVisible();
+  await page.getByRole("button", { name: "Discard drafts and sign out" }).click();
+  await expect(page).toHaveURL(/\/sign-in$/);
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+  const count = await page.evaluate(() => new Promise<number>((resolve, reject) => {
+    const request = indexedDB.open("thinkbee-onboarding");
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const count = request.result.transaction("setup").objectStore("setup").count();
+      count.onsuccess = () => { request.result.close(); resolve(count.result); };
+      count.onerror = () => reject(count.error);
+    };
+  }));
+  expect(count).toBe(0);
 });

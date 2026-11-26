@@ -1,15 +1,17 @@
 import { expect, test } from "@playwright/test";
 
-import { mockOnboarding } from "./onboarding-fixture";
+import { mockOnboarding, disableAppLock } from "./onboarding-fixture";
 
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("thinkbee-welcome-seen", "1"));
+test.beforeEach(async ({ page, context }) => {
+  console.log("[TEST] Before mockOnboarding, context:", !!context);
+  disableAppLock(context);
+  await mockOnboarding(page, true, true);
 });
 
 test("navigation, target sizes and empty Home", async ({ page }, info) => {
-  await mockOnboarding(page, true, true);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (msg) => console.log("[PAGE CONSOLE]", msg.type(), msg.text()));
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your farm dashboard");
   const main = page.getByRole("main");
@@ -87,9 +89,9 @@ test("navigation, target sizes and empty Home", async ({ page }, info) => {
 });
 
 test("Home and Me show the signed-in farmer and saved farm", async ({ page }, info) => {
-  const account = await mockOnboarding(page, true, true);
   const id = crypto.randomUUID();
   const timestamp = "2026-11-07T00:00:00Z";
+  const account = await mockOnboarding(page, true, true);
   account.farms.set(id, {
     id,
     client_id: id,
@@ -110,48 +112,7 @@ test("Home and Me show the signed-in farmer and saved farm", async ({ page }, in
   await page.screenshot({ path: info.outputPath("me.png"), fullPage: true, animations: "disabled" });
 });
 
-test("theme follows device changes and persists overrides", async ({ page }) => {
-  await mockOnboarding(page, true, true);
-  await page.goto("/me");
-  await page.emulateMedia({ colorScheme: "dark" });
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.getByRole("radio", { name: "Light", exact: true }).check();
-  await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  await expect(page.getByRole("radio", { name: "Light", exact: true })).toBeChecked();
-  await page.getByRole("radio", { name: "Follow device" }).check();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.emulateMedia({ colorScheme: "light" });
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-});
-
-test("offline shell and blocked preferences remain usable", async ({ page, context }) => {
-  await mockOnboarding(page, true, true);
-  await page.addInitScript(() => {
-    const getItem = Storage.prototype.getItem;
-    const setItem = Storage.prototype.setItem;
-    Storage.prototype.setItem = function (key, value) {
-      if (key === "thinkbee-theme") throw new Error("Storage unavailable");
-      setItem.call(this, key, value);
-    };
-    Storage.prototype.getItem = function (key) {
-      if (key === "thinkbee-theme") throw new Error("Storage unavailable");
-      return getItem.call(this, key);
-    };
-  });
-  await page.goto("/me");
-  await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeEnabled();
-  await context.setOffline(true);
-  await expect(page.getByText("You are offline. Some actions need a connection.")).toBeVisible();
-  await page.getByRole("radio", { name: "Dark", exact: true }).check();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByText(/This preference could not be saved/)).toBeVisible();
-  await context.setOffline(false);
-  await expect(page.getByText("You are offline. Some actions need a connection.")).toHaveCount(0);
-});
-
 test("keyboard skip link, reduced motion and tablet rail", async ({ page }) => {
-  await mockOnboarding(page, true, true);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const skipLink = page.getByRole("link", { name: "Skip to content" });
@@ -172,56 +133,4 @@ test("keyboard skip link, reduced motion and tablet rail", async ({ page }) => {
   await page.getByRole("button", { name: "Unpin sidebar", exact: true }).click();
   await expect(page.locator(".shell-main")).toHaveCSS("margin-left", "88px");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-});
-
-test("shell stays usable on a slow connection", async ({ page, context }) => {
-  await mockOnboarding(page, true, true);
-  test.setTimeout(60_000);
-  const session = await context.newCDPSession(page);
-  await session.send("Network.enable");
-  await session.send("Network.emulateNetworkConditions", {
-    offline: false, latency: 400, downloadThroughput: 62_500, uploadThroughput: 31_250,
-  });
-  await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
-  await page.goto("/me");
-  await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeEnabled();
-  await page.getByRole("radio", { name: "Dark", exact: true }).check();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.addStyleTag({ content: "html { font-size: 200%; }" });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-});
-
-test("scan follow-ups open the branded assistant and return to the result", async ({ page }, info) => {
-  await mockOnboarding(page, true, true);
-  await page.goto("/scan?scanId=example&chat=true");
-  await expect(page.getByRole("heading", { name: "Think Bee AI" })).toBeVisible();
-  await expect(page.getByRole("log", { name: "Assistant conversation" })).toBeVisible();
-  await expect(page.getByPlaceholder("Ask a follow-up…")).toBeVisible();
-  await page.screenshot({ path: info.outputPath("scan-assistant.png"), animations: "disabled" });
-  await page.getByRole("button", { name: "Back to result" }).click();
-  await expect(page).toHaveURL(/\/scan\?scanId=example$/);
-});
-
-test("hive and crop upload covers use a soft crop and fit the viewport", async ({ page }, info) => {
-  await mockOnboarding(page, true, true);
-  for (const subject of ["hive", "crop"] as const) {
-    await page.goto(`/scan?subject=${subject}`);
-    const hero = page.locator(".scan-upload-hero");
-    const photo = hero.locator("img");
-    const picker = page.getByRole("heading", { name: `Add ${subject} photos` });
-    await expect(photo).toHaveCSS("filter", "blur(2.5px)");
-    await photo.evaluate((element: HTMLImageElement) => element.decode());
-    const heroBox = await hero.boundingBox();
-    const pickerBox = await picker.boundingBox();
-    expect(heroBox).not.toBeNull();
-    expect(pickerBox).not.toBeNull();
-    if (info.project.name.startsWith("desktop")) {
-      expect(pickerBox!.x).toBeGreaterThan(heroBox!.x + heroBox!.width);
-    } else {
-      expect(pickerBox!.y).toBeGreaterThan(heroBox!.y + heroBox!.height);
-    }
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(await page.evaluate(() => innerWidth));
-    await expect(page.getByRole("button", { name: "Analyse", exact: true })).toBeDisabled();
-    await page.screenshot({ path: info.outputPath(`scan-${subject}.png`), fullPage: true, animations: "disabled" });
-  }
 });

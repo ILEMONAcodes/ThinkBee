@@ -67,22 +67,28 @@ test("keeps a farm draft through background locking and cancelled recovery, incl
   await context.setOffline(false);
 });
 
-test("cached Home reloads covered and can be unlocked offline", async ({ page, context }) => {
-  await seedAppLock(page);
-  await page.goto("/");
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
-  await unlockApp(page);
-  await expect(page.getByRole("heading", { name: "Your farm dashboard" })).toBeVisible();
-  // Match the offline signal used by cached navigations even if Chromium reports online after reload.
-  await page.addInitScript(() => Object.defineProperty(navigator, "onLine", { get: () => false }));
-  await context.setOffline(true);
-  const response = await page.reload();
-  expect(response?.fromServiceWorker()).toBe(true);
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.locator("#app-content")).toBeHidden();
-  await unlockApp(page);
-  await expect(page.getByRole("heading", { name: "Your farm dashboard" })).toBeVisible();
+test.describe("cached Home reloads", () => {
+  test.use({ serviceWorkers: "allow" });
+  test("cached Home reloads covered and can be unlocked offline", async ({ page, context }) => {
+    page.on("console", (msg) => console.log("[PAGE CONSOLE]", msg.type(), msg.text()));
+    await seedAppLock(page);
+    await page.goto("/");
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+    await unlockApp(page);
+    await expect(page.getByRole("heading", { name: "Your farm dashboard" })).toBeVisible();
+    // Match the offline signal used by cached navigations even if Chromium reports online after reload.
+    await page.addInitScript(() => Object.defineProperty(navigator, "onLine", { get: () => false }));
+    await context.setOffline(true);
+    const response = await page.reload();
+    expect(response?.fromServiceWorker()).toBe(true);
+    await page.waitForTimeout(1000);
+    console.log("[TEST] After reload, checking for dialog...");
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.locator("#app-content")).toBeHidden();
+    await unlockApp(page);
+    await expect(page.getByRole("heading", { name: "Your farm dashboard" })).toBeVisible();
+  });
 });
 
 test("requires the current PIN to change or turn off the lock", async ({ page }) => {
@@ -169,6 +175,7 @@ test.describe("before startup", () => {
   });
 
   test("conceals app content even when the client runtime cannot load", async ({ page }) => {
+    page.on("console", (msg) => console.log("[PAGE CONSOLE]", msg.type(), msg.text()));
     await seedAppLock(page);
     await page.route("**/_next/static/**/*.js", (route) => route.abort());
     await page.goto("/me");
